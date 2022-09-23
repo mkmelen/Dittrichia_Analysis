@@ -1,3 +1,2 @@
 # Dittrichia_Analysis
-#Repository for Dittrichia data
-#This is a line from RStudio
+# This repository contains the analysis files for Miranda's part of Team Dittrichia
