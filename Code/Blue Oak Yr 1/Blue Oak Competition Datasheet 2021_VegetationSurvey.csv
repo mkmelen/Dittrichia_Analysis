@@ -1,0 +1,51 @@
+﻿Flag,Bare,Grass,Forb,HECO,Trt
+A1,2,14,3,0,Raking
+A2,0,12,5,0,Control
+A3,5,10,2,0,Raking + Clipping
+A4,6,8,2,3,+Hemizonia
+A5,16,0,0,0,Biomass Removal
+B1,8,6,2,0,Control
+B2,16,0,0,0,Biomass Removal
+B3,5,10,2,0,Raking
+B4,2,11,5,1,+Hemizonia
+B5,4,11,4,0,Raking + Clipping
+C1,2,11,6,3,+Hemizonia
+C2,16,0,0,0,Biomass Removal
+C3,1,14,5,0,Control
+C4,2,13,1,0,Raking + Clipping
+C5,0,15,2,0,Raking
+D1,16,0,0,0,Biomass Removal
+D2,2,13,3,1,+Hemizonia
+D3,1,14,7,0,Control
+D4,7,4,9,0,Raking + Clipping
+D5,4,10,5,0,Raking
+E1,1,14,4,0,Raking
+E2,3,12,5,0,Control
+E3,3,10,4,0,Raking + Clipping
+E4,2,12,3,2,+Hemizonia
+E5,16,0,0,0,Biomass Removal
+F1,16,0,0,0,Biomass Removal
+F2,3,12,8,0,Control
+F3,0,16,4,0,+Hemizonia
+F4,2,12,2,0,Raking + Clipping
+F5,0,16,6,0,Raking
+G1,16,0,0,0,Biomass Removal
+G2,2,11,7,0,Raking
+G3,4,9,4,0,Control
+G4,8,3,4,2,+Hemizonia
+G5,10,4,3,0,Raking + Clipping
+H1,5,7,4,0,Raking
+H2,3,10,5,0,Control
+H3,1,10,3,2,+Hemizonia
+H4,16,0,0,0,Biomass Removal
+H5,6,7,4,0,Raking + Clipping
+I1,7,10,4,0,Raking + Clipping
+I2,1,8,8,2,+Hemizonia
+I3,1,14,2,0,Raking
+I4,16,0,0,0,Biomass Removal
+I5,3,8,5,0,Control
+J1,7,9,2,0,+Hemizonia
+J2,16,0,0,0,Biomass Removal
+J3,6,9,2,0,Control
+J4,9,5,2,0,Raking + Clipping
+J5,5,8,5,0,Raking
