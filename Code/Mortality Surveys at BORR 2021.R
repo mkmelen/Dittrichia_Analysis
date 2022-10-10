@@ -3,7 +3,7 @@
 #March 2021
 #Blue Oak Ranch Reserve, Competition Experiment
 
-#This code will evaluate the mortality rates of the data from the Blue Oak competition experiment.
+#This code will evaluate the longest leaf length of the data from the Blue Oak competition experiment.
 
 #There are 5 treatments.
 #Control = control plots: no manipulation of the plot
@@ -82,4 +82,4 @@ ggplot(data=mean.leaf.length, aes(x=Trt,y=LeafMeas2))+
   geom_point(fill="light green")+
   labs(title="Mean Leaf Length by Treatment Type",x="Treatment",y="Mean Longest Leaf Length (mm)")+
   geom_errorbar(aes(ymin=LeafMeas2-sd, ymax=LeafMeas2+sd), width=.2,position=position_dodge(.9)) 
-
+# error in LeafMeas2-sd: non-numeric argument to binary operator
