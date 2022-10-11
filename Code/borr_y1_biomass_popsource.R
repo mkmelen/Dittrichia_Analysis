@@ -1,6 +1,6 @@
 #Mortality Surveys
 #Dittrichia Project
-#March 2021
+#October 2022
 #Blue Oak Ranch Reserve, Competition Experiment
 
 #This code will evaluate the number of days plants survived by source.

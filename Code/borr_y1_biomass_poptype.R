@@ -1,6 +1,6 @@
 #Mortality Surveys
 #Dittrichia Project
-#March 2021
+#October 2022
 #Blue Oak Ranch Reserve, Competition Experiment
 
 #This code will evaluate the biomass in roadside and off-road plants that survived.
