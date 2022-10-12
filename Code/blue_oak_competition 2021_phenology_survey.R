@@ -17,25 +17,28 @@ library(ggplot2)
 
 #### Loading Data Sheets ####
 
+setwd("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis")
+
 #Raw Data Input (whole data sheet)
-phenology_data <- read_sheet("https://docs.google.com/spreadsheets/d/1dYs2nKqeF5yOkt4kmxDGKn8S9-H6o9OxXlO4oMAhOcs/edit#gid=913269526")
-View(phenology_data)
+phenology_data <-read.csv("Data/blue_oak_yr1/blue_oak_competition_datasheet_2021_phenology_survey.csv",stringsAsFactors = T)
+#View(phenology_data)
 
 #Create Individual Data Frames for Analysis
 daysalive <- phenology_data[, c("Flag_Pos", "Trt", "NumDaysAlive")]
-View(daysalive)
+#View(daysalive)
 
 biomass <- phenology_data[, c("Flag_Pos", "Trt", "Biomass")]
-View(biomass)
+#View(biomass)
 biomass_na <- na.omit(biomass)
-View(biomass_na)
+#View(biomass_na)
 
 height_raw <- phenology_data[, c("Flag_Pos", "Trt", "Height")]
-View(height_raw)
+#View(height_raw)
 height_na <- na.omit(height_raw)
-View(height_na)
+#View(height_na)
 
 #### Summary Data Frames for Plotting ####
+####ERROR HERE####
 
 #Number of Days Alive
 daysalive_sum <- daysalive %>%

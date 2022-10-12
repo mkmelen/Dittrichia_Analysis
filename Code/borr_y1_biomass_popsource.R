@@ -3,7 +3,7 @@
 #October 2022
 #Blue Oak Ranch Reserve, Competition Experiment
 
-#This code will evaluate the number of days plants survived by source.
+#This code will evaluate the biomass of surviving plants by source.
 
 #Load libraries
 library(sciplot)

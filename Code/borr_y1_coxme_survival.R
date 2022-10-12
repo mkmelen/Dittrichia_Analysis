@@ -46,15 +46,14 @@ str(dataFilter) #Check that each column has the right class (factor, integer, nu
 #This dataframe has one row per plant with a calculation for how many days it took for the plant to reproduce (NumDaysAlive). The censor for this dataframe is Censor with a 1 denoting a plant lived and a 0 denoting plant died by the last census date.
 
 ##Filter model
-fullmodelFilter <- coxme(Surv(NumDaysAlive,Censor) ~ #Response variable: survival data
-                           Type + #Fixed effects and their interactions
-                           (1 | Pop/Source/Block) + #Random effect with random intercept only
-                           (1 | Block), #Data was blocked
-                         data = dataFilter) #Dataframe
-#### ERROR in Model ####
-
+fullmodelFilter<-coxme(Surv(NumDaysAlive,Censor)~ #Response variable: survival data
+                         +Habitat * Treatment #Fixed effects and their interactions.
+                       +(1 | Site)  #Random effect with random intercept only
+                       +(1 | Block), #Data was blocked
+                       data = dataFilter) #Dataframe
 
 summary(fullmodelFilter)
+#ERROR HERE # 
 Anova(fullmodelFilter, test.statistic = "LR") #Use a type II likelihood ratio test to test your fixed effects
 #It is confusing to use Anova here (the capital A is important) because this is not really an anova; R uses this function for lots of different tests of the main variables in your model.
 

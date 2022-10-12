@@ -1,4 +1,4 @@
-#Mortality Surveys
+#Longest leaf measurements by treatment
 #Dittrichia Project
 #October 2022
 #Blue Oak Ranch Reserve, Competition Experiment
@@ -26,59 +26,60 @@ str(data)
 #$ Flag          : chr  "A1" "A1" "A1" "A1" ...
 #$ Pos           : int  1 2 3 4 5 6 7 8 9 10 ...
 #$ Flag_Pos      : chr  "A1_01" "A1_02" "A1_03" "A1_04" ...
-#$ Source        : chr  "GUA-O" "SSJ-O" "PEN-R" "PAR-O" ...
-#$ Pop           : chr  "GUA" "SSJ" "PEN" "PAR" ...
-#$ Type          : chr  "Off-road" "Off-road" "Roadside" "Off-road" ...
-#$ Trt           : chr  "Raking" "Raking" "Raking" "Raking" ...
-#$ PlantDate     : chr  "2/27/2021" "2/27/2021" "2/27/2021" "2/27/2021" ...
+#$ Population    : chr  "GUA-O" "SSJ-O" "PEN-R" "PAR-O" ...
+#$ Site          : chr  "GUA" "SSJ" "PEN" "PAR" ...
+#$ Habitat       : chr  "Off-road" "Off-road" "Roadside" "Off-road" ...
+#$ Treatment     : chr  "Raking" "Raking" "Raking" "Raking" ...
+#$ PlantDate     : chr  "2/27/21" "2/27/21" "2/27/21" "2/27/21" ...
 #$ LeafMeas1     : num  18.75 15.71 9.13 16.39 12.85 ...
-#$ LeafMeas2     : chr  "24" "31" "19" "9" ...
+#$ LeafMeas2     : int  24 31 19 9 14 16 19 27 22 22 ...
+#$ Growth        : num  5.25 15.29 9.87 -7.39 1.15 ...
 
-data_col_NA <- data[!is.na(data$LeafMeas2), ] # Drop NAs in only LeafMeas2
-data_col_NA # Print data frame without NA in LeafMeas2
+#data_col_NA <- data[!is.na(data$LeafMeas2), ] # Drop NAs in only LeafMeas2
+#data_col_NA # Print data frame without NA in LeafMeas2
 
 data$LeafMeas2 <- as.numeric (data$LeafMeas2) # Convert LeafMeas2 from Char to Num
-which(is.na(data$LeafMeas2))
+#which(is.na(data$LeafMeas2))
 
 ##plot Treatment on x-axis and Longest Leaf Length (mm) (LeafMeas2) on y-axis (all data)
-ggplot(data=data, aes(x=Trt,y=LeafMeas2))+
+ggplot(data=data, aes(x=Treatment,y=LeafMeas2))+
   geom_boxplot(fill="light green")+
   labs(title="Leaf Length by Treatment Type",x="Treatment",y="Longest Leaf Length (mm)")
 
 #We want the mean length of leaf for each treatment, save to a variable
-mean.leaf.length<-aggregate(LeafMeas2~Trt,data=data,FUN=mean)
+mean.leaf.length<-aggregate(LeafMeas2~Treatment,data=data,FUN=mean)
 print(mean.leaf.length)
-#LeafMeas2
-#1   Control                              19.15925
-#2      HECO                              19.22175
-#3      High                              18.75669
-#4       Low                              17.97350
-#5    Medium                              17.96525
+#Treatment LeafMeas2
+#1   Biomass Removal  46.81333
+#2           Control  21.46853
+#3         Hemizonia  21.29197
+#4            Raking  22.45033
+#5 Raking + Clipping  26.64626
 
-SD.leaf.length<-aggregate(LeafMeas2~Trt,data=data,FUN=sd)
+SD.leaf.length<-aggregate(LeafMeas2~Treatment,data=data,FUN=sd)
 print(SD.leaf.length)
 #Treatment LeafMeas2
-#1   Control                              5.129316
-#2      HECO                              5.251399
-#3      High                              5.397813
-#4       Low                              5.100468
-#5    Medium                              5.382011
+#1   Biomass Removal 11.074723
+#2           Control  8.797250
+#3         Hemizonia  8.232076
+#4            Raking  9.959711
+#5 Raking + Clipping  9.753681
 
-SE.leaf.length<-aggregate(LeafMeas2~Trt,data=data,FUN=se)
+SE.leaf.length<-aggregate(LeafMeas2~Treatment,data=data,FUN=se)
 print(SE.leaf.length)
 #Treatment LeafMeas2
-#1   Control                             0.4055080
-#2      HECO                             0.4151596
-#3      High                             0.4267346
-#4       Low                             0.4032274
-#5    Medium                             0.4254853
+#1   Biomass Removal 0.9042473
+#2           Control 0.7356630
+#3         Hemizonia 0.7033137
+#4            Raking 0.8105098
+#5 Raking + Clipping 0.8044700
 
-summary.data<-merge(mean.leaf.length,SD.leaf.length,by="Trt")
+summary.data<-merge(mean.leaf.length,SD.leaf.length,by="Treatment")
 print(summary.data)
-summary.data2<-merge(summary.data,SE.leaf.length,by="Trt")
+summary.data2<-merge(summary.data,SE.leaf.length,by="Treatment")
 print(summary.data2)
 
-ggplot(data=mean.leaf.length, aes(x=Trt,y=LeafMeas2))+
+ggplot(data=mean.leaf.length, aes(x=Treatment,y=LeafMeas2))+
   geom_point(fill="light green")+
   labs(title="Mean Leaf Length by Treatment Type",x="Treatment",y="Mean Longest Leaf Length (mm)")+
   geom_errorbar(aes(ymin=LeafMeas2-sd, ymax=LeafMeas2+sd), width=.2,position=position_dodge(.9)) 
