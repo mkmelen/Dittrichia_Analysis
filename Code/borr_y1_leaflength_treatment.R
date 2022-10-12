@@ -46,6 +46,11 @@ ggplot(data=data, aes(x=Treatment,y=LeafMeas2))+
   geom_boxplot(fill="light green")+
   labs(title="Leaf Length by Treatment Type",x="Treatment",y="Longest Leaf Length (mm)")
 
+ggplot(data=data, aes(x=Treatment,y=LeafMeas2))+
+  labs(title="Mean Leaf Length by Treatment Type",x="Treatment",y="Mean Longest Leaf Length (mm)")+
+  geom_jitter(alpha=0.5,height=0,show.legend = F)+ #adds all data, spread out 
+  geom_boxplot(alpha = 0.3,show.legend = F,outlier.shape = NA,width=0.5)#if you use this, comment out the geom_boxplot earlier in the code; Alpha 1=100%, 0.3= 30% fade
+
 #We want the mean length of leaf for each treatment, save to a variable
 mean.leaf.length<-aggregate(LeafMeas2~Treatment,data=data,FUN=mean)
 print(mean.leaf.length)
@@ -56,16 +61,29 @@ print(mean.leaf.length)
 #4            Raking  22.45033
 #5 Raking + Clipping  26.64626
 
+#Calculating SD
 SD.leaf.length<-aggregate(LeafMeas2~Treatment,data=data,FUN=sd)
+colnames(SD.leaf.length)<-c("Treatment","sd")
 print(SD.leaf.length)
-#Treatment LeafMeas2
+#Treatment sd
 #1   Biomass Removal 11.074723
 #2           Control  8.797250
 #3         Hemizonia  8.232076
 #4            Raking  9.959711
 #5 Raking + Clipping  9.753681
 
+summary.data<-merge(mean.leaf.length,SD.leaf.length,by="Treatment")
+print(summary.data)
+
+#Plotting with SD
+ggplot(data=summary.data, aes(x=Treatment,y=LeafMeas2))+
+  geom_point(fill="light green")+
+  labs(title="Mean Leaf Length by Treatment Type",x="Treatment",y="Mean Longest Leaf Length (mm)")+
+  geom_errorbar(aes(ymin=LeafMeas2-sd, ymax=LeafMeas2+sd), width=.2,position=position_dodge(.9)) 
+
+#Calculating SE
 SE.leaf.length<-aggregate(LeafMeas2~Treatment,data=data,FUN=se)
+colnames(SE.leaf.length)<-c("Treatment","se")
 print(SE.leaf.length)
 #Treatment LeafMeas2
 #1   Biomass Removal 0.9042473
@@ -74,13 +92,13 @@ print(SE.leaf.length)
 #4            Raking 0.8105098
 #5 Raking + Clipping 0.8044700
 
-summary.data<-merge(mean.leaf.length,SD.leaf.length,by="Treatment")
-print(summary.data)
 summary.data2<-merge(summary.data,SE.leaf.length,by="Treatment")
 print(summary.data2)
 
-ggplot(data=mean.leaf.length, aes(x=Treatment,y=LeafMeas2))+
+#Plotting with SE
+ggplot(data=summary.data, aes(x=Treatment,y=LeafMeas2))+
   geom_point(fill="light green")+
   labs(title="Mean Leaf Length by Treatment Type",x="Treatment",y="Mean Longest Leaf Length (mm)")+
-  geom_errorbar(aes(ymin=LeafMeas2-sd, ymax=LeafMeas2+sd), width=.2,position=position_dodge(.9)) 
-# error in LeafMeas2-sd: non-numeric argument to binary operator
+  geom_errorbar(aes(ymin=LeafMeas2-se, ymax=LeafMeas2+se), width=.2,position=position_dodge(.9)) 
+
+
