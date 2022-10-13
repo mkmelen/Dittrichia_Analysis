@@ -2,7 +2,7 @@
 # Applied here on: data from surveys at Hester in 2021
 # R version 3.6.3 (2020-02-29) -- "Holding the Windsock" and R Studio Version 1.0.153 – © 2009-2017
 # Last updated 09/18/2021 by Karen Tanner 
-
+# https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html
 
 
 ##### SETUP ####
@@ -52,7 +52,7 @@ model_F<-glmer(Present~Elevation*Pattern + (1|Block),data=F_data,subset=Species=
 
 # Assess GLMM with DHARMa
 sim_output_model_F <- simulateResiduals(fittedModel = model_F, plot = F) # save simulated data to work with
-# QQ plot
+# QQ plot (or use Car package and use qqp or qqPlot - gives the 95% confidence intervals)
 plotQQunif(sim_output_model_F) # ok
 # standardized residuals vs model predictions plot
 plotResiduals(sim_output_model_F); testQuantiles(sim_output_model_F) # ok
@@ -61,5 +61,3 @@ plotResiduals(sim_output_model_F, F_data$Elevation)
 testCategorical(sim_output_model_F, catPred = F_data$Elevation)
 plotResiduals(sim_output_model_F, F_data$Pattern)
 testCategorical(sim_output_model_F, catPred = F_data$Pattern) 
-
-

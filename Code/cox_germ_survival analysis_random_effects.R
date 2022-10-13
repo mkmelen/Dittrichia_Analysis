@@ -14,10 +14,10 @@
 setwd("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Analysis") 
 
 #Install Packages for Analysis
-install.packages("coxme")
-install.packages("car")
-install.packages("survival")
-install.packages("multcomp")
+#install.packages("coxme")
+#install.packages("car")
+#install.packages("survival")
+#install.packages("multcomp")
 
 #Load Libraries for Analysis
 library(coxme)
@@ -26,11 +26,11 @@ library(survival)
 library(multcomp)
 
 #Install Packages for Graphing
-install.packages("tidyr")
-install.packages("ggfortify")
-install.packages("RColorBrewer")
-install.packages("survMisc")
-install.packages("ggplot2")
+#install.packages("tidyr")
+#install.packages("ggfortify")
+#install.packages("RColorBrewer")
+#install.packages("survMisc")
+#install.packages("ggplot2")
 
 #Load Libraries for Graphing
 library(tidyr)

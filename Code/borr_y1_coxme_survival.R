@@ -14,10 +14,10 @@
 setwd("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis")
 
 #Install Packages for Analysis
-install.packages("coxme")
-install.packages("car")
-install.packages("survival")
-install.packages("multcomp")
+#install.packages("coxme")
+#install.packages("car")
+#install.packages("survival")
+#install.packages("multcomp")
 
 #Load Libraries for Analysis
 library(coxme)
@@ -26,11 +26,11 @@ library(survival)
 library(multcomp)
 
 #Install Packages for Graphing
-install.packages("tidyr")
-install.packages("ggfortify")
-install.packages("RColorBrewer")
-install.packages("survMisc")
-install.packages("ggplot2")
+#install.packages("tidyr")
+#install.packages("ggfortify")
+#install.packages("RColorBrewer")
+#install.packages("survMisc")
+#install.packages("ggplot2")
 
 #Load Libraries for Graphing
 library(tidyr)
@@ -53,13 +53,22 @@ fullmodelFilter<-coxme(Surv(NumDaysAlive,Censor)~ #Response variable: survival d
                        data = dataFilter) #Dataframe
 
 summary(fullmodelFilter)
-#ERROR HERE # 
-Anova(fullmodelFilter, test.statistic = "LR") #Use a type II likelihood ratio test to test your fixed effects
+#ERROR HERE # Error in update.default(formula(object), formula.) : need an object with call component
+Anova(fullmodelFilter,test.statistic = "LR") #Use a type II likelihood ratio test to test your fixed effects
 #It is confusing to use Anova here (the capital A is important) because this is not really an anova; R uses this function for lots of different tests of the main variables in your model.
 
-exp(coef(fullmodelFilter)) #This number is more than 1 therefore showing that roadside pops have 28% higher probability of germination (1.28) compared to their counterpart off-road pops
+exp(coef(fullmodelFilter)) #This extracts fixed effects?
+#HabitatRoadside                           TreatmentControl 
+#0.9915997                                  1.0927160 
+#TreatmentHemizonia                            TreatmentRaking 
+#1.0675844                                  1.1032617 
+#TreatmentRaking + Clipping           HabitatRoadside:TreatmentControl 
+#0.9045366                                  0.9068636 
+#HabitatRoadside:TreatmentHemizonia            HabitatRoadside:TreatmentRaking 
+#1.1862529                                  0.9924184 
+#HabitatRoadside:TreatmentRaking + Clipping 
+#1.0801331 
 
-exp(ranef(fullmodelFilter)$PopName) 
-exp(ranef(fullmodelFilter)$'PopName/Pop')
-exp(ranef(fullmodelFilter)$'PopName/Pop/DishNum')
+exp(ranef(fullmodelFilter)$Population)
+exp(ranef(fullmodelFilter)$'Population/Pop')
 exp(ranef(fullmodelFilter)$Rep) #Ideally these would be clustered closer; the spread is not ideal and may indicate differences in the incubator based on which shelf the trays of dishes where placed during the experiment.
