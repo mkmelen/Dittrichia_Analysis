@@ -47,14 +47,14 @@ str(dataFilter) #Check that each column has the right class (factor, integer, nu
 
 ##Filter model
 fullmodelFilter<-coxme(Surv(NumDaysAlive,Censor)~ #Response variable: survival data
-                         +Habitat * Treatment #Fixed effects and their interactions.
+                         Habitat * Treatment #Fixed effects and their interactions.
                        +(1 | Site)  #Random effect with random intercept only
                        +(1 | Block), #Data was blocked
-                       data = dataFilter) #Dataframe
+                       data=dataFilter) #Dataframe
 
 summary(fullmodelFilter)
 #ERROR HERE # Error in update.default(formula(object), formula.) : need an object with call component
-Anova(fullmodelFilter,test.statistic = "LR") #Use a type II likelihood ratio test to test your fixed effects
+Anova(fullmodelFilter, test.statistic = "LR") #Use a type II likelihood ratio test to test your fixed effects
 #It is confusing to use Anova here (the capital A is important) because this is not really an anova; R uses this function for lots of different tests of the main variables in your model.
 
 exp(coef(fullmodelFilter)) #This extracts fixed effects?

@@ -14,7 +14,7 @@ library(multcomp)
 #library(ggplot2)
 
 ## Get data
-survdrt <- read.csv("SFcox_drought.csv", stringsAsFactors = T)
+survdrt <- read.csv("example_code/coxme/SFcox_drought.csv.csv",stringsAsFactors = T)
 head(survdrt) #  here you can see the first 6 rows of your dataframe
 str(survdrt) # here you need to make sure that each column has the right class (factor, integer, numeric, etc.)
 
