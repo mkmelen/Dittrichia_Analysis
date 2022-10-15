@@ -13,8 +13,10 @@ library(multcomp)
 #library(survMisc)
 #library(ggplot2)
 
+setwd("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis")
+
 ## Get data
-survdrt <- read.csv("example_code/coxme/SFcox_drought.csv.csv",stringsAsFactors = T)
+survdrt <- read.csv("example_code/coxme/sf_cox_drought.csv",stringsAsFactors = T)
 head(survdrt) #  here you can see the first 6 rows of your dataframe
 str(survdrt) # here you need to make sure that each column has the right class (factor, integer, numeric, etc.)
 

@@ -50,7 +50,7 @@ fullmodelFilter<-coxme(Surv(NumDaysAlive,Censor)~ #Response variable: survival d
                          Habitat * Treatment #Fixed effects and their interactions.
                        +(1 | Site)  #Random effect with random intercept only
                        +(1 | Block), #Data was blocked
-                       data=dataFilter) #Dataframe
+                       dataFilter) #Dataframe
 
 summary(fullmodelFilter)
 #ERROR HERE # Error in update.default(formula(object), formula.) : need an object with call component
