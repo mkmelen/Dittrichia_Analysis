@@ -90,12 +90,7 @@ plot(myDHARMagraph3) #plotting graph
 #?emmeans, emmeans(model, pairwise ~ treatment)
 emmeans(fullmodel3, pairwise ~ Treatment)
 
-####Ploting Successful Model####
-ggplot(data=mydata,aes(x=Treatment,y=Biomass))+geom_boxplot() #plot data from model
+####Plotting Successful Model####
+#ggplot(data=mydata,aes(x=Treatment,y=Biomass))+geom_boxplot() #plot data from original data
 
-ggplot(data=mydata,aes(x=Treatment,y=log(Biomass)))+geom_boxplot() #plot data from model
-
-#Matt thinks next step is to do a pairwise comparison... look at emmeans, also bolkar from Julia?
-
-plot(fullmodel3) #plot residuals
-summary(fullmodel3) #summary of successful model
+ggplot(data=mydata,aes(x=Treatment,y=log(Biomass)))+geom_boxplot() #plot data from log(data)
