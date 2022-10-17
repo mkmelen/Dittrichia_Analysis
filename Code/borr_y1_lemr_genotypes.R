@@ -20,8 +20,8 @@ library(emmeans)
 
 ####Load Data####
 mydata<-read.csv("Data/blue_oak_yr1/blue_oak_competition_datasheet_2021_phenology_survey.csv",stringsAsFactors = T)
-head(mydata)#Let's look at the first 6 rows of the dataframe
-str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
+#head(mydata)#Let's look at the first 6 rows of the dataframe
+#str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
 
 #?lmer #ReadMe for Fit Linear Mixed-Effects Models
 #lmer(formula, data = NULL, REML = TRUE, control = lmerControl(), start = NULL, verbose = 0L, subset, weights, na.action, offset, contrasts = NULL, devFunOnly = FALSE)
@@ -41,39 +41,39 @@ mydata$Site<-as.character(mydata$Site)
 #boundary (singular) fit: see help('isSingular')
 
 ####Model 2####
-fullmodel2<-lmer((Biomass)~ #Response variable: survival data
-                        Habitat * Treatment #Fixed effects and their interactions.
-                      +(1 | Block), #Data was blocked, Random effect with random intercept only: Site is removed because it explains very little of the variance in the model
-                      data = mydata) #Dataframe
+#fullmodel2<-lmer((Biomass)~ #Response variable: survival data
+#                        Habitat * Treatment #Fixed effects and their interactions.
+#                      +(1 | Block), #Data was blocked, Random effect with random intercept only: Site is removed because it explains very little of the variance in the model
+#                      data = mydata) #Dataframe
 
 # To get p-values, run an Anova
-Anova(fullmodel2)
+#Anova(fullmodel2)
 
 # Look at the residuals using the DHARMa package
-qqnorm(resid(fullmodel2)) #qqplot
-qqline(resid(fullmodel2)) #add the line
-testDispersion(fullmodel2) #red line should be in the middle of the distribution
-myDHARMagraph <- simulateResiduals(fullmodel2) #making a graph using DHARMa package
-plot(myDHARMagraph) #plotting graph
+#qqnorm(resid(fullmodel2)) #qqplot
+#qqline(resid(fullmodel2)) #add the line
+#testDispersion(fullmodel2) #red line should be in the middle of the distribution
+#myDHARMagraph <- simulateResiduals(fullmodel2) #making a graph using DHARMa package
+#plot(myDHARMagraph) #plotting graph
 
 #Log transform data because the qqplot is poor (https://www.statology.org/transform-data-in-r/)
-mydata.Log<-log10(mydata$Biomass)
-hist(mydata$Biomass, col='steelblue', main='Original') #Original data
-shapiro.test(mydata$Biomass)
+#mydata.Log<-log10(mydata$Biomass)
+#hist(mydata$Biomass, col='steelblue', main='Original') #Original data
+#shapiro.test(mydata$Biomass)
 #Shapiro-Wilk normality test
 #data:  mydata$Biomass
 #W = 0.50901, p-value < 2.2e-16
 
-hist(mydata.Log, col='coral2', main='Log Transformed') #Log transformed data
-shapiro.test(mydata.Log)
+#hist(mydata.Log, col='coral2', main='Log Transformed') #Log transformed data
+#shapiro.test(mydata.Log)
 #Shapiro-Wilk normality test
 #data:  mydata.Log
 #W = 0.95322, p-value = 1.428e-10
 
-mydata2<-mutate(mydata,Biomass.Log=log10(Biomass))
-print(mydata2)
-
 ####Model 3####
+mydata2<-mutate(mydata,Biomass.Log=log10(Biomass))
+#print(mydata2)
+
 fullmodel3<-lmer(log(Biomass)~ #Response variable: survival data
                    Habitat * Treatment #Fixed effects and their interactions.
                  +(1 | Block), #Data was blocked, Random effect with random intercept only: Site is removed because it explains very little of the variance in the model
