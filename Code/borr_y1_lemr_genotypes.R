@@ -31,7 +31,6 @@ mydata<-read.csv("Data/blue_oak_yr1/blue_oak_competition_datasheet_2021_phenolog
 mydata$Site<-as.character(mydata$Site)
 
 ####Model 1####
-##Filter model
 #fullmodel1<-lmer((Biomass)~ #Response variable: survival data
 #                         Habitat * Treatment #Fixed effects and their interactions.
 #                       +(1 | Site) #Random effect with random intercept only
@@ -90,7 +89,7 @@ plot(myDHARMagraph3) #plotting graph
 #?emmeans, emmeans(model, pairwise ~ treatment)
 emmeans(fullmodel3, pairwise ~ Treatment)
 
-####Plotting Successful Model####
+####Plotting Successful Model###
 #ggplot(data=mydata,aes(x=Treatment,y=Biomass))+geom_boxplot() #plot data from original data
 
 ggplot(data=mydata,aes(x=Treatment,y=log(Biomass)))+geom_boxplot() #plot data from log(data)
