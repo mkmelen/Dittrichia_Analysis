@@ -1,21 +1,21 @@
-#### Linear Mixed-Effects Models ####
+#### Linear Mixed-Effects Models - Biomass and Habitat ####
 #Dittrichia Project
 #October 2022
 #Miranda Melen
 
-#This code uses biomass data with Habitat (roadside and off-road) and Treatment in a lmer model. Anova and Tukey tests are used on the successful Model3 with the creation of a box plot as a finished product.
+#This code uses Biomass data with Habitat (roadside and off-road) and Treatment in a lmer model. Anova and Tukey tests are used on the successful Model3 with the creation of a box plot as a finished product.
 
 #Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and off-road; R or O)
 
 ####Install Libraries ####
-#Install Packages for Analysis
 #install.packages("lme4")
 #install.packages("lmerTest")
+#install.packages("DHARMa")
+#install.packages("dplyr")
 #install.packages("emmeans")
 #install.packages("AICcmodavg")
 
 ####Load Libraries####
-#Load Libraries for Analysis
 library(lme4)
 library(lmerTest)
 library(DHARMa)
@@ -132,7 +132,7 @@ plot(myDHARMagraph3.1) #plotting graph
 #?emmeans, emmeans(model, pairwise ~ treatment)
 emmeans(fullmodel3, pairwise ~ Treatment)
 emmeans(fullmodel3.1, pairwise ~ Treatment)
-#These models result in similar Tukey outcomes
+#These models result in similar Tukey outcomes, we'll see what Nicky has to say about next steps!
 
 ####Plotting Successful Model###
 ggplot(data=mydata,aes(x=Treatment,y=log(Biomass)))+geom_boxplot() #plot data from log(data)
