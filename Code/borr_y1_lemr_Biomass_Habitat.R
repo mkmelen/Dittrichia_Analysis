@@ -78,14 +78,14 @@ fullmodel3<-lmer(log(Biomass)~Habitat*Treatment+(1|Block),data=mydata)
 summary(fullmodel3)
 Anova(fullmodel3)
 
-#When we compare the model summaries and Anova of Models 2 & 3, we see that the removal of Site doesn't impact the model. Therefore the more simple Model 3 is a better choice. But let's keep checking...
-
 #Now we'll look at the QQ plots and the residuals using DHARMa
 qqnorm(resid(fullmodel3)) #qqplot
 qqline(resid(fullmodel3)) #add the line
 testDispersion(fullmodel3) #red line should be in the middle of the distribution
 myDHARMagraph3<-simulateResiduals(fullmodel3) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
 plot(myDHARMagraph3) #plotting graph. At this point, you don't want any text or lines to be red.
+
+#When we compare the model summaries and Anova of Models 2 & 3, we see that the removal of Site doesn't impact the model. Therefore the more simple Model 3 is a better choice. But let's keep checking...
 
 ###Compare AICs####
 #Now I need to compare the AIC scores for all the models to tell me which is the better model (but it will not say which fits my data better, that is why I did all the DHARMa stuff)
