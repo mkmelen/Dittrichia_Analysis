@@ -15,7 +15,6 @@
 #install.packages("DHARMa")
 #install.packages("dplyr")
 #install.packages("emmeans")
-#install.packages("AICcmodavg")
 #install.packages('TMB', type = 'source')
 #install.packages("glmmTMB")
 #install.packages("ggplot2")
@@ -26,7 +25,6 @@ library(lmerTest)
 library(DHARMa)
 library(dplyr)
 library(emmeans)
-library(AICcmodavg)
 library(TMB)
 library(glmmTMB)
 library(ggplot2)
@@ -72,14 +70,14 @@ fullmodel1<-lmer(sqrt(Rate)~Habitat*Treatment+(1|Site)+(1|Block),data=mydata)
 isSingular(fullmodel1,tol=1e-4) #=True
 #boundary (singular) fit: see help('isSingular')
 summary(fullmodel1) #Variance explained by Site = 0.000
-Anova(fullmodel1)
+anova(fullmodel1)
 #Site as a random effect does not explain any of the variance in the model, therefore let's try Site as a fixed effect to see if it adds to the model.
 
 ####Model 2####
 #Modeling Site as a fixed  effect
 fullmodel2<-lmer(log(Rate)~Habitat*Treatment+Site+(1|Block),data=mydata)
 summary(fullmodel2) #As a fixed effect, one of the Sites (Lex) is significant.
-Anova(fullmodel2)
+anova(fullmodel2)
 #Site as a fixed effect accounts for 3% of the variance
 
 #Now we'll look at the QQ plots and the residuals using DHARMa

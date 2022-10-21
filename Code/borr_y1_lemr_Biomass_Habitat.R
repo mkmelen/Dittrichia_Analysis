@@ -64,14 +64,14 @@ fullmodel1<-lmer(log(Biomass)~Habitat*Treatment+(1|Site)+(1|Block),data=mydata)
 isSingular(fullmodel1,tol=1e-4) #=True
 #boundary (singular) fit: see help('isSingular')
 summary(fullmodel1) #Variance explained by Site = 0.000
-Anova(fullmodel1)
+anova(fullmodel1)
 #Site as a random effect does not explain any of the variance in the model, therefore let's try Site as a fixed effect to demonstrate that it doesn't add to the model.
 
 ####Model 2####
 #Modeling Site as a fixed  effect
 fullmodel2<-lmer(log(Biomass)~Habitat*Treatment+Site+(1|Block),data=mydata)
 summary(fullmodel2)
-Anova(fullmodel2)
+anova(fullmodel2)
 #Site as a fixed effect is not significant, therefore it should not be used as a fixed effect in addition to it not being used as a random effect.
 
 ####Model 3####
@@ -115,7 +115,7 @@ aictab(cand.set=models,modnames=mod.names)
 
 fullmodel3.1<-lmer(log(Biomass)~Treatment+(1|Block),data=mydata)
 summary(fullmodel3.1)
-Anova(fullmodel3.1)
+anova(fullmodel3.1)
 qqnorm(resid(fullmodel3.1)) #qqplot
 qqline(resid(fullmodel3.1)) #add the line
 testDispersion(fullmodel3.1) #red line should be in the middle of the distribution
@@ -124,7 +124,7 @@ plot(myDHARMagraph3.1) #plotting graph
 
 fullmodel3.2<-lmer(log(Biomass)~Treatment+(1|Block)+(1|Population),data=mydata)
 summary(fullmodel3.2)
-Anova(fullmodel3.2)
+anova(fullmodel3.2)
 qqnorm(resid(fullmodel3.2)) #qqplot
 qqline(resid(fullmodel3.2)) #add the line
 testDispersion(fullmodel3.2) #red line should be in the middle of the distribution
