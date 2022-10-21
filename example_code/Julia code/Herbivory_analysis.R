@@ -9,6 +9,8 @@ library("tidyverse")
 library("MASS") #does not work with dplyr select because also has a select function!
 library("dplyr")
 library("lme4")
+library("brms")
+library("lmerTest")
 library("car")
 library("ggplot2")
 library("patchwork")
@@ -114,6 +116,7 @@ Wherb_full <- Wherb22 %>%
 # binomial regression 
 bin_reg <- glm(Wherb_full$pa ~ Wherb_full$spp + Wherb_full$year, family = "binomial")
 summary(bin_reg)
+
 # year and species are significant predictors of the presence of herbivory at a < 0.00001 level
 # because you use a binomial distribution, you should check if there is no 
 # over or under-dispersion in your model. This can be tested with the package DHARMA. 
@@ -455,41 +458,45 @@ singleSP <- rbind(singleSPalle, singleSPvill)
 
 # removing 0s (8 from alle, 9 from vill) (common in insect behavior to get 0s that are thrown out unless different between treatments)
 singleSP.no0 <- singleSP[singleSP$mm2.eaten != 0,]
-hist(singleSP.no0$mm2.eaten)
+hist(singleSP.no0$mm2.eaten) # clearly not normal, closer to poisson...?
 
 # looking at the fit of different distributions using QQ plots - hist looks like poisson, is a sort of count: number of mm eaten. 
 qqp(singleSP.no0$mm2.eaten, "norm")
-qqp(singleSP.no0$mm2.eaten, "lnorm") # okay fit 
+qqp(singleSP.no0$mm2.eaten, "lnorm") # looks like probably the best fit 
 MASS::fitdistr(singleSP.no0$mm2.eaten,"Poisson")
 qqPlot(singleSP.no0$mm2.eaten, distribution = "pois",lambda = 2) # okay fit 
 
-# regression model - gaussian
-gBPT  <- glmer(mm2.eaten ~ trial.species + (1 | species.found.on) + (1 | date), 
-              data = singleSP.no0, 
-              family = gaussian(link = "log"))  
+# regression model - log transformed response
+singleSP.no0$log_mm2.eaten <- log(singleSP.no0$mm2.eaten)
+gBPT  <- lme(log_mm2.eaten ~ trial.species, random = list(species.found.on = ~ 1, date = ~1), data = singleSP.no0)  
 summary(gBPT)
 
-# regression model - poisson ## THIS IS THE BEST FIT MODEL ##
+# regression model - poisson 
 pBPT  <- glmer(mm2.eaten ~ trial.species + (1 | species.found.on) + (1 | date), 
                data = singleSP.no0, 
-               family = poisson(link = "log"))  
+               family = poisson)  
 summary(pBPT)
 
 # evaluating model assumptions
 # compare residuals
+# log transformed
 qqnorm(resid(gBPT)) 
 qqline(resid(gBPT))
-
-qqnorm(resid(pBPT)) # much better fit than lognormal
+# poisson
+qqnorm(resid(pBPT)) 
 qqline(resid(pBPT))
+# one not clearly better than the other
 
 # looking for over/under dispersion
+# log transformed
 gsimOut <- simulateResiduals(gBPT)
-plot(gsimOut) # dispersion looks okay but KS test indicates wrong distribution and w/n group deviation from normality
-
+plot(gsimOut) # looks good
+# poisson
 psimOut <- simulateResiduals(pBPT)
-plot(psimOut) # looks fine all around! much better fit than normal distribution
-testDispersion(psimOut) # dispersion = 0.26672, p-value = 0.704
+plot(psimOut) # no red flags but doesn't fit as well as log transformed
+testDispersion(psimOut) # p-value = 0.872
+
+# both don't set off warnings, but log transformed looks better.
 
 ### old - AIC comparison method #####
 # # simplest model for AIC comparison; no random variables 
@@ -539,87 +546,162 @@ testDispersion(psimOut) # dispersion = 0.26672, p-value = 0.704
 
 ### Beetle trials: choice ----------------------------------------------------------------------
 btd <- read.csv("beetle_trials.csv", header = TRUE) # importing beetle trial data
+btd[2,1] <- 'laev'# correcting after ID confirmation
+btd[7,1] <- 'guan'# correcting after ID confirmation
+aOvBT <- btd[btd$Species.in.trial =="alle/vill",] # subsetting rows with alle and vill together as trial
+aOvBT$vill.mm2eaten <- as.numeric(aOvBT$vill.mm2eaten) # converting character to numeric
+aOvBT$alle.mm2eaten <- as.numeric(aOvBT$alle.mm2eaten)
+# remove trials in which beetles did not eat either spp
+aOvBT.no.0 <- aOvBT[,1:6] %>% filter(!(vill.mm2eaten == 0 & alle.mm2eaten == 0))
 
 # convert to long format for analysis
-aOvBT.no.0$trial <- 1:40
+aOvBT.no.0$beetleID <- 1:40 # assign each trial (each beetle) an ID before splitting each trial into two rows (one for each species) 
 aOvBT.no.0 <- aOvBT.no.0 %>% 
   pivot_longer(cols = c(vill.mm2eaten, alle.mm2eaten),
                names_to = "trial.spp",
                values_to = "mm2eaten")
 
 # look at distribution of response
-hist(aOvBT.no.0$mm2eaten) # likely 0 inflated poisson
+hist(aOvBT.no.0$mm2eaten) # likely 0 inflated poisson or 0 inflated lognormal
+qqp(aOvBT.no.0$mm2eaten, "norm") # BAD
+qqp((aOvBT.no.0$mm2eaten+1), "lnorm") # added one to log transform data with 0s, looks 0 inflated but otherwise fine
 
-# regression model
-BCT  <- glmer(mm2eaten ~  trial.spp +
-                (1 | trial) + 
-                (1 | date) , 
-              data = aOvBT.no.0, 
-              family= poisson(link = "log"))  
-summary(BCT)
+# regression model - log transformed response + 1
+#  final model zero inflated below
+lnBCT  <- lmer(log(mm2eaten+1) ~  trial.spp +
+                (1 | date),
+              data = aOvBT.no.0)
+summary(lnBCT)
+# beetleID can't be included as a different beetle was used in each trial 
+
+# # regression model -poisson distribution 
+# # log transformed is better fit
+# pBCT  <- glmer(mm2eaten ~  trial.spp +
+#                 (1 | beetleID) + 
+#                 (1 | date) , 
+#               data = aOvBT.no.0, 
+#               family= poisson)  
+# summary(pBCT)
+
 # year and species on which the beetle was found are excluded 
 # as random effects due to extremely low variance explained 
 # causing a singular fit when included
 
-# evaluating model assumptions
-# check residualsxw
-qqnorm(resid(BCT)) 
-qqline(resid(BCT)) # not bad
-# looking for over/under dispersion
-simOut <- simulateResiduals(BCT)
-plot(simOut) # dispersion looks good
-testDispersion(simOut) # dispersion = 1.1627, p-value = 0.544
-testZeroInflation(simOut) # zero inflated: ratioObsSim = 2.8004, p-value < 2.2e-16
+# # evaluating model assumptions
+# # check residuals
+# qqnorm(resid(lnBCT)) 
+# qqline(resid(lnBCT))
+# 
+# qqnorm(resid(pBCT)) 
+# qqline(resid(pBCT)) # maybe slightly better than log transformed
 
-# Fitting zero inflated model
+# # looking for over/under dispersion
+# lnsimOut <- simulateResiduals(lnBCT)
+# plot(lnsimOut) # better fit than poisson
+# 
+# psimOut <- simulateResiduals(pBCT)
+# plot(psimOut) # significant KS test
+
+# testDispersion(psimOut) # dispersion = 1.1627, p-value = 0.544
+# testZeroInflation(lnsimOut) # zero inflated: ratioObsSim = 2.8004, p-value < 2.2e-16
+
+# Fitting zero inflated model 
+#THIS IS THE FINAL/BEST MODEL, gaussian fails KS test in DHARMa and can't do lognormal bc of 0s
 library("glmmTMB")
-ziBCT <- glmmTMB(mm2eaten ~  trial.spp +
-                   (1 | trial) + 
+ziBCT <- glmmTMB(log(mm2eaten+1) ~  trial.spp +
                    (1 | date), 
                  ziformula = ~1 , 
-                 family = "poisson", 
+                 family = "gaussian", 
                  data = aOvBT.no.0)
+
 summary(ziBCT)
+
+# looking at a zero inflated beta 
+aOvBT.no.0$per_eaten <- aOvBT.no.0$mm2eaten/22500
+
+betaBCT <- glmmTMB(per_eaten ~  trial.spp +
+                   (1 | date), 
+                 ziformula = ~1 , 
+                 family=beta_family(), 
+                 data = aOvBT.no.0)
+
+summary(betaBCT)
 # exp(0.3626) = 1.437061 ; so I think this means an average of 1.4 more mm2 eaten on vill...?
+
+emmeans(betaBCT,  ~ trial.spp) 
 
 # evaluating model assumptions
 # check residuals
 plot(fitted(ziBCT), resid(ziBCT)) # characteristic fan of poisson glm
 abline(h=0)
 # looking for over/under dispersion
-simOut <- simulateResiduals(ziBCT)
-plot(simOut) # looks much better than non-zero inflated
+simOut <- simulateResiduals(betaBCT)
+plot(simOut) # looks good! No more distribution test or uniformity problems! 
 testDispersion(simOut) # dispersion = 0.87998, p-value = 0.872
 testZeroInflation(simOut) # no longer zero inflated: ratioObsSim = 0.97674, p-value = 1
 
-# peaking at a paired t-test ignoring random effects from date
-aOvBT <- btd[btd$Species.in.trial =="alle/vill",] # subsetting rows with alle and vill together as trial
-aOvBT$vill.mm2eaten <- as.numeric(aOvBT$vill.mm2eaten)
-aOvBT$alle.mm2eaten <- as.numeric(aOvBT$alle.mm2eaten)
+## Trying a bayesian version:
 
-# remove trials in which beetles did not eat 
-aOvBT.no.0 <- aOvBT[,1:6] %>% filter(!(vill.mm2eaten == 0 & alle.mm2eaten == 0))
+# First, convert to % of leaf square eaten to fit a beta distribution (this is probably what I should do anyway... even if I stick with traditional stats )
+# leaf squares were 1.5 cm squared, so 22500mm2 
+aOvBT.no.0$per_eaten <- aOvBT.no.0$mm2eaten/22500
+hist(aOvBT.no.0$per_eaten)
+hist(log(aOvBT.no.0$per_eaten+0.000001))
 
-# assessing whether difference is normally distributed for use of paired t-test
-shapiro.test(aOvBT.no.0$vill.mm2eaten-aOvBT.no.0$alle.mm2eaten) # p-value = 0.02551
-hist(aOvBT.no.0$vill.mm2eaten-aOvBT.no.0$alle.mm2eaten)
-qqp(aOvBT.no.0$vill.mm2eaten-aOvBT.no.0$alle.mm2eaten, "norm")
+bayesWH <- brm(per_eaten ~  trial.spp +
+                   (1 | date), 
+                 family = zero_inflated_beta(), 
+                 data = aOvBT.no.0,
+               control = list(adapt_delta = 0.95))
+pairs(bayesWH)
+summary(bayesWH)
 
-# t-test
-t.test(aOvBT.no.0$vill.mm2eaten, aOvBT.no.0$alle.mm2eaten, paired = T) # barely significant if two sided (0.04102), significant if "less", aka less on alle than vill (0.0205)
-# Cohen's D
-library("lsr")
-cohensD(aOvBT.no.0$vill.mm2eaten, aOvBT.no.0$alle.mm2eaten, method = "paired")
+## peaking at a paired t-test ignoring random effects from date
+# # assessing whether difference is normally distributed for use of paired t-test
+# aOvBT.no.0 <- aOvBT[,1:6] %>% filter(!(vill.mm2eaten == 0 & alle.mm2eaten == 0))
+# shapiro.test(aOvBT.no.0$vill.mm2eaten-aOvBT.no.0$alle.mm2eaten) # p-value = 0.02551
+# hist(aOvBT.no.0$vill.mm2eaten-aOvBT.no.0$alle.mm2eaten)
+# qqp(aOvBT.no.0$vill.mm2eaten-aOvBT.no.0$alle.mm2eaten, "norm")
+# 
+# # t-test
+# t.test(aOvBT.no.0$vill.mm2eaten, aOvBT.no.0$alle.mm2eaten, paired = T) # barely significant if two sided (0.04102), significant if "less", aka less on alle than vill (0.0205)
+# wilcox.test(aOvBT.no.0$vill.mm2eaten, aOvBT.no.0$alle.mm2eaten, alternative = "greater", paired = T)
+# # Cohen's D (measure of effect size)
+# library("lsr")
+# cohensD(aOvBT.no.0$vill.mm2eaten, aOvBT.no.0$alle.mm2eaten, method = "paired")
 
 #### Feeding trial plotting ----------------------------------------------------------------------
-# reshape choice data long
-aOvBT_long <- aOvBT.no.0 %>% 
-  pivot_longer(cols = c(alle.mm2eaten, vill.mm2eaten),
-               names_to = "species",
-               values_to = "mm2eaten") 
+btd <- read.csv("beetle_trials.csv", header = TRUE) # importing beetle trial data
+btd[2,1] <- 'laev'# correcting after ID confirmation
+btd[7,1] <- 'guan'# correcting after ID confirmation
+## palatability trial data
+alleBT <- btd[btd$Species.in.trial =="alle",] # subsetting rows with alle as trial
+villBT <- btd[btd$Species.in.trial =="vill",] # subsetting rows with vill as trial
+alleBT$alle.mm2eaten <- as.numeric(as.character(alleBT$alle.mm2eaten))
+villBT$vill.mm2eaten <- as.numeric(as.character(villBT$vill.mm2eaten))
+# Reshaping the dataset
+singleSPalle <- data.frame(alleBT$Species.found.on, alleBT$Species.in.trial, alleBT$alle.mm2eaten, alleBT$date)
+names(singleSPalle) <- c("species.found.on", "trial.species", "mm2.eaten", "date")
+singleSPvill <- data.frame(villBT$Species.found.on, villBT$Species.in.trial, villBT$vill.mm2eaten, villBT$date)
+names(singleSPvill) <- c("species.found.on", "trial.species", "mm2.eaten", "date")
+singleSP <- rbind(singleSPalle, singleSPvill)
+# removing 0s (8 from alle, 9 from vill) (common in insect behavior to get 0s that are thrown out unless different between treatments)
+singleSP.no0 <- singleSP[singleSP$mm2.eaten != 0,]
 
+## choice trial data
+aOvBT <- btd[btd$Species.in.trial =="alle/vill",] # subsetting rows with alle and vill together as trial
+aOvBT$vill.mm2eaten <- as.numeric(aOvBT$vill.mm2eaten) # converting character to numeric
+aOvBT$alle.mm2eaten <- as.numeric(aOvBT$alle.mm2eaten)
+# remove trials in which beetles did not eat either spp
+aOvBT.no.0 <- aOvBT[,1:6] %>% filter(!(vill.mm2eaten == 0 & alle.mm2eaten == 0))
+# convert to long format
+aOvBT.no.0$beetleID <- 1:40 # assign each trial (each beetle) an ID before splitting each trial into two rows (one for each species) 
+aOvBT.no.0 <- aOvBT.no.0 %>% 
+  pivot_longer(cols = c(vill.mm2eaten, alle.mm2eaten),
+               names_to = "trial.spp",
+               values_to = "mm2eaten")
 # remove '.mm2eaten' from species column
-aOvBT_long$species <- substr(aOvBT_long$species, 1, 4) 
+aOvBT.no.0$trial.spp <- substr(aOvBT.no.0$trial.spp, 1, 4) 
 
 #simple box plot of palatability data, shows potential for slight trend towards more vill herbivory.
 palatability <- ggplot(singleSP.no0, aes(trial.species, mm2.eaten)) + 
@@ -639,8 +721,8 @@ palatability <- ggplot(singleSP.no0, aes(trial.species, mm2.eaten)) +
 # ggsave("beetle_palatability_plot.png", device = "png", width = 5, height = 6, units = "cm")
 
 # box plot of choice data 
-choice <- ggplot(aOvBT_long, aes(species, mm2eaten)) + 
-  geom_boxplot(aes(fill = species)) + 
+choice <- ggplot(aOvBT.no.0, aes(trial.spp, mm2eaten)) + 
+  geom_boxplot(aes(fill = trial.spp)) + 
   scale_fill_manual(values = c("#cc79a7", "#f0e442"), name = "Species",
                     labels=c("alle" = expression(italic("C. allenii")),
                              "vill" = expression(italic("C. villosissimus")))) +

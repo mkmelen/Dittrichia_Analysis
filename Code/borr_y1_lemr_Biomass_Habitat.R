@@ -14,6 +14,7 @@
 #install.packages("dplyr")
 #install.packages("emmeans")
 #install.packages("AICcmodavg")
+#install.packages("ggplot2")
 
 ####Load Libraries####
 library(lme4)
@@ -22,6 +23,7 @@ library(DHARMa)
 library(dplyr)
 library(emmeans)
 library(AICcmodavg)
+library(ggplot2)
 
 ####Load Data####
 setwd("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis")
@@ -41,7 +43,7 @@ shapiro.test(mydata$Biomass)
 
 #Log transform data (https://www.statology.org/transform-data-in-r/)
 mydata.Log<-log10(mydata$Biomass)
-hist(mydata.Log,col='coral2',main='Log Transformed') #Log transformed data, this looks better than the orginal distribution
+hist(mydata.Log,col='coral2',main='Log Transformed') #Log transformed data, this looks better than the original distribution
 shapiro.test(mydata.Log)
 #Shapiro-Wilk normality test
 #data:  mydata.Log
