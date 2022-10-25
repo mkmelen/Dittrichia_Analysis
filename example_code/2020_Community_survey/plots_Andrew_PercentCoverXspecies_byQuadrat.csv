@@ -1,0 +1,91 @@
+﻿Code,Site,Type,Quadrat,nr_species,%dittrichia
+SCV Water District_Non-roadside,SCV Water District,Offroad,1,6,3
+SCV Water District_Non-roadside,SCV Water District,Offroad,2,6,2
+SCV Water District_Non-roadside,SCV Water District,Offroad,3,6,1
+SCV Water District_Roadside,SCV Water District,Road,1,12,2
+SCV Water District_Roadside,SCV Water District,Road,2,12,0
+SCV Water District_Roadside,SCV Water District,Road,3,12,20
+Baylands Park_Non-roadside,Baylands Park,Offroad,1,7,2
+Baylands Park_Non-roadside,Baylands Park,Offroad,2,7,2
+Baylands Park_Non-roadside,Baylands Park,Offroad,3,7,2
+Baylands Park_Roadside,Baylands Park,Road,1,10,0
+Baylands Park_Roadside,Baylands Park,Road,2,10,0
+Baylands Park_Roadside,Baylands Park,Road,3,10,0
+Lake Cunningham park_Non-roadside,Lake Cunningham Park,Offroad,1,9,7
+Lake Cunningham park_Non-roadside,Lake Cunningham Park,Offroad,2,9,3
+Lake Cunningham park_Non-roadside,Lake Cunningham Park,Offroad,3,9,10
+Lake Cunningham park_Roadside,Lake Cunningham Park,Road,1,6,0
+Lake Cunningham park_Roadside,Lake Cunningham Park,Road,2,6,15
+Lake Cunningham park_Roadside,Lake Cunningham Park,Road,3,6,12
+South San Jose VTA_Non-roadside,South San Jose VTA,Offroad,1,9,20
+South San Jose VTA_Non-roadside,South San Jose VTA,Offroad,2,9,7
+South San Jose VTA_Non-roadside,South San Jose VTA,Offroad,3,9,5
+South San Jose VTA_Roadside,South San Jose VTA,Road,1,4,0
+South San Jose VTA_Roadside,South San Jose VTA,Road,2,4,5
+South San Jose VTA_Roadside,South San Jose VTA,Road,3,4,1
+Coyote creek field_Non-roadside,Coyote Creek Field,Offroad,1,10,65
+Coyote creek field_Non-roadside,Coyote Creek Field,Offroad,2,10,40
+Coyote creek field_Non-roadside,Coyote Creek Field,Offroad,3,10,15
+Coyote creek field_Roadside,Coyote Creek Field,Road,1,5,20
+Coyote creek field_Roadside,Coyote Creek Field,Road,2,5,0
+Coyote creek field_Roadside,Coyote Creek Field,Road,3,5,1
+Alviso Bay trail_Non-roadside,Alviso Bay Trail,Offroad,1,13,95
+Alviso Bay trail_Non-roadside,Alviso Bay Trail,Offroad,2,13,20
+Alviso Bay trail_Non-roadside,Alviso Bay Trail,Offroad,3,13,13
+Alviso Bay trail_Roadside,Alviso Bay Trail,Road,1,19,0
+Alviso Bay trail_Roadside,Alviso Bay Trail,Road,2,19,0
+Alviso Bay trail_Roadside,Alviso Bay Trail,Road,3,19,6
+Calero reservoir_Non-roadside,Calero Reservoir,Offroad,1,10,32
+Calero reservoir_Non-roadside,Calero Reservoir,Offroad,2,10,18
+Calero reservoir_Non-roadside,Calero Reservoir,Offroad,3,10,27
+Calero reservoir_Roadside,Calero Reservoir,Road,1,9,13
+Calero reservoir_Roadside,Calero Reservoir,Road,2,9,15
+Calero reservoir_Roadside,Calero Reservoir,Road,3,9,8
+Campbell percolation ponds_Non-roadside,Campbell Percolation Ponds,Offroad,1,14,0
+Campbell percolation ponds_Non-roadside,Campbell Percolation Ponds,Offroad,2,14,5
+Campbell percolation ponds_Non-roadside,Campbell Percolation Ponds,Offroad,3,14,45
+Campbell percolation ponds_Roadside,Campbell Percolation Ponds,Road,1,15,0
+Campbell percolation ponds_Roadside,Campbell Percolation Ponds,Road,2,15,1
+Campbell percolation ponds_Roadside,Campbell Percolation Ponds,Road,3,15,3
+Lexington reservoir_Non-roadside,Lexington Reservoir,Offroad,1,24,0
+Lexington reservoir_Non-roadside,Lexington Reservoir,Offroad,2,24,20
+Lexington reservoir_Non-roadside,Lexington Reservoir,Offroad,3,24,18
+Lexington reservoir_Roadside,Lexington Reservoir,Road,1,10,3
+Lexington reservoir_Roadside,Lexington Reservoir,Road,2,10,5
+Lexington reservoir_Roadside,Lexington Reservoir,Road,3,10,4
+Metcalf ponds_Non-roadside,Metcalf Ponds,Offroad,1,13,30
+Metcalf ponds_Non-roadside,Metcalf Ponds,Offroad,2,13,2
+Metcalf ponds_Non-roadside,Metcalf Ponds,Offroad,3,13,11
+Metcalf ponds_Roadside,Metcalf Ponds,Road,1,8,3
+Metcalf ponds_Roadside,Metcalf Ponds,Road,2,8,5
+Metcalf ponds_Roadside,Metcalf Ponds,Road,3,8,0
+Penitencia creek_Non-roadside,Penitencia Creek,Offroad,1,10,52
+Penitencia creek_Non-roadside,Penitencia Creek,Offroad,2,10,30
+Penitencia creek_Non-roadside,Penitencia Creek,Offroad,3,10,27
+Penitencia creek_Roadside,Penitencia Creek,Road,1,10,1
+Penitencia creek_Roadside,Penitencia Creek,Road,2,10,5
+Penitencia creek_Roadside,Penitencia Creek,Road,3,10,3
+Parkway lakes RV_Non-roadside,Parkway Lakes RV,Offroad,1,17,2
+Parkway lakes RV_Non-roadside,Parkway Lakes RV,Offroad,2,17,6
+Parkway lakes RV_Non-roadside,Parkway Lakes RV,Offroad,3,17,1
+Parkway lakes RV_Roadside,Parkway Lakes RV,Road,1,11,3
+Parkway lakes RV_Roadside,Parkway Lakes RV,Road,2,11,2
+Parkway lakes RV_Roadside,Parkway Lakes RV,Road,3,11,8
+Chesboro reservoir_Non-roadside,Chesboro Reservoir,Offroad,1,28,13
+Chesboro reservoir_Non-roadside,Chesboro Reservoir,Offroad,2,28,22
+Chesboro reservoir_Non-roadside,Chesboro Reservoir,Offroad,3,28,7
+Chesboro reservoir_Roadside,Chesboro Reservoir,Road,1,15,0
+Chesboro reservoir_Roadside,Chesboro Reservoir,Road,2,15,2
+Chesboro reservoir_Roadside,Chesboro Reservoir,Road,3,15,8
+Oakridge pond_Non-roadside,Oakridge Pond,Offroad,1,9,8
+Oakridge pond_Non-roadside,Oakridge Pond,Offroad,2,9,4
+Oakridge pond_Non-roadside,Oakridge Pond,Offroad,3,9,30
+Oakridge pond_Roadside,Oakridge Pond,Road,1,6,0
+Oakridge pond_Roadside,Oakridge Pond,Road,2,6,23
+Oakridge pond_Roadside,Oakridge Pond,Road,3,6,1
+Guadalupe reservoir_Non-roadside,Guadalupe Reservoir,Offroad,1,27,39
+Guadalupe reservoir_Non-roadside,Guadalupe Reservoir,Offroad,2,27,53
+Guadalupe reservoir_Non-roadside,Guadalupe Reservoir,Offroad,3,27,50
+Guadalupe reservoir_Roadside,Guadalupe Reservoir,Road,1,10,5
+Guadalupe reservoir_Roadside,Guadalupe Reservoir,Road,2,10,0
+Guadalupe reservoir_Roadside,Guadalupe Reservoir,Road,3,10,7

@@ -1,0 +1,31 @@
+﻿plot,plot_type,alpha
+SCV_Water_District_Non-roadside,Offroad,6
+SCV_Water_District_Roadside,Road,12
+Baylands_Park_Non-roadside,Offroad,7
+Baylands_Park_Roadside,Road,10
+Lake_Cunningham_park_Non-roadside,Offroad,9
+Lake_Cunningham_park_Roadside,Road,6
+South_San_Jose_VTA_Non-roadside,Offroad,9
+South_San_Jose_VTA_Roadside,Road,4
+Coyote_creek_field_Non-roadside,Offroad,10
+Coyote_creek_field_Roadside,Road,5
+Alviso_Bay_trail_Non-roadside,Offroad,13
+Alviso_Bay_trail_Roadside,Road,19
+Calero_reservoir_Non-roadside,Offroad,10
+Calero_reservoir_Roadside,Road,9
+Campbell_percolation_ponds_Non-roadside,Offroad,14
+Campbell_percolation_ponds_Roadside,Road,15
+Lexington_reservoir_Non-roadside,Offroad,24
+Lexington_reservoir_Roadside,Road,10
+Metcalf_ponds_Non-roadside,Offroad,13
+Metcalf_ponds_Roadside,Road,8
+Penitencia_creek_Non-roadside,Offroad,10
+Penitencia_creek_Roadside,Road,10
+Parkway_lakes RV_Non-roadside,Offroad,17
+Parkway_lakes RV_Roadside,Road,11
+Chesboro_reservoir _Non-roadside,Offroad,28
+Chesboro_reservoir _Roadside,Road,15
+Oakridge_pond_Non-roadside,Offroad,9
+Oakridge_pond_Roadside,Road,6
+Guadalupe_reservoir_Non-roadside,Offroad,27
+Guadalupe_reservoir_Roadside,Road,10

@@ -1,0 +1,114 @@
+﻿New Table( "plots_Andrew_popSizeXavgCover",
+	Add Rows( 30 ),
+	New Script(
+		"Source",
+		Open(
+			"/Users/Miranda/Documents/Education/R Directory/DIGR/2020_Community_survey/plots_Andrew_popSizeXavgCover.csv",
+			columns(
+				New Column( "Type", Character, "Nominal" ),
+				New Column( "Location", Character, "Nominal" ),
+				New Column( "Pop_size",
+					Numeric,
+					"Continuous",
+					Format( "Best", 12 )
+				),
+				New Column( "%Dittrichia",
+					Numeric,
+					"Continuous",
+					Format( "Best", 12 )
+				)
+			),
+			Import Settings(
+				End Of Line( CRLF, CR, LF ),
+				End Of Field( Comma, CSV( 1 ) ),
+				Strip Quotes( 1 ),
+				Use Apostrophe as Quotation Mark( 0 ),
+				Use Regional Settings( 0 ),
+				Scan Whole File( 1 ),
+				Treat empty columns as numeric( 0 ),
+				CompressNumericColumns( 0 ),
+				CompressCharacterColumns( 0 ),
+				CompressAllowListCheck( 0 ),
+				Labels( 1 ),
+				Column Names Start( 1 ),
+				Data Starts( 2 ),
+				Lines To Read( "All" ),
+				Year Rule( "20xx" )
+			)
+		)
+	),
+	New Column( "Type",
+		Character,
+		"Nominal",
+		Set Values(
+			{"Offroad", "Offroad", "Offroad", "Offroad", "Offroad", "Offroad",
+			"Offroad", "Offroad", "Offroad", "Offroad", "Offroad", "Offroad",
+			"Offroad", "Offroad", "Offroad", "Road", "Road", "Road", "Road", "Road",
+			"Road", "Road", "Road", "Road", "Road", "Road", "Road", "Road", "Road",
+			"Road"}
+		)
+	),
+	New Column( "Location",
+		Character,
+		"Nominal",
+		Set Values(
+			{"SCV Water District", "Baylands Park", "Lake Cunningham park",
+			"South San Jose VTA", "Coyote creek field", "Alviso Bay trail",
+			"Calero reservoir", "Campbell percolation ponds", "Lexington reservoir",
+			"Metcalf ponds", "Penitencia creek", "Parkway lakes RV",
+			"Chesboro reservoir", "Oakridge pond", "Guadalupe reservoir",
+			"SCV Water District", "Baylands Park", "Lake Cunningham park",
+			"South San Jose VTA", "Coyote creek field", "Alviso Bay trail",
+			"Calero reservoir", "Campbell percolation ponds", "Lexington reservoir",
+			"Metcalf ponds", "Penitencia creek", "Parkway lakes RV",
+			"Chesboro reservoir", "Oakridge pond", "Guadalupe reservoir"}
+		)
+	),
+	New Column( "Pop_size",
+		Numeric,
+		"Continuous",
+		Format( "Best", 12 ),
+		Set Values(
+			[500, 100, 1000, 100, 1000, 10000, 1000, 500, 10000, 1000, 10000, 500,
+			500, 500, 1000, 500, 10, 50, 10, 50, 10, 100, 10, 10, 50, 500, 10000,
+			100, 50, 50]
+		),
+		Set Display Width( 68 )
+	),
+	New Column( "%Dittrichia",
+		Numeric,
+		"Continuous",
+		Format( "Best", 12 ),
+		Set Selected,
+		Set Values(
+			[2, 2, 6.666666667, 10.66666667, 40, 42.66666667, 25.66666667,
+			16.66666667, 12.66666667, 14.33333333, 36.33333333, 3, 14, 14,
+			47.33333333, 7.333333333, 0, 9, 2, 7, 2, 12, 1.333333333, 4, 2.666666667,
+			3, 4.333333333, 3.333333333, 8, 4]
+		)
+	)
+) << Run Formulas;
+Graph Builder(
+	Size( 528, 454 ),
+	Show Control Panel( 0 ),
+	Variables( X( :Pop_size ), Y( :Name( "%Dittrichia" ) ), Overlay( :Type ) ),
+	Elements(
+		Points( X, Y, Legend( 5 ) ),
+		Line Of Fit( X, Y, Legend( 7 ), R²( 1 ), Equation( 1 ), F Test( 1 ) )
+	),
+	SendToReport(
+		Dispatch( {}, "graph title", TextEditBox, {Set Text( "" )} ),
+		Dispatch(
+			{},
+			"X title",
+			TextEditBox,
+			{Set Text( "Estimated Population Size per Site" )}
+		),
+		Dispatch(
+			{},
+			"Y title",
+			TextEditBox,
+			{Set Text( "Percent Cover of Dittrichia graveolens per Site" )}
+		)
+	)
+);

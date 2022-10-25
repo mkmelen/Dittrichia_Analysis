@@ -1,0 +1,57 @@
+﻿New Table( "plots_Andrew_alpha_split4pairedT",
+	Add Rows( 15 ),
+	New Script(
+		"Source",
+		Data Table( "plots_Andrew_alpha" ) << Split(
+			Split By( :plot_type ),
+			Split( :plot_type, :alpha, :plot ),
+			Sort by Column Property
+		)
+	),
+	New Column( "plot_type Offroad",
+		Character,
+		"Nominal",
+		Set Values(
+			{"Offroad", "Offroad", "Offroad", "Offroad", "Offroad", "Offroad",
+			"Offroad", "Offroad", "Offroad", "Offroad", "Offroad", "Offroad",
+			"Offroad", "Offroad", "Offroad"}
+		)
+	),
+	New Column( "plot_type Road",
+		Character,
+		"Nominal",
+		Set Values(
+			{"Road", "Road", "Road", "Road", "Road", "Road", "Road", "Road", "Road",
+			"Road", "Road", "Road", "Road", "Road", "Road"}
+		)
+	),
+	New Column( "alpha Offroad",
+		Numeric,
+		"Continuous",
+		Format( "Best", 12 ),
+		Set Values( [6, 7, 9, 9, 10, 13, 10, 14, 24, 13, 10, 17, 28, 9, 27] )
+	),
+	New Column( "alpha Road",
+		Numeric,
+		"Continuous",
+		Format( "Best", 12 ),
+		Set Values( [12, 10, 6, 4, 5, 19, 9, 15, 10, 8, 10, 11, 15, 6, 10] )
+	),
+	New Column( "plot name",
+		Character,
+		"Nominal",
+		Set Values(
+			{"SCV_Water_District", "Baylands_Park", "Lake_Cunningham_park",
+			"South_San_Jose_VTA", "Coyote_creek_field", "Alviso_Bay_trail",
+			"Calero_reservoir", "Campbell_percolation_ponds", "Lexington_reservoir",
+			"Metcalf_ponds", "Penitencia_creek", "Parkway_lakes RV",
+			"Chesboro_reservoir", "Oakridge_pond", "Guadalupe_reservoir"}
+		),
+		Set Display Width( 303 )
+	)
+) << Run Formulas;
+Matched Pairs(
+	X( :plot name ),
+	Y( :alpha Offroad, :alpha Road ),
+	Reference Frame( 1 )
+);

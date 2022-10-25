@@ -1,0 +1,107 @@
+﻿New Table( "plots_Andrew_alpha",
+	Add Rows( 30 ),
+	New Script(
+		"Source",
+		Open(
+			"/Users/Miranda/Documents/Education/R Directory/DIGR/2020_Community_survey/plots_Andrew_alpha.csv",
+			columns(
+				New Column( "plot", Character, "Nominal" ),
+				New Column( "plot_type", Character, "Nominal" ),
+				New Column( "alpha", Numeric, "Continuous", Format( "Best", 12 ) )
+			),
+			Import Settings(
+				End Of Line( CRLF, CR, LF ),
+				End Of Field( Comma, CSV( 1 ) ),
+				Strip Quotes( 0 ),
+				Use Apostrophe as Quotation Mark( 0 ),
+				Use Regional Settings( 0 ),
+				Scan Whole File( 1 ),
+				Treat empty columns as numeric( 0 ),
+				CompressNumericColumns( 0 ),
+				CompressCharacterColumns( 0 ),
+				CompressAllowListCheck( 0 ),
+				Labels( 1 ),
+				Column Names Start( 1 ),
+				Data Starts( 2 ),
+				Lines To Read( "All" ),
+				Year Rule( "20xx" )
+			)
+		)
+	),
+	New Column( "plot",
+		Character,
+		"Nominal",
+		Set Values(
+			{"SCV_Water_District_Non-roadside", "SCV_Water_District_Roadside",
+			"Baylands_Park_Non-roadside", "Baylands_Park_Roadside",
+			"Lake_Cunningham_park_Non-roadside", "Lake_Cunningham_park_Roadside",
+			"South_San_Jose_VTA_Non-roadside", "South_San_Jose_VTA_Roadside",
+			"Coyote_creek_field_Non-roadside", "Coyote_creek_field_Roadside",
+			"Alviso_Bay_trail_Non-roadside", "Alviso_Bay_trail_Roadside",
+			"Calero_reservoir_Non-roadside", "Calero_reservoir_Roadside",
+			"Campbell_percolation_ponds_Non-roadside",
+			"Campbell_percolation_ponds_Roadside",
+			"Lexington_reservoir_Non-roadside", "Lexington_reservoir_Roadside",
+			"Metcalf_ponds_Non-roadside", "Metcalf_ponds_Roadside",
+			"Penitencia_creek_Non-roadside", "Penitencia_creek_Roadside",
+			"Parkway_lakes RV_Non-roadside", "Parkway_lakes RV_Roadside",
+			"Chesboro_reservoir _Non-roadside", "Chesboro_reservoir _Roadside",
+			"Oakridge_pond_Non-roadside", "Oakridge_pond_Roadside",
+			"Guadalupe_reservoir_Non-roadside", "Guadalupe_reservoir_Roadside"}
+		),
+		Set Display Width( 303 )
+	),
+	New Column( "plot_type",
+		Character,
+		"Nominal",
+		Set Selected,
+		Set Values(
+			{"Offroad", "Road", "Offroad", "Road", "Offroad", "Road", "Offroad",
+			"Road", "Offroad", "Road", "Offroad", "Road", "Offroad", "Road",
+			"Offroad", "Road", "Offroad", "Road", "Offroad", "Road", "Offroad",
+			"Road", "Offroad", "Road", "Offroad", "Road", "Offroad", "Road",
+			"Offroad", "Road"}
+		)
+	),
+	New Column( "alpha",
+		Numeric,
+		"Continuous",
+		Format( "Best", 12 ),
+		Set Values(
+			[6, 12, 7, 10, 9, 6, 9, 4, 10, 5, 13, 19, 10, 9, 14, 15, 24, 10, 13, 8,
+			10, 10, 17, 11, 28, 15, 9, 6, 27, 10]
+		)
+	)
+) << Run Formulas;
+Graph Builder(
+	Size( 528, 448 ),
+	Show Control Panel( 0 ),
+	Variables( X( :plot_type ), Y( :alpha ), Color( :plot_type ) ),
+	Elements( Bar( X, Y, Legend( 8 ), Error Interval( "Standard Error" ) ) ),
+	SendToReport(
+		Dispatch(
+			{},
+			"alpha",
+			ScaleBox,
+			{Min( 0 ), Max( 20 ), Inc( 2.5 ), Minor Ticks( 0 ),
+			Add Ref Line( 20, "Solid", "Black", "", 1 )}
+		),
+		Dispatch(
+			{},
+			"400",
+			ScaleBox,
+			{Legend Model(
+				8,
+				Properties( 0, {Fill Color( 52 )}, Item ID( "Offroad", 1 ) ),
+				Properties( 1, {Fill Color( 16 )}, Item ID( "Road", 1 ) )
+			)}
+		),
+		Dispatch( {}, "X title", TextEditBox, {Set Text( "Site Type" )} ),
+		Dispatch(
+			{},
+			"Y title",
+			TextEditBox,
+			{Set Text( "Average Number of Species per Site (Alpha)" )}
+		)
+	)
+);

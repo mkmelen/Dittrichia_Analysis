@@ -1,0 +1,282 @@
+﻿New Table( "plots_Andrew_PercentCover_byQuadratXspecies_byQuadrat",
+	Add Rows( 90 ),
+	New Script(
+		"Source",
+		Open(
+			"/Users/Miranda/Documents/Education/R Directory/DIGR/2020_Community_survey/plots_Andrew_PercentCover_byQuadratXspecies_byQuadrat.csv",
+			columns(
+				New Column( "Code", Character, "Nominal" ),
+				New Column( "Site", Character, "Nominal" ),
+				New Column( "Type", Character, "Nominal" ),
+				New Column( "Quadrat", Numeric, "Continuous", Format( "Best", 12 ) ),
+				New Column( "nr_species",
+					Numeric,
+					"Continuous",
+					Format( "Best", 12 )
+				),
+				New Column( "%dittrichia",
+					Numeric,
+					"Continuous",
+					Format( "Best", 12 )
+				)
+			),
+			Import Settings(
+				End Of Line( CRLF, CR, LF ),
+				End Of Field( Comma, CSV( 1 ) ),
+				Strip Quotes( 0 ),
+				Use Apostrophe as Quotation Mark( 0 ),
+				Use Regional Settings( 0 ),
+				Scan Whole File( 1 ),
+				Treat empty columns as numeric( 0 ),
+				CompressNumericColumns( 0 ),
+				CompressCharacterColumns( 0 ),
+				CompressAllowListCheck( 0 ),
+				Labels( 1 ),
+				Column Names Start( 1 ),
+				Data Starts( 2 ),
+				Lines To Read( "All" ),
+				Year Rule( "20xx" )
+			)
+		)
+	),
+	New Column( "Code",
+		Character,
+		"Nominal",
+		Set Values(
+			{"SCV Water District_Non-roadside", "SCV Water District_Non-roadside",
+			"SCV Water District_Non-roadside", "SCV Water District_Roadside",
+			"SCV Water District_Roadside", "SCV Water District_Roadside",
+			"Baylands Park_Non-roadside", "Baylands Park_Non-roadside",
+			"Baylands Park_Non-roadside", "Baylands Park_Roadside",
+			"Baylands Park_Roadside", "Baylands Park_Roadside",
+			"Lake Cunningham park_Non-roadside", "Lake Cunningham park_Non-roadside",
+			"Lake Cunningham park_Non-roadside", "Lake Cunningham park_Roadside",
+			"Lake Cunningham park_Roadside", "Lake Cunningham park_Roadside",
+			"South San Jose VTA_Non-roadside", "South San Jose VTA_Non-roadside",
+			"South San Jose VTA_Non-roadside", "South San Jose VTA_Roadside",
+			"South San Jose VTA_Roadside", "South San Jose VTA_Roadside",
+			"Coyote creek field_Non-roadside", "Coyote creek field_Non-roadside",
+			"Coyote creek field_Non-roadside", "Coyote creek field_Roadside",
+			"Coyote creek field_Roadside", "Coyote creek field_Roadside",
+			"Alviso Bay trail_Non-roadside", "Alviso Bay trail_Non-roadside",
+			"Alviso Bay trail_Non-roadside", "Alviso Bay trail_Roadside",
+			"Alviso Bay trail_Roadside", "Alviso Bay trail_Roadside",
+			"Calero reservoir_Non-roadside", "Calero reservoir_Non-roadside",
+			"Calero reservoir_Non-roadside", "Calero reservoir_Roadside",
+			"Calero reservoir_Roadside", "Calero reservoir_Roadside",
+			"Campbell percolation ponds_Non-roadside",
+			"Campbell percolation ponds_Non-roadside",
+			"Campbell percolation ponds_Non-roadside",
+			"Campbell percolation ponds_Roadside",
+			"Campbell percolation ponds_Roadside",
+			"Campbell percolation ponds_Roadside",
+			"Lexington reservoir_Non-roadside", "Lexington reservoir_Non-roadside",
+			"Lexington reservoir_Non-roadside", "Lexington reservoir_Roadside",
+			"Lexington reservoir_Roadside", "Lexington reservoir_Roadside",
+			"Metcalf ponds_Non-roadside", "Metcalf ponds_Non-roadside",
+			"Metcalf ponds_Non-roadside", "Metcalf ponds_Roadside",
+			"Metcalf ponds_Roadside", "Metcalf ponds_Roadside",
+			"Penitencia creek_Non-roadside", "Penitencia creek_Non-roadside",
+			"Penitencia creek_Non-roadside", "Penitencia creek_Roadside",
+			"Penitencia creek_Roadside", "Penitencia creek_Roadside",
+			"Parkway lakes RV_Non-roadside", "Parkway lakes RV_Non-roadside",
+			"Parkway lakes RV_Non-roadside", "Parkway lakes RV_Roadside",
+			"Parkway lakes RV_Roadside", "Parkway lakes RV_Roadside",
+			"Chesboro reservoir_Non-roadside", "Chesboro reservoir_Non-roadside",
+			"Chesboro reservoir_Non-roadside", "Chesboro reservoir_Roadside",
+			"Chesboro reservoir_Roadside", "Chesboro reservoir_Roadside",
+			"Oakridge pond_Non-roadside", "Oakridge pond_Non-roadside",
+			"Oakridge pond_Non-roadside", "Oakridge pond_Roadside",
+			"Oakridge pond_Roadside", "Oakridge pond_Roadside",
+			"Guadalupe reservoir_Non-roadside", "Guadalupe reservoir_Non-roadside",
+			"Guadalupe reservoir_Non-roadside", "Guadalupe reservoir_Roadside",
+			"Guadalupe reservoir_Roadside", "Guadalupe reservoir_Roadside"}
+		)
+	),
+	New Column( "Site",
+		Character,
+		"Nominal",
+		Set Values(
+			{"SCV Water District", "SCV Water District", "SCV Water District",
+			"SCV Water District", "SCV Water District", "SCV Water District",
+			"Baylands Park", "Baylands Park", "Baylands Park", "Baylands Park",
+			"Baylands Park", "Baylands Park", "Lake Cunningham Park",
+			"Lake Cunningham Park", "Lake Cunningham Park", "Lake Cunningham Park",
+			"Lake Cunningham Park", "Lake Cunningham Park", "South San Jose VTA",
+			"South San Jose VTA", "South San Jose VTA", "South San Jose VTA",
+			"South San Jose VTA", "South San Jose VTA", "Coyote Creek Field",
+			"Coyote Creek Field", "Coyote Creek Field", "Coyote Creek Field",
+			"Coyote Creek Field", "Coyote Creek Field", "Alviso Bay Trail",
+			"Alviso Bay Trail", "Alviso Bay Trail", "Alviso Bay Trail",
+			"Alviso Bay Trail", "Alviso Bay Trail", "Calero Reservoir",
+			"Calero Reservoir", "Calero Reservoir", "Calero Reservoir",
+			"Calero Reservoir", "Calero Reservoir", "Campbell Percolation Ponds",
+			"Campbell Percolation Ponds", "Campbell Percolation Ponds",
+			"Campbell Percolation Ponds", "Campbell Percolation Ponds",
+			"Campbell Percolation Ponds", "Lexington Reservoir",
+			"Lexington Reservoir", "Lexington Reservoir", "Lexington Reservoir",
+			"Lexington Reservoir", "Lexington Reservoir", "Metcalf Ponds",
+			"Metcalf Ponds", "Metcalf Ponds", "Metcalf Ponds", "Metcalf Ponds",
+			"Metcalf Ponds", "Penitencia Creek", "Penitencia Creek",
+			"Penitencia Creek", "Penitencia Creek", "Penitencia Creek",
+			"Penitencia Creek", "Parkway Lakes RV", "Parkway Lakes RV",
+			"Parkway Lakes RV", "Parkway Lakes RV", "Parkway Lakes RV",
+			"Parkway Lakes RV", "Chesboro Reservoir", "Chesboro Reservoir",
+			"Chesboro Reservoir", "Chesboro Reservoir", "Chesboro Reservoir",
+			"Chesboro Reservoir", "Oakridge Pond", "Oakridge Pond", "Oakridge Pond",
+			"Oakridge Pond", "Oakridge Pond", "Oakridge Pond", "Guadalupe Reservoir",
+			"Guadalupe Reservoir", "Guadalupe Reservoir", "Guadalupe Reservoir",
+			"Guadalupe Reservoir", "Guadalupe Reservoir"}
+		)
+	),
+	New Column( "Type",
+		Character,
+		"Nominal",
+		Set Values(
+			{"Offroad", "Offroad", "Offroad", "Road", "Road", "Road", "Offroad",
+			"Offroad", "Offroad", "Road", "Road", "Road", "Offroad", "Offroad",
+			"Offroad", "Road", "Road", "Road", "Offroad", "Offroad", "Offroad",
+			"Road", "Road", "Road", "Offroad", "Offroad", "Offroad", "Road", "Road",
+			"Road", "Offroad", "Offroad", "Offroad", "Road", "Road", "Road",
+			"Offroad", "Offroad", "Offroad", "Road", "Road", "Road", "Offroad",
+			"Offroad", "Offroad", "Road", "Road", "Road", "Offroad", "Offroad",
+			"Offroad", "Road", "Road", "Road", "Offroad", "Offroad", "Offroad",
+			"Road", "Road", "Road", "Offroad", "Offroad", "Offroad", "Road", "Road",
+			"Road", "Offroad", "Offroad", "Offroad", "Road", "Road", "Road",
+			"Offroad", "Offroad", "Offroad", "Road", "Road", "Road", "Offroad",
+			"Offroad", "Offroad", "Road", "Road", "Road", "Offroad", "Offroad",
+			"Offroad", "Road", "Road", "Road"}
+		)
+	),
+	New Column( "Quadrat",
+		Numeric,
+		"Continuous",
+		Format( "Best", 12 ),
+		Set Values(
+			[1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3,
+			1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3,
+			1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3,
+			1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
+		)
+	),
+	New Column( "nr_species",
+		Numeric,
+		"Continuous",
+		Format( "Best", 12 ),
+		Set Values(
+			[4, 4, 4, 2, 4, 2, 1, 3, 3, 4, 1, 0, 2, 1, 1, 2, 2, 1, 4, 4, 3, 0, 1, 0,
+			2, 2, 3, 3, 1, 2, 0, 3, 2, 3, 2, 4, 2, 2, 2, 7, 5, 8, 4, 3, 3, 5, 3, 3,
+			7, 5, 6, 3, 3, 3, 3, 3, 6, 2, 3, 3, 0, 0, 1, 5, 5, 4, 2, 3, 5, 4, 3, 2,
+			3, 5, 5, 3, 2, 6, 2, 2, 3, 1, 0, 1, 7, 5, 6, 1, 0, 1]
+		)
+	),
+	New Column( "%dittrichia",
+		Numeric,
+		"Continuous",
+		Format( "Best", 12 ),
+		Set Values(
+			[3, 2, 1, 2, 0, 20, 2, 2, 2, 0, 0, 0, 7, 3, 10, 0, 15, 12, 20, 7, 5, 0,
+			5, 1, 65, 40, 15, 20, 0, 1, 95, 20, 13, 0, 0, 6, 32, 18, 27, 13, 15, 8,
+			0, 5, 45, 0, 1, 3, 0, 20, 18, 3, 5, 4, 30, 2, 11, 3, 5, 0, 52, 30, 27, 1,
+			5, 3, 2, 6, 1, 3, 2, 8, 13, 22, 7, 0, 2, 8, 8, 4, 30, 0, 23, 1, 39, 53,
+			50, 5, 0, 7]
+		)
+	)
+) << Run Formulas;
+Graph Builder(
+	Size( 790, 651 ),
+	Show Control Panel( 0 ),
+	Variables(
+		X( :Name( "%dittrichia" ) ),
+		Y( :nr_species ),
+		Overlay( :Type ),
+		Color( :Site )
+	),
+	Elements( Points( X, Y, Legend( 5 ) ) ),
+	SendToReport(
+		Dispatch(
+			{},
+			"400",
+			ScaleBox,
+			{Legend Model(
+				5,
+				Properties(
+					0,
+					{Line Color( 51 )},
+					Item ID( "Alviso Bay Trail", 1 )
+				),
+				Properties( 1, {Line Color( 54 )}, Item ID( "Baylands Park", 1 ) ),
+				Properties(
+					2,
+					{Line Color( 57 )},
+					Item ID( "Calero Reservoir", 1 )
+				),
+				Properties(
+					3,
+					{Line Color( 60 )},
+					Item ID( "Campbell Percolation Ponds", 1 )
+				),
+				Properties(
+					4,
+					{Line Color( 52 )},
+					Item ID( "Chesboro Reservoir", 1 )
+				),
+				Properties(
+					5,
+					{Line Color( 53 )},
+					Item ID( "Coyote Creek Field", 1 )
+				),
+				Properties(
+					6,
+					{Line Color( 56 )},
+					Item ID( "Guadalupe Reservoir", 1 )
+				),
+				Properties(
+					7,
+					{Line Color( 62 )},
+					Item ID( "Lake Cunningham Park", 1 )
+				),
+				Properties(
+					8,
+					{Line Color( 35 )},
+					Item ID( "Lexington Reservoir", 1 )
+				),
+				Properties( 9, {Line Color( 38 )}, Item ID( "Metcalf Ponds", 1 ) ),
+				Properties( 10, {Line Color( 41 )}, Item ID( "Oakridge Pond", 1 ) ),
+				Properties(
+					11,
+					{Line Color( 36 )},
+					Item ID( "Parkway Lakes RV", 1 )
+				),
+				Properties(
+					12,
+					{Line Color( 39 )},
+					Item ID( "Penitencia Creek", 1 )
+				),
+				Properties(
+					13,
+					{Line Color( 37 )},
+					Item ID( "SCV Water District", 1 )
+				),
+				Properties(
+					14,
+					{Line Color( 46 )},
+					Item ID( "South San Jose VTA", 1 )
+				)
+			)}
+		),
+		Dispatch( {}, "graph title", TextEditBox, {Set Text( "" )} ),
+		Dispatch(
+			{},
+			"X title",
+			TextEditBox,
+			{Set Text( "Percent Cover of Dittrichia graveolens per Quadrat" )}
+		),
+		Dispatch(
+			{},
+			"Y title",
+			TextEditBox,
+			{Set Text( "Number of Species per Quadrat (Alpha)" )}
+		)
+	)
+);

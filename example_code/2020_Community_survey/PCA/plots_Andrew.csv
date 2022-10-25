@@ -1,0 +1,31 @@
+plot,pair_nr,plot_type,plot_pch,popsize,coverDIGR,coverVeg,coverBare
+SCV_Water_District_Non-roadside,1,Offroad,19,500.00,2,48,50
+SCV_Water_District_Roadside,1,Road,1,500.00,7,24,68
+Baylands_Park_Non-roadside,2,Offroad,19,100.00,2,50,48
+Baylands_Park_Roadside,2,Road,1,10.00,0,1,99
+Lake_Cunningham_park_Non-roadside,3,Offroad,19,1000.00,7,17,77
+Lake_Cunningham_park_Roadside,3,Road,1,50.00,9,12,79
+South_San_Jose_VTA_Non-roadside,4,Offroad,19,100.00,11,89,0
+South_San_Jose_VTA_Roadside,4,Road,1,10.00,2,0,98
+Coyote_creek_field_Non-roadside,5,Offroad,19,1000.00,40,42,18
+Coyote_creek_field_Roadside,5,Road,1,50.00,7,63,30
+Alviso_Bay_trail_Non-roadside,6,Offroad,19,10000.00,43,24,33
+Alviso_Bay_trail_Roadside,6,Road,1,10.00,2,75,23
+Calero_reservoir_Non-roadside,7,Offroad,19,1000.00,26,62,12
+Calero_reservoir_Roadside,7,Road,1,100.00,12,47,41
+Campbell_percolation_ponds_Non-roadside,8,Offroad,19,500.00,17,69,14
+Campbell_percolation_ponds_Roadside,8,Road,1,10.00,1,7,92
+Lexington_reservoir_Non-roadside,9,Offroad,19,10000.00,13,49,38
+Lexington_reservoir_Roadside,9,Road,1,10.00,4,26,70
+Metcalf_ponds_Non-roadside,10,Offroad,19,1000.00,14,46,39
+Metcalf_ponds_Roadside,10,Road,1,50.00,3,63,35
+Penitencia_creek_Non-roadside,11,Offroad,19,10000.00,36,0,63
+Penitencia_creek_Roadside,11,Road,1,500.00,3,44,53
+Parkway_lakes RV_Non-roadside,12,Offroad,19,500.00,3,4,93
+Parkway_lakes RV_Roadside,12,Road,1,10000.00,4,22,74
+Chesboro_reservoir _Non-roadside,13,Offroad,19,500.00,14,17,69
+Chesboro_reservoir _Roadside,13,Road,1,100.00,3,12,84
+Oakridge_pond_Non-roadside,14,Offroad,19,500.00,14,86,0
+Oakridge_pond_Roadside,14,Road,1,50.00,8,1,91
+Guadalupe_reservoir_Non-roadside,15,Offroad,19,1000.00,47,38,15
+Guadalupe_reservoir_Roadside,15,Road,1,50.00,4,2,94

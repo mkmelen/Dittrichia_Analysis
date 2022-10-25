@@ -1,0 +1,34 @@
+﻿site_type,location,percent_dittrichia,percent_vegetation,percent_bareground,,,,,
+Offroad,SCV Water District,2,48,50,,,,Offroad,Percent_Cover
+Offroad,Baylands Park,2,49.66666667,48.33333333,,,,19.2,Dittrichia
+Offroad,Lake Cunningham park,6.666666667,16.66666667,76.66666667,,,,42.71111111,Vegetation
+Offroad,South San Jose VTA,10.66666667,89.33333333,0,,,,38.08888889,Bareground
+Offroad,Coyote creek field,40,41.66666667,18.33333333,,,,,
+Offroad,Alviso Bay trail,42.66666667,24,33.33333333,,,,,
+Offroad,Calero reservoir,25.66666667,62,12.33333333,,,,,
+Offroad,Campbell percolation ponds,16.66666667,69,14.33333333,,,,Road,Percent_Cover
+Offroad,Lexington reservoir,12.66666667,49,38.33333333,,,,4.666666667,Dittrichia
+Offroad,Metcalf ponds,14.33333333,46.33333333,39.33333333,,,,26.64444444,Vegetation
+Offroad,Penitencia creek,36.33333333,0.333333333,63.33333333,,,,68.68888889,Bareground
+Offroad,Parkway lakes RV,3,4,93,,,,,
+Offroad,Chesboro reservoir,14,17,69,,,,,
+Offroad,Oakridge pond,14,86,0,,,,,
+Offroad,Guadalupe reservoir,47.33333333,37.66666667,15,,,,,
+Road,SCV Water District,7.333333333,24.33333333,68.33333333,,,,,
+Road,Baylands Park,0,1.333333333,98.66666667,,,,,
+Road,Lake Cunningham park,9,12,79,,,,,
+Road,South San Jose VTA,2,0.333333333,97.66666667,,,,,
+Road,Coyote creek field,7,63,30,,,,,
+Road,Alviso Bay trail,2,75,23,,,,,
+Road,Calero reservoir,12,46.66666667,41.33333333,,,,,
+Road,Campbell percolation ponds,1.333333333,7,91.66666667,,,,,
+Road,Lexington reservoir,4,25.66666667,70.33333333,,,,,
+Road,Metcalf ponds,2.666666667,62.66666667,34.66666667,,,,,
+Road,Penitencia creek,3,44.33333333,52.66666667,,,,,
+Road,Parkway lakes RV,4.333333333,21.66666667,74,,,,,
+Road,Chesboro reservoir,3.333333333,12.33333333,84.33333333,,,,,
+Road,Oakridge pond,8,1.333333333,90.66666667,,,,,
+Road,Guadalupe reservoir,4,2,94,,,,,
+,,,,,,,,,
+,Offroad,19.2,42.71111111,38.08888889,,,,,
+,Road,4.666666667,26.64444444,68.68888889,,,,,

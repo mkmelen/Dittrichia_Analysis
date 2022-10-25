@@ -1,0 +1,134 @@
+﻿New Table( "plots_Andrew_PercentCoverXspecies",
+	Add Rows( 30 ),
+	New Script(
+		"Source",
+		Open(
+			"/Users/Miranda/Documents/Education/R Directory/DIGR/2020_Community_survey/plots_Andrew_PercentCoverXspecies.csv",
+			columns(
+				New Column( "Code", Character, "Nominal" ),
+				New Column( "site_type", Character, "Nominal" ),
+				New Column( "nr_species",
+					Numeric,
+					"Continuous",
+					Format( "Best", 12 )
+				),
+				New Column( "Avg_percentcover_DIGR",
+					Numeric,
+					"Continuous",
+					Format( "Best", 12 )
+				)
+			),
+			Import Settings(
+				End Of Line( CRLF, CR, LF ),
+				End Of Field( Comma, CSV( 1 ) ),
+				Strip Quotes( 0 ),
+				Use Apostrophe as Quotation Mark( 0 ),
+				Use Regional Settings( 0 ),
+				Scan Whole File( 1 ),
+				Treat empty columns as numeric( 0 ),
+				CompressNumericColumns( 0 ),
+				CompressCharacterColumns( 0 ),
+				CompressAllowListCheck( 0 ),
+				Labels( 1 ),
+				Column Names Start( 1 ),
+				Data Starts( 2 ),
+				Lines To Read( "All" ),
+				Year Rule( "20xx" )
+			)
+		)
+	),
+	New Column( "Code",
+		Character,
+		"Nominal",
+		Set Values(
+			{"SCV Water District_Non-roadside", "SCV Water District_Roadside",
+			"Baylands Park_Non-roadside", "Baylands Park_Roadside",
+			"Lake Cunningham park_Non-roadside", "Lake Cunningham park_Roadside",
+			"South San Jose VTA_Non-roadside", "South San Jose VTA_Roadside",
+			"Coyote creek field_Non-roadside", "Coyote creek field_Roadside",
+			"Alviso Bay trail_Non-roadside", "Alviso Bay trail_Roadside",
+			"Calero reservoir_Non-roadside", "Calero reservoir_Roadside",
+			"Campbell percolation ponds_Non-roadside",
+			"Campbell percolation ponds_Roadside",
+			"Lexington reservoir_Non-roadside", "Lexington reservoir_Roadside",
+			"Metcalf ponds_Non-roadside", "Metcalf ponds_Roadside",
+			"Penitencia creek_Non-roadside", "Penitencia creek_Roadside",
+			"Parkway lakes RV_Non-roadside", "Parkway lakes RV_Roadside",
+			"Chesboro reservoir_Non-roadside", "Chesboro reservoir_Roadside",
+			"Oakridge pond_Non-roadside", "Oakridge pond_Roadside",
+			"Guadalupe reservoir_Non-roadside", "Guadalupe reservoir_Roadside"}
+		),
+		Set Display Width( 277 )
+	),
+	New Column( "site_type",
+		Character,
+		"Nominal",
+		Set Values(
+			{"Offroad", "Road", "Offroad", "Road", "Offroad", "Road", "Offroad",
+			"Road", "Offroad", "Road", "Offroad", "Road", "Offroad", "Road",
+			"Offroad", "Road", "Offroad", "Road", "Offroad", "Road", "Offroad",
+			"Road", "Offroad", "Road", "Offroad", "Road", "Offroad", "Road",
+			"Offroad", "Road"}
+		)
+	),
+	New Column( "nr_species",
+		Numeric,
+		"Continuous",
+		Format( "Best", 12 ),
+		Set Values(
+			[6, 12, 7, 10, 9, 6, 9, 4, 10, 5, 13, 19, 10, 9, 14, 15, 24, 10, 13, 8,
+			10, 10, 17, 11, 28, 15, 9, 6, 27, 10]
+		)
+	),
+	New Column( "Avg_percentcover_DIGR",
+		Numeric,
+		"Continuous",
+		Format( "Best", 12 ),
+		Set Values(
+			[2, 7.333333333, 2, 0, 6.666666667, 9, 10.66666667, 2, 40, 7,
+			42.66666667, 2, 25.66666667, 12, 16.66666667, 1.333333333, 12.66666667,
+			4, 14.33333333, 2.666666667, 36.33333333, 3, 3, 4.333333333, 14,
+			3.333333333, 14, 8, 47.33333333, 4]
+		)
+	)
+) << Run Formulas;
+Graph Builder(
+	Size( 528, 453 ),
+	Show Control Panel( 0 ),
+	Variables( X( :Avg_percentcover_DIGR ), Y( :nr_species ), Color( :site_type ) ),
+	Elements( Points( X, Y, Legend( 6 ) ) ),
+	SendToReport(
+		Dispatch(
+			{},
+			"400",
+			ScaleBox,
+			{Legend Model(
+				6,
+				Properties(
+					0,
+					{Line Color( 20 ), Marker( "Filled Up Triangle" ),
+					Marker Size( 6 )},
+					Item ID( "Offroad", 1 )
+				),
+				Properties(
+					1,
+					{Line Color( 16 ), Marker( "FilledCircle" ), Marker Size( 6 )},
+					Item ID( "Road", 1 )
+				)
+			)}
+		),
+		Dispatch( {}, "graph title", TextEditBox, {Set Text( "" )} ),
+		Dispatch(
+			{},
+			"X title",
+			TextEditBox,
+			{Set Text( "Average Percent Cover of Dittrichia graveolens" )}
+		),
+		Dispatch(
+			{},
+			"Y title",
+			TextEditBox,
+			{Set Text( "Average Number of Speces per Site (Alpha)" )}
+		)
+	)
+);
