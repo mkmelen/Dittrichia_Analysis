@@ -12,25 +12,13 @@
 
 ####Install Libraries####
 #install.packages("coxme")
-#install.packages("car")
 #install.packages("survival")
-#install.packages("multcomp")
-#install.packages("tidyr")
-#install.packages("ggfortify")
-#install.packages("RColorBrewer")
-#install.packages("survMisc")
-#install.packages("tidyverse")
+#install.packages("ggplot2")
 
 ####Load Libraries####
 library(coxme)
-library(car)
 library(survival)
-library(multcomp)
-library(tidyr)
-library(ggfortify)
-library(RColorBrewer)
-library(survMisc)
-library(tidyverse)
+library(ggplot2)
 
 ####Load Data####
 setwd("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis")
@@ -44,22 +32,33 @@ mydata$Site<-as.character(mydata$Site)
 
 ####Histograms####
 #Original data
-hist(mydata$NumDaysAlive,col='steelblue',main='Original') #Original data is skewed, let's test for normality and consider log transforming the data
+hist(mydata$NumDaysAlive,col='steelblue',main='Original') 
 shapiro.test(mydata$NumDaysAlive)
 #Shapiro-Wilk normality test
 #data:  mydata$NumDaysAlive
 #W = 0.81823, p-value < 2.2e-16
 
-#THE PLAN: explore the data and figure out if the bimodal distribution of the data is driven by a treatment... so make some exploratory graphs
-#Bad code
-#ggplot(mydata, aes(x=NumDaysAlive,y=Coumt,group=Treatment)) +
-  #geom_line(stat="identity", position=position_dodge()), width=.2)
+ggplot(mydata,aes(x=NumDaysAlive))+geom_histogram()+facet_wrap(vars(Treatment)) #Here we see that 4 of the treatments have the same bi-modal distribution and Biomass Removal is right skewed.
 
 ####Model 1####
+#Start by making a simple model with no random effects. This will be compared to the full model with random effects.
+simplemodel1<-coxph(Surv(NumDaysAlive,Censor)~Habitat*Treatment,data=mydata)
+print(simplemodel1)
+
 fullmodel1<-coxme(Surv(NumDaysAlive,Censor)~Habitat*Treatment+(1|Site)+(1|Block),data=mydata)
-summary(fullmodel1)
-#ERROR HERE # Error in update.default(formula(object), formula.) : need an object with call component
-anova(fullmodel1, test.statistic = "LR") #Use a type II likelihood ratio test to test your fixed effects
+print(fullmodel1)
+
+anova(simplemodel1,fullmodel1) #See example: https://www.rdocumentation.org/packages/coxme/versions/2.2-16/topics/coxme
+
+stem(exp(ranef(fullmodel1)[[1]]))
+
+
+
+
+
+
+#ERROR WITH ANOVA # Error in update.default(formula(object), formula.) : need an object with call component
+anova((fullmodel1), test.statistic = "LR") #Use a type II likelihood ratio test to test your fixed effects
 #It is confusing to use Anova here (the capital A is important) because this is not really an anova; R uses this function for lots of different tests of the main variables in your model.
 
 exp(coef(fullmodel1)) #This extracts fixed effects?
