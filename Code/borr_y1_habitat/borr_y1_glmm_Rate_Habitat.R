@@ -1,4 +1,4 @@
-#### Linear Mixed-Effects Models - Growth and Habitat####
+#### Generalized Linear Mixed Models using Template Model Builder - Growth and Habitat####
 #Dittrichia Project
 #October 2022
 #Miranda Melen

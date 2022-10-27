@@ -14,51 +14,67 @@
 #install.packages("coxme")
 #install.packages("survival")
 #install.packages("ggplot2")
+#install.packages("ggfortify")
 
 ####Load Libraries####
 library(coxme)
 library(survival)
 library(ggplot2)
+library(ggfortify)
 
 ####Load Data####
 setwd("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis")
 
 mydata<-read.csv("Data/blue_oak_yr1/blue_oak_competition_datasheet_2021_phenology_survey.csv",stringsAsFactors=T)
 #head(mydata)#Let's look at the first 6 rows of the dataframe
-#str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
+str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
 mydata$Site<-as.character(mydata$Site)
 
-#This dataframe has one row per plant with a calculation for how many days it took for the plant to reproduce (NumDaysAlive). The censor for this dataframe is Censor with a 1 denoting a plant lived and a 0 denoting plant died by the last census date.
+#This dataframe has one row per plant with a calculation for how many days it took for the plant to reproduce (NumDaysAlive). The censor for this dataframe is Censor with a 1 denoting a plant lived and a 0 denoting plant died by the last census date. Erin says dying is 1 and 0 alive, so I need to double check this.
 
 ####Histograms####
-#Original data
-hist(mydata$NumDaysAlive,col='steelblue',main='Original') 
-shapiro.test(mydata$NumDaysAlive)
-#Shapiro-Wilk normality test
-#data:  mydata$NumDaysAlive
-#W = 0.81823, p-value < 2.2e-16
+#Assumptions for cox models: https://www.theanalysisfactor.com/assumptions-cox-regression/
 
+#All data
+hist(mydata$NumDaysAlive,col='steelblue',main='Original') 
+
+#By Treatment
 ggplot(mydata,aes(x=NumDaysAlive))+geom_histogram()+facet_wrap(vars(Treatment)) #Here we see that 4 of the treatments have the same bi-modal distribution and Biomass Removal is right skewed.
 
-####Model 1####
+####Cox Model####
 #Start by making a simple model with no random effects. This will be compared to the full model with random effects.
 simplemodel1<-coxph(Surv(NumDaysAlive,Censor)~Habitat*Treatment,data=mydata)
 print(simplemodel1)
 
-fullmodel1<-coxme(Surv(NumDaysAlive,Censor)~Habitat*Treatment+(1|Site)+(1|Block),data=mydata)
+fullmodel1<-coxme(Surv(NumDaysAlive,Censor)~Habitat*Treatment
+                  +(1|Site)
+                  +(1|Block),
+                  data=mydata)
 print(fullmodel1)
 
+#Compare the models
 anova(simplemodel1,fullmodel1) #See example: https://www.rdocumentation.org/packages/coxme/versions/2.2-16/topics/coxme
+
+fullanova<-Anova(fullmodel1)
+print(fullanova)
+
+simpleanova<-Anova(simplemodel1)
+print(simpleanova)
+
 
 stem(exp(ranef(fullmodel1)[[1]]))
 
+#Test code to plot by habitat
+model_graph1<-survfit(Surv(NumDaysAlive,Censor)~Habitat,data=mydata)
+autoplot(model_graph1)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Off-road Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
 
-
-
+#Test code to plot by treatment
+model_graph2<-survfit(Surv(NumDaysAlive,Censor)~Treatment,data=mydata)
+autoplot(model_graph2)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Off-road Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
 
 
 #ERROR WITH ANOVA # Error in update.default(formula(object), formula.) : need an object with call component
-anova((fullmodel1), test.statistic = "LR") #Use a type II likelihood ratio test to test your fixed effects
+Anova((fullmodel1), test = "LR") #Use a type II likelihood ratio test to test your fixed effects
 #It is confusing to use Anova here (the capital A is important) because this is not really an anova; R uses this function for lots of different tests of the main variables in your model.
 
 exp(coef(fullmodel1)) #This extracts fixed effects?
