@@ -15,7 +15,7 @@ survdrt <- read.csv("SFcox_drought_sterile.csv")
 
 ######################## running the cox proportional hazards survival test with random factors #####################
 
-?Surv         #Surv creates a survival object
+#?Surv         #Surv creates a survival object
 # to add random effects, type "+ (1|random effect)"
 
 ######### below: includes wet treated, so drought treatment is a factor ###########

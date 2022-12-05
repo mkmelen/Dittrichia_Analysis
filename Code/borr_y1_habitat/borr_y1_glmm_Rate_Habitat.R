@@ -18,6 +18,7 @@
 #install.packages('TMB', type = 'source')
 #install.packages("glmmTMB")
 #install.packages("ggplot2")
+#install.packages("MASS")
 
 ####Load Libraries####
 library(lme4)
@@ -28,6 +29,7 @@ library(emmeans)
 library(TMB)
 library(glmmTMB)
 library(ggplot2)
+library(MASS)
 
 ####Load Data####
 setwd("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis")
@@ -73,8 +75,7 @@ summary(fullmodel1) #Variance explained by Site = 0.000
 anova(fullmodel1)
 #Site as a random effect does not explain any of the variance in the model, therefore let's try Site as a fixed effect to see if it adds to the model.
 
-####Model 2####
-#Modeling Site as a fixed  effect
+####Model 2 - Modeling Site as a fixed effect####
 fullmodel2<-lmer(log(Rate)~Habitat*Treatment+Site+(1|Block),data=mydata)
 summary(fullmodel2) #As a fixed effect, one of the Sites (Lex) is significant.
 anova(fullmodel2)
@@ -86,29 +87,43 @@ qqline(resid(fullmodel2)) #add the line
 testDispersion(fullmodel2) #red line should be in the middle of the distribution
 myDHARMagraph2<-simulateResiduals(fullmodel2) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
 plot(myDHARMagraph2) #plotting graph. At this point, you don't want any text or lines to be red.
-#The QQ plots are not looking good for this model
+#The QQ plots are not looking good for this model. Let's try fitting to a negative binomial distribution.
 
-#So this model isn't working well either. Let's try building a model and fitting it to a Beta distribution, first without a link function. Check it with DHARMa, and if it doesn't look good, then fit it to a Beta distribution with a logit link function.
-
-####Model 3####
-#Now I'm using glmm because I'm fitting to other distributions
-fullmodel3<-glmmTMB(Rate~Habitat*Treatment+(1|Site)+(1|Block),family=beta_family(),data=mydata)
+####Model 3 - Negative Binomial####
+fullmodel3<-glmer.nb(Rate~Habitat*Treatment+(1|Site)+(1|Block),data=mydata)
 summary(fullmodel3)
-
-#Now we'll look at the QQ plots and the residuals using DHARMa
 qqnorm(resid(fullmodel3)) #qqplot
 qqline(resid(fullmodel3)) #add the line
 testDispersion(fullmodel3) #red line should be in the middle of the distribution
 myDHARMagraph3<-simulateResiduals(fullmodel3) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
-plot(myDHARMagraph3) #plotting graph. 
+plot(myDHARMagraph3) #plotting graph.The QQ plots are not looking good for this model.
+
+#So this model isn't working well either. Let's try building a model and fitting it to a Beta distribution, first without a link function. Check it with DHARMa, and if it doesn't look good, then fit it to a Beta distribution with a logit link function.
+
+####Model 4 - Beta distribution####
+#Now I'm using glmm because I'm fitting to other distributions
+fullmodel4<-glmmTMB(Rate~Habitat*Treatment+(1|Site)+(1|Block),family=beta_family(),data=mydata)
+summary(fullmodel4)
+qqnorm(resid(fullmodel4)) #qqplot
+qqline(resid(fullmodel4)) #add the line
+testDispersion(fullmodel4) #red line should be in the middle of the distribution
+myDHARMagraph4<-simulateResiduals(fullmodel4) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph4) #plotting graph. Looks good, but check the outliers to make sure they are real.
+
+#Checking outliers:
+ggplot(data=mydata,aes(x=Habitat,y=Rate))+geom_boxplot()
+max(mydata$Rate[mydata$Habitat== "Off-road"])
+max(mydata$Rate[mydata$Habitat== "Roadside"]) 
+#Yes, these outliers make sense, so I don't need to worry about the red stars in the DHARMa plot.
 
 ####Post-Hoc Test####
-#Nicky says: you should remove non-significant interaction terms before running the Tukey.
+#Remove non-significant interaction terms before running the Tukey.
 
 #?emmeans, emmeans(model, pairwise ~ treatment)
-fullmodel3.1<-glmmTMB(Rate~Treatment+(1|Site)+(1|Block),family=beta_family(),data=mydata)
-summary(fullmodel3.1)
-emmeans(fullmodel3.1,pairwise~Treatment)
+fullmodel4.1<-glmmTMB(Rate~Treatment+(1|Site)+(1|Block),family=beta_family(),data=mydata)
+summary(fullmodel4.1)
+emmeans(fullmodel4.1,pairwise~Treatment)
 
 ####Plotting Successful Model###
 ggplot(data=mydata,aes(x=Treatment,y=Rate))+geom_boxplot() #plot data from log(data)
+ggplot(data=mydata,aes(x=Habitat,y=Rate))+geom_boxplot() #plot data from log(data)

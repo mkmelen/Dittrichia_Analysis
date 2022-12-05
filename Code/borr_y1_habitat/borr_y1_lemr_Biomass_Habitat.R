@@ -67,6 +67,9 @@ summary(fullmodel1) #Variance explained by Site = 0.000
 anova(fullmodel1)
 #Site as a random effect does not explain any of the variance in the model, therefore let's try Site as a fixed effect to demonstrate that it doesn't add to the model.
 
+#predict(fullmodel1)
+#hist(predict(fullmodel1,type="response"))
+
 ####Model 2####
 #Modeling Site as a fixed  effect
 fullmodel2<-lmer(log(Biomass)~Habitat*Treatment+Site+(1|Block),data=mydata)
@@ -78,7 +81,7 @@ anova(fullmodel2)
 #Site is removed from this model because it explains very little of the variance
 fullmodel3<-lmer(log(Biomass)~Habitat*Treatment+(1|Block),data=mydata)
 summary(fullmodel3)
-Anova(fullmodel3)
+anova(fullmodel3)
 
 #Now we'll look at the QQ plots and the residuals using DHARMa
 qqnorm(resid(fullmodel3)) #qqplot
@@ -139,3 +142,4 @@ emmeans(fullmodel3.2,pairwise~Treatment)
 
 ####Plotting Successful Model###
 ggplot(data=mydata,aes(x=Treatment,y=log(Biomass)))+geom_boxplot() #plot data from log(data)
+ggplot(data=mydata,aes(x=Habitat,y=log(Biomass)))+geom_boxplot() #plot data from log(data)
