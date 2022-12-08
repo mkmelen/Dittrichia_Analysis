@@ -3,7 +3,7 @@
 #October 2022
 #Miranda Melen
 
-#This code uses Growth data with Habitat (roadside and off-road) and Treatment in a lmer model. Anova and Tukey tests are used on the successful ModelX with the creation of a box plot as a finished product.
+#This code uses Growth data with Habitat (roadside and off-road) and Treatment in a lmer model. Anova and Tukey tests are used on the successful Model4 with the creation of a box plot as a finished product.
 
 #Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and off-road; R or O)
 

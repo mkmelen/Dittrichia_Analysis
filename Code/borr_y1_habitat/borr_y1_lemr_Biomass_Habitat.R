@@ -143,3 +143,4 @@ emmeans(fullmodel3.2,pairwise~Treatment)
 ####Plotting Successful Model###
 ggplot(data=mydata,aes(x=Treatment,y=log(Biomass)))+geom_boxplot() #plot data from log(data)
 ggplot(data=mydata,aes(x=Habitat,y=log(Biomass)))+geom_boxplot() #plot data from log(data)
+

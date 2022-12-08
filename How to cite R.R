@@ -8,3 +8,8 @@ version$version.string
 
 #Here is the code to pull information needed to cite a package in R
 citation("coxme")
+citation("survival")
+citation("DHARMa")
+citation("glmmTMB")
+citation("lme4")
+citation("lmerTest")

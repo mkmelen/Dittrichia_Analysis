@@ -1,7 +1,7 @@
 #### Survival Analysis with Random Effects ####
 #Dittrichia Project
 #October 2022
-#Miranda Melen
+#Miranda Melen and Nicky Lustenhouwer
 
 #Here we will use 'coxme' which allows you to conduct mixed effects Cox proportional hazards models. Information here: https://cran.r-project.org/web/packages/coxme/vignettes/coxme.pdf.
 
@@ -29,7 +29,7 @@ library(multcomp)
 ####Load Data####
 setwd("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis")
 
-mydata<-read.csv("Data/blue_oak_yr1/blue_oak_competition_datasheet_2021_phenology_survey.csv",stringsAsFactors=T)
+mydata<-read.csv("data/blue_oak_yr1/blue_oak_competition_datasheet_2021_phenology_survey.csv",stringsAsFactors=T)
 #head(mydata)#Let's look at the first 6 rows of the dataframe
 str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
 mydata$Site<-as.character(mydata$Site)
