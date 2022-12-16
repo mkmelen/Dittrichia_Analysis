@@ -116,6 +116,9 @@ max(mydata$Rate[mydata$Habitat== "Off-road"])
 max(mydata$Rate[mydata$Habitat== "Roadside"]) 
 #Yes, these outliers make sense, so I don't need to worry about the red stars in the DHARMa plot.
 
+#Here is the best model
+summary(fullmodel4)
+
 ####Post-Hoc Test####
 #Remove non-significant interaction terms before running the Tukey.
 

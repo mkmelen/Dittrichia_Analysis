@@ -95,7 +95,9 @@ exp(ranef(fullmodel2)$Site) # Pretty good for most, CHE is lower
 #BAY       CHE       GUA       LEX       OAP       PAR       PEN       SSJ 
 #0.9993086 1.0030391 0.9969110 0.9997749 0.9987377 0.9998305 1.0027064 0.9997059 
 
-####Plots####
+####Plots: Proportaion Germinated####
+#Autoplot
+
 #Plot by habitat
 model_graph1<-survfit(Surv(DaysToGerm,Censor)~Habitat,data=mydata)
 autoplot(model_graph1)+labs(x="\n Time to Germination (Days)",y="Germination Probabilities\n",title="Germination Times Of Seeds from \n Roadside and Adjacent Vegetation\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
@@ -107,3 +109,13 @@ autoplot(model_graph2)+labs(x="\n Time to Germination (Days)",y="Germination Pro
 #Plot by site and treatment
 model_graph3<-survfit(Surv(DaysToGerm,Censor)~Site+Treatment,data=mydata)
 autoplot(model_graph3)+labs(x="\n Time to Germination (Days)",y="Germination Probabilities\n",title="Germination Times Of Seeds from \n Roadside and Adjacent Vegetation\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+
+####HELP - I need these graphs to show germination, where curves should start at 0 and end with 100####
+
+#Now in ggplot
+library(survminer)
+require("survival")
+ggsurvplot(model_graph1,data=mydata)
+ggsurvplot(model_graph2,data=mydata)
+ggsurvplot(model_graph3,data=mydata)
+#But I still cannot get the Surv to flip, so the graphs are "upside down" :-(

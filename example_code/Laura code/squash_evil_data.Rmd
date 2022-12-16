@@ -1,0 +1,241 @@
+---
+title: "Squash Miranda's Misery"
+output: html_notebook
+---
+
+
+Miranda needs a correct survival plot for germination time but R is punishing her. 
+
+Time to help!
+
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+boo <- read_csv("cox_germ_soil8-2-21.csv")
+```
+
+What we gotta plot: 
+
+x = time to germination (column = DaysToGerm)
+y = germination probability (column = PlotPropGerm)
+color = strata (column = Habitat)
+
+
+# Germination Rate
+
+If you want to change Forest to Natural: 
+ %>% 
+ mutate(Treatment = case_when(
+    Treatment == "Forest" ~ paste("Natural"),
+    Treatment != "Forest" ~ paste(Treatment)
+  ))
+
+
+## Habitat and Treatment
+
+1. DaystoGerm should be 0 if actually 0, Censor should be NA for DaystoGerm at 0 - ended up filtering off this line
+
+
+2. now lets select the columns we want for plotting so we can make sure there is only one value per time to germination and habitat
+
+```{r}
+
+no_days <- boo %>% 
+  filter(DaysToGerm != 0) %>% 
+  mutate(plot_treat = paste(Habitat, Treatment, sep="/")) %>% 
+  group_by(plot_treat) %>% 
+  count(DaysToGerm) %>% 
+  mutate(cums = cumsum(n)) %>% 
+  mutate(prop = cums/400) 
+  
+
+germd_gg <- ggplot(no_days)+
+  geom_line(aes(x=DaysToGerm, y=prop, color = plot_treat), size = 1)+
+  theme_classic()+
+  ylim(0,1)+
+  scale_x_continuous(name = "Days to Germination", limits = c(0,12), breaks = seq(0,12,1))+
+  labs(y="Proportion Germinated", color = "Habitat/Treatment")
+germd_gg
+
+ggsave(plot = germd_gg, file = "../figures/propgermd.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
+
+
+## Population
+
+```{r}
+no_days1 <- boo %>% 
+  filter(DaysToGerm != 0) %>% 
+  mutate(plot_treat = paste(Population, Treatment, sep="/")) %>% 
+  group_by(plot_treat) %>% 
+  count(DaysToGerm) %>% 
+  mutate(cums = cumsum(n)) %>% 
+  mutate(prop = cums/50) 
+  
+
+germd1_gg <- ggplot(no_days1)+
+  geom_line(aes(x=DaysToGerm, y=prop, color = plot_treat), size = 1)+
+  geom_point(aes(x=DaysToGerm, y=prop, color = plot_treat, shape = plot_treat), size = 5)+
+  theme_classic()+
+  ylim(0,1)+
+  scale_x_continuous(name = "Days to Germination", limits = c(0,12), breaks = seq(0,12,1))+
+  scale_shape_manual(values = c(16, 17, 1, 2, 16, 17, 1, 2,
+                                16, 17, 1, 2, 16, 17, 1, 2,
+                                16, 17, 1, 2, 16, 17, 1, 2,
+                                16, 17, 1, 2, 16, 17, 1, 2))+
+  labs(y="Proportion Germinated", color = "Population/Treatment", shape = "Population/Treatment")
+germd1_gg
+
+ggsave(plot = germd1_gg, file = "../figures/propgermd1.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
+
+
+# Germination Success
+
+
+## Habitat and Treatment
+
+```{r}
+
+suc <- boo %>% 
+  filter(DaysToGerm != 0) %>% 
+  mutate(plot_treat = paste(Habitat, Treatment, sep="/")) %>% 
+  group_by(Habitat, Treatment) %>% 
+  count(DaysToGerm) %>% 
+  mutate(cums = cumsum(n)) %>% 
+  mutate(prop = cums/400) 
+
+suc_gg <- ggplot(suc)+
+  geom_boxplot(aes(x=Treatment, y=prop, fill = Habitat), size = 0.5)+
+  theme_classic()+
+  ylim(0,1)+
+  scale_fill_manual(values = c("forestgreen","gray58"))+
+  labs(y="Proportion Germinated", fill = "Habitat", x="Treatment")
+suc_gg
+
+ggsave(plot = suc_gg, file = "../figures/propgerms.png", width = 20, height = 25, units = "cm", dpi = 800)
+
+sucf_gg <- ggplot(suc)+
+  geom_boxplot(aes(x=Treatment, y=prop, fill = Habitat), size = .5)+
+  theme_classic()+
+  ylim(0,1)+
+  facet_grid(Habitat~.)+
+  scale_fill_manual(values = c("forestgreen","gray58"))+
+  labs(y="Proportion Germinated", fill = "Habitat", x="Treatment")
+sucf_gg
+
+ggsave(plot = sucf_gg, file = "../figures/propgermsF.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
+
+## Population and Treatment
+
+```{r}
+suc1 <- boo %>% 
+  filter(DaysToGerm != 0) %>% 
+  mutate(plot_treat = paste(Population, Treatment, sep="/")) %>% 
+  group_by(Population, Treatment, Habitat) %>% 
+  count(DaysToGerm) %>% 
+  mutate(cums = cumsum(n)) %>% 
+  mutate(prop = cums/50) 
+
+suc1_gg <- ggplot(suc1)+
+  geom_boxplot(aes(x=Treatment, y=prop, fill = Population), size = 0.5)+
+  theme_classic()+
+  ylim(0,1)+
+  facet_grid(Habitat~.)+
+  #scale_fill_manual(values = c("forestgreen","gray58"))+
+  labs(y="Proportion Germinated", fill = "Population", x="Treatment")
+suc1_gg
+
+ggsave(plot = suc1_gg, file = "../figures/propgerms1.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
+
+
+# Response to Soil Type and Competition
+
+
+## Reformatting datasheet
+
+```{r}
+compt <- read_csv("../competition_biomass.csv")
+
+# change "Empty" Competition entries to "None"
+compta <- compt %>% 
+  mutate(Competition = case_when(
+    Competition == "Empty" ~ paste("None"),
+    Competition != "Empty" ~ paste(Competition)
+  )) %>% 
+  mutate(Habitat = case_when(
+    Habitat == "Off-Roadsideoads" ~ paste("Off-road"),
+    Habitat != "Off-Roadsideoads" ~ paste(Habitat)
+  ))  %>% 
+  replace_na(list(Dittrichia_biomass = 0, Grass_biomass = 0)) %>% 
+  mutate(Dittrichia_biomass1000 = Dittrichia_biomass*10000, Grass_biomass1000 = Grass_biomass*10000) %>% 
+  filter(Dittrichia_biomass != 0) %>% 
+  mutate(log_dic = log(Dittrichia_biomass1000)) %>% 
+  mutate(dic_mg = Dittrichia_biomass*100)
+  
+
+```
+
+
+## Habitat/Treatment Plant Biomass
+
+```{r}
+
+compta_gg <- ggplot(compta)+
+  geom_boxplot(aes(x=Competition, y=log_dic, fill = Soil))+
+  theme_classic()+
+  scale_fill_manual(values = c("gray58", "forestgreen"))+
+  labs(y="log(Biomass)", fill = "Soil", x="Competition")
+compta_gg
+
+ggsave(plot = compta_gg, file = "../figures/compt_biomass.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
+
+## Populations/Soil + Habitat
+
+```{r}
+compta1_gg <- ggplot(compta)+
+  geom_boxplot(aes(x=Soil, y=log_dic, fill = Population))+
+  theme_classic()+
+  facet_grid(Habitat~.)+
+  #scale_fill_manual(values = c("gray58", "forestgreen"))+
+  labs(y="log(Biomass)", fill = "Population", x="Soil")
+compta1_gg
+
+ggsave(plot = compta1_gg, file = "../figures/compt1_biomass.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
+
+
+## Biomasses Scatterplot
+
+
+```{r}
+scatter <- compta %>% 
+  filter(Competition != "None") %>%
+  filter(Grass_biomass != 0) %>% 
+  mutate(scx = log(Grass_biomass), scy = log(Dittrichia_biomass)) %>% 
+  mutate(type = paste(Soil, Competition, sep="/"))
+
+scbio_gg <- ggplot(scatter)+
+  geom_point(aes(x=scx, y=scy, shape = Soil, color = Competition))+
+  scale_color_manual(values = c("orange", "purple"))+
+  geom_smooth(method=lm, aes(x=scx, y=scy, linetype = Soil), color = "black")+
+  theme_classic()+
+  labs(y = "Dittrichia biomass (g)", x ="Grass biomass (g)", shape = "Soil", color = "Competition")
+
+scbio_gg
+
+ggsave(plot = scbio_gg, file = "../figures/scat_biomass.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
+
+
+
+
+

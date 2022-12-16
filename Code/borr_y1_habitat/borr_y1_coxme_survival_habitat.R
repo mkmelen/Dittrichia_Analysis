@@ -96,6 +96,16 @@ AIC(fullmodel2,fullmodel3) #Looks like fullmodel3 is the better model
 #fullmodel2 16.34036 9037.097
 #fullmodel3 20.21425 9030.281
 
+#Here's the model we keep:
+summary(fullmodel3)
+#Fixed coefficients
+#                            coef        exp(coef)   se(coef)     z      p
+#HabitatRoadside             0.06904425  1.0714836   0.1073045    0.64   0.52000
+#TreatmentBiomass Removal   -0.45142887  0.6367177   0.1165054   -3.87   0.00011
+#TreatmentHemizonia          0.17432295  1.1904400   0.1148122    1.52   0.13000
+#TreatmentRaking             0.22823811  1.2563844   0.1148063    1.99   0.04700
+#TreatmentRaking + Clipping  0.28214231  1.3259674   0.1153533    2.45   0.01400
+
 ####Risk Assessment####
 #Let's pull out some coefficients, which tell us about the risk of death. 1 = no effect, <1 = decreased risk of death, >1 = increased risk of death. NOTE which model is being used.
 exp(coef(fullmodel2))
@@ -143,6 +153,12 @@ autoplot(model_graph1)+labs(x="\n Survival Time (Days)",y="Survival Probabilitie
 model_graph2<-survfit(Surv(NumDaysAlive,Censor)~Treatment,data=mydata)
 autoplot(model_graph2)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Off-road Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
 
+####HELP - I need to have 4 curves: Control/Roadside, Control/Off-Road, Biomass Removal/Roadside, Biomass Removal/Off-Road ####
+#Plot by treatment, but only with Control and Biomass Removal
+sub_mydata<-subset(mydata,Treatment%in%c('Control','Biomass Removal'))
+model_graph3<-survfit(Surv(NumDaysAlive,Censor)~Treatment,data=sub_mydata)
+autoplot(model_graph3)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Off-road Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+
 ####Post hoc Tukey####
 summary(glht(fullmodel4, mcp(Treatment="Tukey")))
-?glht #mpc = multiple comparison
+#?glht #mpc = multiple comparison
