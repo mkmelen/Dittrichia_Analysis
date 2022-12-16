@@ -44,7 +44,6 @@ library(dplyr)
 This dataframe has one row per seed (1600 lines) with a calculation for how many days it took for the seed to germinate (DaysToGerm). The censor for this dataframe is Censor with a 1 denoting a seed germinated and a 0 denoting when a seed didn't germinate by the last census date (Census = 8/2/21).
 ```{r}
 mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/seed_behavior/cox_germ_soil8-2-21.csv",stringsAsFactors=T)
-#head(mydata) #Let's look at the first 6 rows of the dataframe
 mydata$DishNum<-as.factor(mydata$DishNum)
 str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
 ```

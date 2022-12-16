@@ -1,0 +1,127 @@
+---
+title: "Response to Soil Type and Competition"
+output: html_notebook
+date: December 2022
+authors: Miranda Melen, Laura Goetz
+---
+#Background
+We used a two-way factorial design with construction soil and natural soil and three competition treatments (D. graveolens grown alone, with Bromus hordeaceus, or with Festuca perennis). These grasses were selected because they are commonly found in California annual grasslands and were identified in many of the 8 paired sites (see Supplemental). We collected B. hordeaceus seeds from Blue Oak Ranch Reserve and F. perennis seeds from the Terrace Lands of Younger Lagoon Reserve on the UCSC Coastal Science Campus.
+
+Every pot had either one D. graveolens with one B. hordeaceus or one with F. perennis, or no grass competitor (grown alone). We prepared Deepots (D16; 5cm diameter, 18cm height) at the UCSC Coastal Science Campus Greenhouse and filled with rehydrated soil: 384 pots were filled with natural soil, and 384 with construction soil (768 pots total).
+
+We germinated D. graveolens seeds in an incubation chamber with a daytime temperature of 23ºC from 9AM-1AM and a nighttime temperature of 19ºC from 1AM-9AM. Grasses were germinated in trays with potting mix and placed under fluorescent light banks for 16-hour length days and 8-hour length nights. Once radicles and cotyledons emerged, seedlings were transplanted in sets of six (one for each treatment) and then randomized into a blocked design.
+
+After 4 months, we measured grass height from the soil surface to the longest tip of each grass bundle and measured D. graveolens leaf length from stem node to leaf tip of the longest newest true leaf to obtain an accurate estimate of the rosette size. We then harvested aboveground biomass at the crown and dried it in a 60ºC oven for 3 days before weighing it. 
+
+#Data Analysis
+Statistical analyses were performed in R version 4.2.1 (R Core Team 2022) using a two-way factorial ANOVA to test for the effects of soil and of competition on D. graveolens biomass. We used a post-hoc Tukey test to compare the three competitive treatments (grown alone, with B. hordeaceus, and with F. perennis) for each soil type separately. We also quantified the response of D. graveolens to the biomass of each competitor using linear regression models.
+ 
+We tested for a difference between roadside and adjacent vegetation habitat types on each soil type independently, using mixed-model ANOVA, with site as a random effect and habitat (roadside or adjacent vegetation) as a fixed effect. Biomass of both D. graveolens and the grass competitors was ln-transformed before analysis.
+
+##Models included
+
+#Libraries
+```{r}
+#install.packages("ggplot2")
+#install.library("tidyverse")
+#install.library("dplyr")
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+```
+
+#Load Data
+This dataframe has one row per pot (768 lines). Data is Dittrichia_biomass and Grass_biomass, both measured in grams. NAs in biomass columns are "no data" because there was no grass present in that pot at the time of measurement.
+```{r}
+mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/greenhouse_competition/competition_biomass.csv",stringsAsFactors=T)
+str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
+```
+
+#Histograms
+
+#Model
+
+##Best Model
+
+##Risk Assessment
+
+#ggplot
+
+# Response to Soil Type and Competition
+
+
+## Reformatting datasheet
+
+```{r}
+compt <- read_csv("../competition_biomass.csv")
+
+# change "Empty" Competition entries to "None"
+compta <- compt %>% 
+  mutate(Competition = case_when(
+    Competition == "Empty" ~ paste("None"),
+    Competition != "Empty" ~ paste(Competition)
+  )) %>% 
+  mutate(Habitat = case_when(
+    Habitat == "Off-Roadsideoads" ~ paste("Off-road"),
+    Habitat != "Off-Roadsideoads" ~ paste(Habitat)
+  ))  %>% 
+  replace_na(list(Dittrichia_biomass = 0, Grass_biomass = 0)) %>% 
+  mutate(Dittrichia_biomass1000 = Dittrichia_biomass*10000, Grass_biomass1000 = Grass_biomass*10000) %>% 
+  filter(Dittrichia_biomass != 0) %>% 
+  mutate(log_dic = log(Dittrichia_biomass1000)) %>% 
+  mutate(dic_mg = Dittrichia_biomass*100)
+  
+
+```
+
+
+## Habitat/Treatment Plant Biomass
+
+```{r}
+
+compta_gg <- ggplot(compta)+
+  geom_boxplot(aes(x=Competition, y=log_dic, fill = Soil))+
+  theme_classic()+
+  scale_fill_manual(values = c("gray58", "forestgreen"))+
+  labs(y="log(Biomass)", fill = "Soil", x="Competition")
+compta_gg
+
+ggsave(plot = compta_gg, file = "../figures/compt_biomass.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
+
+## Populations/Soil + Habitat
+
+```{r}
+compta1_gg <- ggplot(compta)+
+  geom_boxplot(aes(x=Soil, y=log_dic, fill = Population))+
+  theme_classic()+
+  facet_grid(Habitat~.)+
+  #scale_fill_manual(values = c("gray58", "forestgreen"))+
+  labs(y="log(Biomass)", fill = "Population", x="Soil")
+compta1_gg
+
+ggsave(plot = compta1_gg, file = "../figures/compt1_biomass.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
+
+
+## Biomasses Scatterplot
+
+
+```{r}
+scatter <- compta %>% 
+  filter(Competition != "None") %>%
+  filter(Grass_biomass != 0) %>% 
+  mutate(scx = log(Grass_biomass), scy = log(Dittrichia_biomass)) %>% 
+  mutate(type = paste(Soil, Competition, sep="/"))
+
+scbio_gg <- ggplot(scatter)+
+  geom_point(aes(x=scx, y=scy, shape = Soil, color = Competition))+
+  scale_color_manual(values = c("orange", "purple"))+
+  geom_smooth(method=lm, aes(x=scx, y=scy, linetype = Soil), color = "black")+
+  theme_classic()+
+  labs(y = "Dittrichia biomass (g)", x ="Grass biomass (g)", shape = "Soil", color = "Competition")
+
+scbio_gg
+
+ggsave(plot = scbio_gg, file = "../figures/scat_biomass.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
