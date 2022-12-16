@@ -1,0 +1,231 @@
+---
+title: "Seed Behavior"
+output: html_notebook
+date: December 2022
+authors: Miranda Melen, Laura Goetz, Nicky Lustenhouwer
+---
+#Background
+The dataset cox_germ_soil8-2-21.csv has germination rate and germination success data from an experiment conducted at UCSC greenhouses in 2021. Seed was sources from two Habitat types (roadside and soils away from roads), and Treatments were two soil types sourced from UCSC.
+
+To test for differences in germination rate between roadside populations and those invading away from roads, we used a germination experiment, which incorporated two proxy soil types for roadside and soils away from roads.
+                                                                                              
+In June 2021, we collected construction soil and natural soil from an outdoor storage area at the UC Santa Cruz (UCSC) lower campus. The construction soil, from the UCSC Kresge construction site, was previously processed to road specifications and will be used in building future roads and shoulders around UCSC. The natural soil was topsoil removed from vegetated areas around the construction site and contained a high amount of woody organic matter. We used a 5mm sieve to remove sticks and rocks from both types of soil.
+
+In the summer of 2021, we tested germination behavior on construction and natural soils. We germinated 10 seeds from each population in Petri dishes. We added construction soil or natural soil to 160 Petri dishes (80 Petri dishes per treatment; 5 replicates each). Petri dishes were sealed with parafilm and placed in a randomized block design in an incubation chamber with a daytime temperature of 23ºC from 9AM-1AM and a nighttime temperature of 19ºC from 1AM-9AM. Each day we scored Petri dishes for germination, for a total of 20 days. Signs of germination included the first emergence of the root radical or the cotyledon. Petri dishes were misted with DI water as needed, and germinated seeds were removed once scored.
+
+#Data Analysis
+Statistical analyses were performed in R version 4.2.1 (R Core Team 2022) using two-way ANOVA to analyze interactions of habitat and soil type on proportion of germination. We used mixed effects cox models with the coxme (Therneau 2022a) and survival (Therneau 2022b) packages to assess germination rates for each soil type. Germination success was assessed using linear mixed-effects models with the lme4 (Bates et al. 2015), lmerTest (Kuznetsova et al. 2017), and DHARMa packages (Hartig 2022).
+
+##Cox proportional hazard models
+Here we will use 'coxme' which allows you to conduct mixed effects Cox proportional hazards models. Information here: https://cran.r-project.org/web/packages/coxme/vignettes/coxme.pdf. We conducted a germination experiment using Dittrichia graveolens seeds on filter paper. "Surv" creates a survival object to combine the days column (NumDaysAlive) and the censor column (Censor) to be used as a response variable in a model formula.The model follows the same syntax as linear models (lm, lmer, etc). Fixed effects: "var1 * var2" will give you the interaction term and the individual variables: so "var1 + var2 + var1:var2"
+To add random effects, type "+ (1|random effect)". 
+
+#Libraries
+```{r}
+#install.packages("coxme")
+#install.packages("survival")
+#install.packages("ggplot2")
+#install.packages("ggfortify")
+#install.packages("car")
+#install.packages("multcomp")
+#install.library("tidyverse")
+#install.library("dplyr")
+library(coxme)
+library(survival)
+library(ggplot2)
+library(ggfortify)
+library(car)
+library(multcomp)
+library(tidyverse)
+library(dplyr)
+```
+
+#Load Data
+This dataframe has one row per seed (1600 lines) with a calculation for how many days it took for the seed to germinate (DaysToGerm). The censor for this dataframe is Censor with a 1 denoting a seed germinated and a 0 denoting when a seed didn't germinate by the last census date (Census = 8/2/21).
+```{r}
+mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/seed_behavior/cox_germ_soil8-2-21.csv",stringsAsFactors=T)
+#head(mydata) #Let's look at the first 6 rows of the dataframe
+mydata$DishNum<-as.factor(mydata$DishNum)
+str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
+```
+
+#Histograms
+```{r}
+#All data
+hist(mydata$DaysToGerm,col='steelblue',main='Original')
+#By soil type
+ggplot(mydata,aes(x=DaysToGerm))+geom_histogram()+facet_wrap(vars(Treatment)) #Here we see that Dittrichia germination responds similarly to both soil types (Treatment).
+```
+
+#Cox Model
+Start by making a simple model with no random effects. This will be compared to the full model with random effects.
+```{r}
+simplemodel1<-coxph(Surv(DaysToGerm,Censor)~Habitat*Treatment,data=mydata)
+#summary(simplemodel1)
+#print(simplemodel1)
+#predict(simplemodel1)
+hist(predict(simplemodel1))
+```
+
+Now make a full model using random effects
+```{r}
+fullmodel1<-coxme(Surv(DaysToGerm,Censor)~Habitat*Treatment+(1|Site/Population/DishNum),data=mydata)
+#summary(fullmodel1)
+#print(fullmodel1)
+#predict(fullmodel1)
+hist(predict(fullmodel1))
+```
+
+Now we can compare the models to see which model is best
+```{r}
+anova(simplemodel1,fullmodel1) #There is a significance between models
+AIC(simplemodel1,fullmodel1) #But comparing the AIC scores is easiest. Keep the lower AIC score because that is considered the better model. The full model (fullmodel1) is best
+```
+
+Now, let's make a model with no interaction term
+```{r}
+fullmodel2<-coxme(Surv(DaysToGerm,Censor)~Habitat+Treatment+(1|Site/Population/DishNum),data=mydata) 
+summary(fullmodel2)
+```
+
+Let's compare the the first two models to test for the significance of the term that is removed (using LR)
+```{r}
+anova(fullmodel1,fullmodel2) #Not significant
+AIC(fullmodel1,fullmodel2) #The two models are within 2 points of each other, so I can use the simpler model, which means the interaction term is dropped and we keep fullmodel2.
+```
+
+##Best Model
+```{r}
+#fullmodel2<-coxme(Surv(DaysToGerm,Censor)~Habitat+Treatment+(1|Site/Population/DishNum),data=mydata) 
+summary(fullmodel2)
+```
+
+##Risk Assessment
+These values are found in the model summary, but if you want to pull them out, here is how you interpret them.
+```{r}
+#1 = no effect, <1 = decreased risk of death, >1 = increased risk of death.
+
+exp(coef(fullmodel2)) #When we run this, both are just above 1, which means that roadside has an ever so so slight increase in germination compared to off-road, and forest has an even smaller slight increase in germination compared to construction.
+
+#Here we pull the std dev of the random effects which works like the fixed effect coefficients to calculate risk.
+exp(ranef(fullmodel2)$Site) # Pretty even among all the sites
+```
+
+#ggplot
+##Proportion Germinated x Time with Habitat and Treatment
+```{r}
+germ_rate1<-mydata %>% 
+  filter(DaysToGerm != 0) %>% 
+  mutate(PlotTreatment = paste(Habitat, Treatment, sep="/")) %>% 
+  group_by(PlotTreatment) %>% 
+  count(DaysToGerm) %>% 
+  mutate(CumulativeSum=cumsum(n)) %>% 
+  mutate(Proportion=CumulativeSum/400) #400 seeds per group, 4 groups (2 Habitats x 2 Treatments)
+  
+germ_rate1_gg<-ggplot(germ_rate1)+
+  geom_line(aes(x=DaysToGerm, y=Proportion, color = PlotTreatment), linewidth = 0.5)+
+  theme_classic()+
+  ylim(0,1)+
+  scale_x_continuous(name = "Days to Germination", limits = c(0,12), breaks = seq(0,12,1))+
+  labs(y="Proportion Germinated", color = "Habitat/Treatment")
+germ_rate1_gg
+
+ggsave(plot = germ_rate1_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate1_gg.png", width = 20, height = 20, units = "cm", dpi = 800)
+
+```
+
+##Proportion Germinated x Time with Habitat and Population
+```{r}
+germ_rate2<-mydata %>% 
+  filter(DaysToGerm != 0) %>% 
+  mutate(PlotTreatment = paste(Population, Treatment, sep="/")) %>% 
+  group_by(PlotTreatment) %>% 
+  count(DaysToGerm) %>% 
+  mutate(CumulativeSum=cumsum(n)) %>% 
+  mutate(Proportion=CumulativeSum/50) 
+  
+germ_rate2_gg<-ggplot(germ_rate2)+
+  geom_line(aes(x=DaysToGerm, y=Proportion, color = PlotTreatment), size = 0.5)+
+  geom_point(aes(x=DaysToGerm, y=Proportion, color = PlotTreatment, shape = PlotTreatment), size = 2)+
+  theme_classic()+
+  ylim(0,1)+
+  scale_x_continuous(name = "Days to Germination", limits = c(0,12), breaks = seq(0,12,1))+
+  scale_shape_manual(values = c(16, 17, 1, 2, 16, 17, 1, 2,
+                                16, 17, 1, 2, 16, 17, 1, 2,
+                                16, 17, 1, 2, 16, 17, 1, 2,
+                                16, 17, 1, 2, 16, 17, 1, 2))+
+  labs(y="Proportion Germinated", color = "Population/Treatment", shape = "Population/Treatment")
+germ_rate2_gg
+
+ggsave(plot = germ_rate2_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate2_gg.png", width = 25, height = 20, units = "cm", dpi = 800)
+```
+
+##Germination Success X Treatment and Habitat
+
+```{r}
+germ_success1<-mydata %>% 
+  filter(DaysToGerm != 0) %>% 
+  mutate(PlotTreatment = paste(Habitat, Treatment, sep="/")) %>% 
+  group_by(Habitat, Treatment) %>% 
+  count(DaysToGerm) %>% 
+  mutate(CumulativeSum=cumsum(n)) %>% 
+  mutate(Proportion=CumulativeSum/400) 
+
+germ_success1_gg<-ggplot(germ_success1)+
+  geom_boxplot(aes(x=Treatment, y=Proportion, fill = Habitat), size = 0.5)+
+  theme_classic()+
+  ylim(0,1)+
+  scale_fill_manual(values = c("forestgreen","gray58"))+
+  labs(y="Proportion Germinated", fill = "Habitat", x="Treatment")
+germ_success1_gg
+
+ggsave(plot = germ_success1_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_success1_gg.png", width = 20, height = 20, units = "cm", dpi = 800)
+
+#Or using facet_grid
+germ_success1F_gg<-ggplot(germ_success1)+
+  geom_boxplot(aes(x=Treatment, y=Proportion, fill = Habitat), size = .5)+
+  theme_classic()+
+  ylim(0,1)+
+  facet_grid(Habitat~.)+
+  scale_fill_manual(values = c("forestgreen","gray58"))+
+  labs(y="Proportion Germinated", fill = "Habitat", x="Treatment")
+germ_success1F_gg
+
+ggsave(plot = germ_success1F_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_success1F_gg.png", width = 20, height = 20, units = "cm", dpi = 800)
+```
+
+##Germination Success x Treatment and Population
+```{r}
+germ_success2<-mydata %>% 
+  filter(DaysToGerm != 0) %>% 
+  mutate(PlotTreatment = paste(Habitat, Treatment, sep="/")) %>% 
+  group_by(Population, Treatment, Habitat) %>% 
+  count(DaysToGerm) %>% 
+  mutate(CumulativeSum=cumsum(n)) %>% 
+  mutate(Proportion=CumulativeSum/50) 
+
+germ_success2_gg<-ggplot(germ_success2)+
+  geom_boxplot(aes(x=Treatment, y=Proportion, fill = Population), size = 0.5)+
+  theme_classic()+
+  ylim(0,1)+
+  facet_grid(Habitat~.)+
+  labs(y="Proportion Germinated", fill = "Population", x="Treatment")
+germ_success2_gg
+
+ggsave(plot = germ_success2_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_success2_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
+```
+
+#Autoplot: Proportion Germinated
+```{r}
+#Plot by habitat
+model_graph1<-survfit(Surv(DaysToGerm,Censor)~Habitat,data=mydata)
+autoplot(model_graph1)+labs(x="\n Time to Germination (Days)",y="Germination Probabilities\n",title="Germination Times Of Seeds from \n Roadside and Away Habitats\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+
+#Plot by habitat and treatment
+model_graph2<-survfit(Surv(DaysToGerm,Censor)~Habitat+Treatment,data=mydata)
+autoplot(model_graph2)+labs(x="\n Time to Germination (Days)",y="Germination Probabilities\n",title="Germination Times Of Seeds from \n Roadside and Away Habitats\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+
+#Plot by site and treatment
+model_graph3<-survfit(Surv(DaysToGerm,Censor)~Site+Treatment,data=mydata)
+autoplot(model_graph3)+labs(x="\n Time to Germination (Days)",y="Germination Probabilities\n",title="Germination Times Of Seeds from \n Roadside and Away Habitats\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+```
