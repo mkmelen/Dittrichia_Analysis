@@ -35,9 +35,35 @@ This dataframe has one row per pot (768 lines). Data is Dittrichia_biomass and G
 ```{r}
 mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/greenhouse_competition/competition_biomass.csv",stringsAsFactors=T)
 str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
+
+# change "NA" biomass to "0"
+mydata1 <- mydata %>% 
+  replace_na(list(Dittrichia_biomass = 0, Grass_biomass = 0))
 ```
 
 #Histograms
+```{r}
+#Dittrichia biomass
+hist(mydata1$Dittrichia_biomass,col='steelblue',main='Original')
+#Grass biomass
+hist(mydata1$Grass_biomass,col='steelblue',main='Original')
+#By soil type
+ggplot(mydata1,aes(x=Dittrichia_biomass))+geom_histogram()+facet_wrap(vars(Soil))
+ggplot(mydata1,aes(x=Grass_biomass))+geom_histogram()+facet_wrap(vars(Soil))
+```
+Data is skewed, so let's try log transforming. However, the values are all <0 which create negative numbers when log transforming, therefore we need to multiply to move the decimal and then check the data again.
+
+```{r}
+#Prepare data for log transform
+log_mydata <- mydata1 %>% 
+  mutate(Dittrichia_biomass10000 = Dittrichia_biomass*10000, Grass_biomass10000 = Grass_biomass*10000) %>% 
+  filter(Dittrichia_biomass != 0) %>% 
+  mutate(log_Dittrichia = log(Dittrichia_biomass10000)) %>% 
+  mutate(log_Grass = log(Grass_biomass10000))
+
+hist(log_mydata$log_Dittrichia,col='steelblue',main='Original')
+hist(log_mydata$log_Grass,col='steelblue',main='Original') 
+```
 
 #Model
 
@@ -46,82 +72,44 @@ str(mydata) #Check that each column has the right class (factor, integer, numeri
 ##Risk Assessment
 
 #ggplot
-
-# Response to Soil Type and Competition
-
-
-## Reformatting datasheet
-
+##Biomass x Competition and Soil
 ```{r}
-compt <- read_csv("../competition_biomass.csv")
-
-# change "Empty" Competition entries to "None"
-compta <- compt %>% 
-  mutate(Competition = case_when(
-    Competition == "Empty" ~ paste("None"),
-    Competition != "Empty" ~ paste(Competition)
-  )) %>% 
-  mutate(Habitat = case_when(
-    Habitat == "Off-Roadsideoads" ~ paste("Off-road"),
-    Habitat != "Off-Roadsideoads" ~ paste(Habitat)
-  ))  %>% 
-  replace_na(list(Dittrichia_biomass = 0, Grass_biomass = 0)) %>% 
-  mutate(Dittrichia_biomass1000 = Dittrichia_biomass*10000, Grass_biomass1000 = Grass_biomass*10000) %>% 
-  filter(Dittrichia_biomass != 0) %>% 
-  mutate(log_dic = log(Dittrichia_biomass1000)) %>% 
-  mutate(dic_mg = Dittrichia_biomass*100)
-  
-
-```
-
-
-## Habitat/Treatment Plant Biomass
-
-```{r}
-
-compta_gg <- ggplot(compta)+
-  geom_boxplot(aes(x=Competition, y=log_dic, fill = Soil))+
+competition1_gg<-ggplot(log_mydata)+
+  geom_boxplot(aes(x=Competition, y=log_Dittrichia, fill = Soil))+
   theme_classic()+
   scale_fill_manual(values = c("gray58", "forestgreen"))+
   labs(y="log(Biomass)", fill = "Soil", x="Competition")
-compta_gg
-
-ggsave(plot = compta_gg, file = "../figures/compt_biomass.png", width = 20, height = 25, units = "cm", dpi = 800)
+competition1_gg
+ggsave(plot = competition1_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition1_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
 ```
 
-## Populations/Soil + Habitat
-
+##Biomass x Competition and Soil and Population
 ```{r}
-compta1_gg <- ggplot(compta)+
-  geom_boxplot(aes(x=Soil, y=log_dic, fill = Population))+
+competition2_gg<-ggplot(log_mydata)+
+  geom_boxplot(aes(x=Soil, y=log_Dittrichia, fill = Population))+
   theme_classic()+
   facet_grid(Habitat~.)+
-  #scale_fill_manual(values = c("gray58", "forestgreen"))+
   labs(y="log(Biomass)", fill = "Population", x="Soil")
-compta1_gg
-
-ggsave(plot = compta1_gg, file = "../figures/compt1_biomass.png", width = 20, height = 25, units = "cm", dpi = 800)
+competition2_gg
+ggsave(plot = competition2_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition2_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
 ```
 
-
-## Biomasses Scatterplot
-
-
+## Biomass Scatterplot
 ```{r}
-scatter <- compta %>% 
+#Prep data for scatterplot
+competition_scatter <- log_mydata %>% 
   filter(Competition != "None") %>%
   filter(Grass_biomass != 0) %>% 
   mutate(scx = log(Grass_biomass), scy = log(Dittrichia_biomass)) %>% 
   mutate(type = paste(Soil, Competition, sep="/"))
 
-scbio_gg <- ggplot(scatter)+
+competition_scatter_gg<- ggplot(competition_scatter)+
   geom_point(aes(x=scx, y=scy, shape = Soil, color = Competition))+
   scale_color_manual(values = c("orange", "purple"))+
   geom_smooth(method=lm, aes(x=scx, y=scy, linetype = Soil), color = "black")+
   theme_classic()+
   labs(y = "Dittrichia biomass (g)", x ="Grass biomass (g)", shape = "Soil", color = "Competition")
+competition_scatter_gg
 
-scbio_gg
-
-ggsave(plot = scbio_gg, file = "../figures/scat_biomass.png", width = 20, height = 25, units = "cm", dpi = 800)
+ggsave(plot = competition_scatter_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition_scatter_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
 ```
