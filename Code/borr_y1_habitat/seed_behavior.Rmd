@@ -17,8 +17,7 @@ In the summer of 2021, we tested germination behavior on construction and natura
 Statistical analyses were performed in R version 4.2.1 (R Core Team 2022) using two-way ANOVA to analyze interactions of habitat and soil type on proportion of germination. We used mixed effects cox models with the coxme (Therneau 2022a) and survival (Therneau 2022b) packages to assess germination rates for each soil type. Germination success was assessed using linear mixed-effects models with the lme4 (Bates et al. 2015), lmerTest (Kuznetsova et al. 2017), and DHARMa packages (Hartig 2022).
 
 ##Cox proportional hazard models
-Here we will use 'coxme' which allows you to conduct mixed effects Cox proportional hazards models. Information here: https://cran.r-project.org/web/packages/coxme/vignettes/coxme.pdf. We conducted a germination experiment using Dittrichia graveolens seeds on filter paper. "Surv" creates a survival object to combine the days column (NumDaysAlive) and the censor column (Censor) to be used as a response variable in a model formula.The model follows the same syntax as linear models (lm, lmer, etc). Fixed effects: "var1 * var2" will give you the interaction term and the individual variables: so "var1 + var2 + var1:var2"
-To add random effects, type "+ (1|random effect)". 
+Here we will use 'coxme' which allows you to conduct mixed effects Cox proportional hazards models. Information here: https://cran.r-project.org/web/packages/coxme/vignettes/coxme.pdf. We conducted a germination experiment using Dittrichia graveolens seeds on filter paper. "Surv" creates a survival object to combine the days column (NumDaysAlive) and the censor column (Censor) to be used as a response variable in a model formula.The model follows the same syntax as linear models (lm, lmer, etc). Fixed effects: "var1 * var2" will give you the interaction term and the individual variables: so "var1 + var2 + var1:var2". To add random effects, type "+ (1|random effect)". 
 
 #Libraries
 ```{r}
@@ -41,7 +40,7 @@ library(dplyr)
 ```
 
 #Load Data
-This dataframe has one row per seed (1600 lines) with a calculation for how many days it took for the seed to germinate (DaysToGerm). The censor for this dataframe is Censor with a 1 denoting a seed germinated and a 0 denoting when a seed didn't germinate by the last census date (Census = 8/2/21).
+This dataframe has one row per seed (1600 observations) with a calculation for how many days it took for the seed to germinate (DaysToGerm). The censor for this dataframe is Censor with a 1 denoting a seed germinated and a 0 denoting when a seed didn't germinate by the last census date (Census = 8/2/21).
 ```{r}
 mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/seed_behavior/cox_germ_soil8-2-21.csv",stringsAsFactors=T)
 mydata$DishNum<-as.factor(mydata$DishNum)

@@ -3,7 +3,7 @@
 #October 2022
 #Miranda Melen
 
-#This code uses Growth data with Habitat (roadside and off-road) and Treatment in a lmer model. Anova and Tukey tests are used on the successful Model4 with the creation of a box plot as a finished product.
+#This code uses Growth data with Habitat (roadside and off-road) and Treatment in a glmm model. Anova and Tukey tests are used on the successful Model4 with the creation of a box plot as a finished product.
 
 #Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and off-road; R or O)
 
@@ -34,7 +34,7 @@ library(MASS)
 ####Load Data####
 setwd("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis")
 
-mydata<-read.csv("Data/blue_oak_yr1/blue_oak_competition_datasheet_2021_phenology_survey.csv",stringsAsFactors=T)%>%filter(Growth>0) #Here I am only looking at the Growth data that is greater than 0 (see Also Note above)
+mydata<-read.csv("Data/field_relative_fitness/blue_oak_competition_datasheet_2021_phenology_survey.csv",stringsAsFactors=T)%>%filter(Growth>0) #Here I am only looking at the Growth data that is greater than 0 (see Also Note above)
 str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
 
 #Convert plant measurement dates to date format

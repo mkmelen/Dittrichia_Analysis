@@ -18,7 +18,7 @@ Statistical analyses were performed in R version 4.2.1 (R Core Team 2022) using 
  
 We tested for a difference between roadside and adjacent vegetation habitat types on each soil type independently, using mixed-model ANOVA, with site as a random effect and habitat (roadside or adjacent vegetation) as a fixed effect. Biomass of both D. graveolens and the grass competitors was ln-transformed before analysis.
 
-##Models included
+##Models Included
 
 #Libraries
 ```{r}
@@ -31,7 +31,7 @@ library(dplyr)
 ```
 
 #Load Data
-This dataframe has one row per pot (768 lines). Data is Dittrichia_biomass and Grass_biomass, both measured in grams. NAs in biomass columns are "no data" because there was no grass present in that pot at the time of measurement.
+This dataframe has one row per pot (768 observations). Data are Dittrichia_biomass and Grass_biomass, both measured in grams. NAs in biomass columns are "no data" because there was no grass present in that pot at the time of measurement.
 ```{r}
 mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/greenhouse_competition/competition_biomass.csv",stringsAsFactors=T)
 str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
