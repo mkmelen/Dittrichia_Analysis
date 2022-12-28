@@ -91,6 +91,7 @@ plot(myDHARMagraph2) #plotting graph. At this point, you don't want any text or 
 
 ####Model 3 - Negative Binomial####
 fullmodel3<-glmer.nb(Rate~Habitat*Treatment+(1|Site)+(1|Block),data=mydata)
+isSingular(fullmodel3,tol=1e-4)
 summary(fullmodel3)
 qqnorm(resid(fullmodel3)) #qqplot
 qqline(resid(fullmodel3)) #add the line

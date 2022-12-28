@@ -1,0 +1,26 @@
+---
+title: "R Resources"
+output: html_notebook
+date: December 2022
+authors: Miranda Melen
+---
+
+#ggplot
+- https://ggplot2.tidyverse.org/reference/#plot-basics
+
+#Citations
+Here is the code to pull information needed to make a citation for R
+```{r}
+citation()
+version$version.string
+```
+
+Here is the code to pull information needed to cite a package in R
+```{r}
+citation("coxme")
+citation("survival")
+citation("DHARMa")
+citation("glmmTMB")
+citation("lme4")
+citation("lmerTest")
+```
