@@ -32,7 +32,7 @@ fullmodel <- lmer(log(Biomass) ~   #Response variable: biomass
           data=mydata)             #Dataframe
   
 ###Generalized linear mixed models
-
+under construction
 
 
 #Libraries
