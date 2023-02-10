@@ -112,13 +112,12 @@ Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: populati
 
 All data combined.
 ```{r}
-mydata_fit<-lm(log_mydata$log_Dittrichia~Soil*Habitat,data=log_mydata)
+mydata_All_fit<-lm(log_mydata$log_Dittrichia~Soil*Habitat,data=log_mydata)
 x<-c("Soil","Habitat")
-mydata_fit_df<-data.table(summary(emmeans(mydata_fit,specs=x)))
+mydata_All_fit_df<-data.table(summary(emmeans(mydata_fit,specs=x)))
 pd<-position_dodge(.2)
-trueSE<-sd(log_mydata1$log_Dittrchia)/sqrt(length(log_mydata$log_Dittrichia))
-mydata_Anova<-anova(mydata_fit)
-mydata_Anova
+mydata_All_Anova<-anova(mydata_fit)
+mydata_All_Anova
 
 comp_int_all_gg<-ggplot(
   data=mydata_fit_df,
@@ -162,31 +161,24 @@ comp_int_all_gg
 
 #Assign legend to have the correct colors
 ```
-Plot by population.
+Plot by site.
 ```{r}
-mydata_fit<-lm(log_mydata$log_Dittrichia~Soil*Habitat,data=log_mydata)
-x <- c("Soil","Habitat")
-mydata_fit_df <- data.table(summary(emmeans(mydata_fit,specs=x)))
-#For all 16 iterations, summarize the data here but without emmeans... use log_mydata
-#log_mydata%>%group_by(Habitat,Soil,Population)%>%summarise(Mean=mean(log_biomass),SD=sd(log_biomass),N=length(log_biomass))%>%mutate(SE=SD/sqrt(n))
-pd<-position_dodge(.2)
-trueSE <- sd(log_mydata1$log_Dittrchia)/sqrt(length(log_mydata$log_Dittrichia))
-mydata_Anova<-anova(mydata_fit)
-mydata_Anova
+mydata_site_sum<-log_mydata%>%group_by(Habitat,Soil,Site)%>%summarise(Mean=mean(log_Dittrichia),SD=sd(log_Dittrichia),N=length(log_Dittrichia))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
 
+pd<-position_dodge(.9)
+#facet wrap by soil
 comp_int_site_gg <- ggplot(
-  data=mydata_fit_df,
+  data=mydata_site_sum,
                 aes(
                   x=factor(Soil),
-                  y=emmean,
+                  y=Mean,
+                  color=Site,
                   shape=Habitat,
-                  group=Habitat)
+                  group=Cat)
     )+
   ylab("log(Biomass)")+
   xlab("Soil")+
-  scale_y_continuous(limits=c(2.4,5.5),
-                     breaks=c(2.5,3,3.5,4,4.5,5,5.5)
-                     )+
+  
   theme_bw()+
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
@@ -195,24 +187,65 @@ comp_int_site_gg <- ggplot(
         )+
   geom_line(
     size=1,
-    position=pd,
-    color=c("orange","orange","purple","purple")
+    position=pd
             )+
   geom_point(
     size=5,
-    position=pd,
-    color=c("orange","orange","purple","purple")
+    position=pd
   )+
   geom_errorbar(
-    color=c("orange","orange","purple","purple"),
     width=0.2,
     position=pd,
     aes(
-      ymin=(emmean-SE),
-      ymax=(emmean+SE)
+      ymin=(Mean-SE),
+      ymax=(Mean+SE)
       ))
 
 comp_int_site_gg
+```
+
+Facet to make panels of the by site plot.
+
+```{r}
+mydata_site_sum<-log_mydata%>%group_by(Habitat,Soil,Site)%>%summarise(Mean=mean(log_Dittrichia),SD=sd(log_Dittrichia),N=length(log_Dittrichia))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
+
+pd<-position_dodge(.2)
+comp_int_site_panel_gg <- ggplot(
+  data=mydata_site_sum,
+                aes(
+                  x=factor(Soil),
+                  y=Mean,
+                  color=Site,
+                  shape=Habitat,
+                  group=Cat)
+    )+
+  facet_wrap(~Site)+
+  ylab("log(Biomass)")+
+  xlab("Soil")+
+  
+  theme_bw()+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black")
+        )+
+  geom_line(
+    size=1,
+    position=pd
+            )+
+  geom_point(
+    size=3,
+    position=pd
+  )+
+  geom_errorbar(
+    width=0.2,
+    position=pd,
+    aes(
+      ymin=(Mean-SE),
+      ymax=(Mean+SE)
+      ))
+
+comp_int_site_panel_gg
 ```
 
 
