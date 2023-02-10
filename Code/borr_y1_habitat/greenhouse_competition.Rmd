@@ -5,7 +5,7 @@ date: December 2022
 authors: Miranda Melen, Laura Goetz
 ---
 #Background
-We used a two-way factorial design with construction soil and natural soil and three competition treatments (D. graveolens grown alone, with Bromus hordeaceus, or with Festuca perennis). These grasses were selected because they are commonly found in California annual grasslands and were identified in many of the 8 paired sites (see Supplemental). We collected B. hordeaceus seeds from Blue Oak Ranch Reserve and F. perennis seeds from the Terrace Lands of Younger Lagoon Reserve on the UCSC Coastal Science Campus.
+We used a two-way factorial design with construction soil and natural soil and three competition treatments (D. graveolens grown alone, with Bromus hordeaceus, or with Festuca perennis). These grasses were selected because they are commonly found in California annual grasslands and were identified in many of the 8 paired sites. We collected B. hordeaceus seeds from Blue Oak Ranch Reserve and F. perennis seeds from the Terrace Lands of Younger Lagoon Reserve on the UCSC Coastal Science Campus.
 
 Every pot had either one D. graveolens with one B. hordeaceus or one with F. perennis, or no grass competitor (grown alone). We prepared Deepots (D16; 5cm diameter, 18cm height) at the UCSC Coastal Science Campus Greenhouse and filled with rehydrated soil: 384 pots were filled with natural soil, and 384 with construction soil (768 pots total).
 
@@ -19,6 +19,7 @@ Statistical analyses were performed in R version 4.2.1 (R Core Team 2022) using 
 We tested for a difference between roadside and adjacent vegetation habitat types on each soil type independently, using mixed-model ANOVA, with site as a random effect and habitat (roadside or adjacent vegetation) as a fixed effect. Biomass of both D. graveolens and the grass competitors was ln-transformed before analysis.
 
 ##Models Included
+
 
 #Libraries
 ```{r}
@@ -112,15 +113,15 @@ Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: populati
 
 All data combined.
 ```{r}
-mydata_All_fit<-lm(log_mydata$log_Dittrichia~Soil*Habitat,data=log_mydata)
+mydata_all_fit<-lm(log_mydata$log_Dittrichia~Soil*Habitat,data=log_mydata)
 x<-c("Soil","Habitat")
-mydata_All_fit_df<-data.table(summary(emmeans(mydata_fit,specs=x)))
+mydata_all_fit_df<-data.table(summary(emmeans(mydata_all_fit,specs=x)))
 pd<-position_dodge(.2)
-mydata_All_Anova<-anova(mydata_fit)
-mydata_All_Anova
+mydata_all_anova<-anova(mydata_all_fit)
+mydata_all_anova
 
 comp_int_all_gg<-ggplot(
-  data=mydata_fit_df,
+  data=mydata_all_fit_df,
                 aes(
                   x=factor(Soil),
                   y=emmean,
@@ -141,15 +142,15 @@ comp_int_all_gg<-ggplot(
   geom_line(
     size=1,
     position=pd,
-    color=c("orange","orange","purple","purple")
+    color=c("magenta","magenta","turquoise","turquoise")
             )+
   geom_point(
     size=5,
     position=pd,
-    color=c("orange","orange","purple","purple")
+    color=c("magenta","magenta","turquoise","turquoise")
   )+
   geom_errorbar(
-    color=c("orange","orange","purple","purple"),
+    color=c("magenta","magenta","turquoise","turquoise"),
     width=0.2,
     position=pd,
     aes(
@@ -166,7 +167,6 @@ Plot by site.
 mydata_site_sum<-log_mydata%>%group_by(Habitat,Soil,Site)%>%summarise(Mean=mean(log_Dittrichia),SD=sd(log_Dittrichia),N=length(log_Dittrichia))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
 
 pd<-position_dodge(.9)
-#facet wrap by soil
 comp_int_site_gg <- ggplot(
   data=mydata_site_sum,
                 aes(
@@ -248,16 +248,6 @@ comp_int_site_panel_gg <- ggplot(
 comp_int_site_panel_gg
 ```
 
-
-
-
-
-
-
-
-
-
-
 ## Biomass Scatterplot
 ```{r}
 #Prep data for scatterplot
@@ -269,7 +259,7 @@ competition_scatter <- log_mydata %>%
 
 competition_scatter_gg<- ggplot(competition_scatter)+
   geom_point(aes(x=scx, y=scy, shape = Soil, color = Competition))+
-  scale_color_manual(values = c("orange", "purple"))+
+  scale_color_manual(values = c("magenta", "turquoise"))+
   geom_smooth(method=lm, aes(x=scx, y=scy, linetype = Soil), color = "black")+
   theme_classic()+
   labs(y = "Dittrichia biomass (g)", x ="Grass biomass (g)", shape = "Soil", color = "Competition")
