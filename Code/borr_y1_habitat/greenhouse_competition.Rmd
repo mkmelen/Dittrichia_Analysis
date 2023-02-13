@@ -145,7 +145,7 @@ comp_int_all_gg<-ggplot(
     color=c("magenta","magenta","turquoise","turquoise")
             )+
   geom_point(
-    size=5,
+    size=3,
     position=pd,
     color=c("magenta","magenta","turquoise","turquoise")
   )+
@@ -166,7 +166,7 @@ Plot by site.
 ```{r}
 mydata_site_sum<-log_mydata%>%group_by(Habitat,Soil,Site)%>%summarise(Mean=mean(log_Dittrichia),SD=sd(log_Dittrichia),N=length(log_Dittrichia))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
 
-pd<-position_dodge(.9)
+pd<-position_dodge(.8)
 comp_int_site_gg <- ggplot(
   data=mydata_site_sum,
                 aes(
@@ -186,11 +186,11 @@ comp_int_site_gg <- ggplot(
         axis.line=element_line(colour="black")
         )+
   geom_line(
-    size=1,
+    size=.8,
     position=pd
             )+
   geom_point(
-    size=5,
+    size=3,
     position=pd
   )+
   geom_errorbar(
@@ -230,7 +230,7 @@ comp_int_site_panel_gg <- ggplot(
         axis.line=element_line(colour="black")
         )+
   geom_line(
-    size=1,
+    size=.8,
     position=pd
             )+
   geom_point(
