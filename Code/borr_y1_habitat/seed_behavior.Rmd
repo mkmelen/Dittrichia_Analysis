@@ -29,6 +29,8 @@ Here we will use 'coxme' which allows you to conduct mixed effects Cox proportio
 #install.packages("multcomp")
 #install.library("tidyverse")
 #install.library("dplyr")
+#install.library("data.table")
+#install.library("emmeans")
 library(coxme)
 library(survival)
 library(ggplot2)
@@ -37,6 +39,8 @@ library(car)
 library(multcomp)
 library(tidyverse)
 library(dplyr)
+library(data.table)
+library(emmeans)
 ```
 
 #Load Data
@@ -111,6 +115,10 @@ exp(ranef(fullmodel2)$Site) # Pretty even among all the sites
 
 #ggplot
 ##Proportion Germinated x Time with Habitat and Treatment
+
+NEEDS:
+Lines need to start at 0, although points don't begin until day 3
+Combine legends together and have gray and green with different symbols
 ```{r}
 germ_rate1<-mydata %>% 
   filter(DaysToGerm != 0) %>% 
@@ -122,6 +130,7 @@ germ_rate1<-mydata %>%
   
 germ_rate1_gg<-ggplot(germ_rate1)+
   geom_line(aes(x=DaysToGerm, y=Proportion, color = PlotTreatment), linewidth = 0.5)+
+  geom_point(aes(x=DaysToGerm, y=Proportion, color = PlotTreatment, shape = PlotTreatment), size = 1.5)+
   theme_classic()+
   ylim(0,1)+
   scale_x_continuous(name = "Days to Germination", limits = c(0,12), breaks = seq(0,12,1))+
@@ -133,6 +142,10 @@ ggsave(plot = germ_rate1_gg, file = "/Users/Miranda/Documents/Education/UC Santa
 ```
 
 ##Proportion Germinated x Time with Habitat and Population
+
+NEEDS:
+Lines need to start at 0, although points don't begin until day 3
+Combine legends together and have gray and green with different symbols
 ```{r}
 germ_rate2<-mydata %>% 
   filter(DaysToGerm != 0) %>% 
@@ -159,6 +172,25 @@ ggsave(plot = germ_rate2_gg, file = "/Users/Miranda/Documents/Education/UC Santa
 ```
 
 ##Germination Success X Treatment and Habitat
+###Interaction Plot
+
+NEEDS: 
+
+Legends need to be colored green and grey
+```{r}
+mydata_all_fit<-lm(mydata$DaysToGerm~Treatment*Habitat,data=mydata)
+x<-c("Treatment","Habitat")
+mydata_all_fit_df<-data.table(summary(emmeans(mydata_all_fit,specs=x)))
+pd<-position_dodge(.2)
+mydata_all_anova<-anova(mydata_all_fit)
+mydata_all_anova
+
+germ_int_all_gg<-ggplot(data=mydata_all_fit_df,aes(x=factor(Treatment),y=emmean,shape=Habitat,group=Habitat))+ylab("Proportion Germinated")+xlab("Soil Type")+scale_y_continuous(limits=c(2.1,2.6),breaks=c(2.1,2.2,2.3,2.4,2.5,2.6))+theme_bw()+theme(panel.border=element_blank(),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"))+geom_line(size=1,position=pd,color=c("forestgreen","gray58","gray58","gray58"))+geom_point(size=3,position=pd,color=c("forestgreen","forestgreen","gray58","gray58"))+geom_errorbar(color=c("forestgreen","forestgreen","gray58","gray58"),width=0.2,position=pd,aes(ymin=(emmean-SE),ymax=(emmean+SE)))
+
+germ_int_all_gg
+```
+
+###Boxplot
 
 ```{r}
 germ_success1<-mydata %>% 
@@ -193,6 +225,22 @@ ggsave(plot = germ_success1F_gg, file = "/Users/Miranda/Documents/Education/UC S
 ```
 
 ##Germination Success x Treatment and Population
+###Interaction Plot
+
+NEEDS: 
+Legend = 8 symbols, gray for roadside habitat and green for vegetated (away) habitat
+Combined legend
+Y-axis numbers should be out of 1.00 to show proportion
+```{r}
+mydata_site_sum<-mydata%>%group_by(Habitat,Treatment,Site)%>%summarise(Mean=mean(DaysToGerm),SD=sd(DaysToGerm),N=length(DaysToGerm))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
+
+pd<-position_dodge(.2)
+germ_int_site_gg <- ggplot(data=mydata_site_sum,aes(x=factor(Treatment),y=Mean,color=Site,shape=Habitat,group=Cat))+ylab("Proportion Germinated")+xlab("Soil Type")+theme_bw()+theme(panel.border=element_blank(),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"))+geom_line(size=.8,position=pd)+geom_point(size=3,position=pd)+geom_errorbar(width=0.2,position=pd,aes(ymin=(Mean-SE),ymax=(Mean+SE)))
+
+germ_int_site_gg
+```
+
+###Boxplot
 ```{r}
 germ_success2<-mydata %>% 
   filter(DaysToGerm != 0) %>% 
@@ -214,6 +262,10 @@ ggsave(plot = germ_success2_gg, file = "/Users/Miranda/Documents/Education/UC Sa
 ```
 
 #Autoplot: Proportion Germinated
+
+NEEDS:
+How do I flip these so that germination on day 0 is at 0 and germination goes up as time continues?
+
 ```{r}
 #Plot by habitat
 model_graph1<-survfit(Surv(DaysToGerm,Censor)~Habitat,data=mydata)
