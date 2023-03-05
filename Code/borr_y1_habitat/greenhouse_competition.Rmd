@@ -88,6 +88,29 @@ hist(log_mydata$log_Grass,col='steelblue',main='Original')
 
 #ggplot
 ##Biomass x Competition and Soil
+
+###Interaction Plot
+Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and off-road; R or O)
+
+All data combined.
+
+NEEDS:
+Actually this graph doesn't show what Ingrid wants at all... take a look at the greenhouse photo
+```{r}
+mydata_all_fit<-lm(log_mydata$log_Dittrichia~Soil*Habitat,data=log_mydata)
+x<-c("Soil","Habitat")
+mydata_all_fit_df<-data.table(summary(emmeans(mydata_all_fit,specs=x)))
+pd<-position_dodge(.2)
+mydata_all_anova<-anova(mydata_all_fit)
+mydata_all_anova
+
+comp_int_all_gg<-ggplot(data=mydata_all_fit_df,aes(x=factor(Soil),y=emmean,shape=Habitat,group=Habitat))+ylab("log(Biomass)")+xlab("Soil Type")+scale_y_continuous(limits=c(2.4,5.5),breaks=c(2.5,3,3.5,4,4.5,5,5.5))+theme_bw()+theme(panel.border=element_blank(),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"))+geom_line(size=1,position=pd,color=c("gray58","gray58","forestgreen","forestgreen"))+geom_point(size=3,position=pd,color=c("gray58","gray58","forestgreen","forestgreen"))+geom_errorbar(color=c("gray58","gray58","forestgreen","forestgreen"),width=0.2,position=pd,aes(ymin=(emmean-SE),ymax=(emmean+SE)))
+
+comp_int_all_gg
+```
+
+
+###Boxplot
 ```{r}
 competition1_gg<-ggplot(log_mydata)+
   geom_boxplot(aes(x=Competition, y=log_Dittrichia, fill = Soil))+
@@ -99,107 +122,15 @@ ggsave(plot = competition1_gg, file = "/Users/Miranda/Documents/Education/UC San
 ```
 
 ##Biomass x Competition and Soil and Population
-```{r}
-competition2_gg<-ggplot(log_mydata)+
-  geom_boxplot(aes(x=Soil, y=log_Dittrichia, fill = Population))+
-  theme_classic()+
-  facet_grid(Habitat~.)+
-  labs(y="log(Biomass)", fill = "Population", x="Soil")
-competition2_gg
-ggsave(plot = competition2_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition2_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
-```
-##Interaction Plot
-Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and off-road; R or O)
 
-All data combined.
-```{r}
-mydata_all_fit<-lm(log_mydata$log_Dittrichia~Soil*Habitat,data=log_mydata)
-x<-c("Soil","Habitat")
-mydata_all_fit_df<-data.table(summary(emmeans(mydata_all_fit,specs=x)))
-pd<-position_dodge(.2)
-mydata_all_anova<-anova(mydata_all_fit)
-mydata_all_anova
+### Interaction Plots
 
-comp_int_all_gg<-ggplot(
-  data=mydata_all_fit_df,
-                aes(
-                  x=factor(Soil),
-                  y=emmean,
-                  shape=Habitat,
-                  group=Habitat)
-    )+
-  ylab("log(Biomass)")+
-  xlab("Soil")+
-  scale_y_continuous(limits=c(2.4,5.5),
-                     breaks=c(2.5,3,3.5,4,4.5,5,5.5)
-                     )+
-  theme_bw()+
-  theme(panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        axis.line=element_line(colour="black")
-        )+
-  geom_line(
-    size=1,
-    position=pd,
-    color=c("magenta","magenta","turquoise","turquoise")
-            )+
-  geom_point(
-    size=3,
-    position=pd,
-    color=c("magenta","magenta","turquoise","turquoise")
-  )+
-  geom_errorbar(
-    color=c("magenta","magenta","turquoise","turquoise"),
-    width=0.2,
-    position=pd,
-    aes(
-      ymin=(emmean-SE),
-      ymax=(emmean+SE)
-      ))
-
-comp_int_all_gg
-
-#Assign legend to have the correct colors
-```
 Plot by site.
 ```{r}
 mydata_site_sum<-log_mydata%>%group_by(Habitat,Soil,Site)%>%summarise(Mean=mean(log_Dittrichia),SD=sd(log_Dittrichia),N=length(log_Dittrichia))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
 
 pd<-position_dodge(.8)
-comp_int_site_gg <- ggplot(
-  data=mydata_site_sum,
-                aes(
-                  x=factor(Soil),
-                  y=Mean,
-                  color=Site,
-                  shape=Habitat,
-                  group=Cat)
-    )+
-  ylab("log(Biomass)")+
-  xlab("Soil")+
-  
-  theme_bw()+
-  theme(panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        axis.line=element_line(colour="black")
-        )+
-  geom_line(
-    size=.8,
-    position=pd
-            )+
-  geom_point(
-    size=3,
-    position=pd
-  )+
-  geom_errorbar(
-    width=0.2,
-    position=pd,
-    aes(
-      ymin=(Mean-SE),
-      ymax=(Mean+SE)
-      ))
+comp_int_site_gg <- ggplot(data=mydata_site_sum,aes(x=factor(Soil),y=Mean,color=Site,shape=Habitat,group=Cat))+ylab("log(Biomass)")+xlab("Soil")+theme_bw()+theme(panel.border=element_blank(),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"))+geom_line(size=.8,position=pd)+geom_point(size=3,position=pd)+geom_errorbar(width=0.2,position=pd,aes(ymin=(Mean-SE),ymax=(Mean+SE)))
 
 comp_int_site_gg
 ```
@@ -210,42 +141,20 @@ Facet to make panels of the by site plot.
 mydata_site_sum<-log_mydata%>%group_by(Habitat,Soil,Site)%>%summarise(Mean=mean(log_Dittrichia),SD=sd(log_Dittrichia),N=length(log_Dittrichia))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
 
 pd<-position_dodge(.2)
-comp_int_site_panel_gg <- ggplot(
-  data=mydata_site_sum,
-                aes(
-                  x=factor(Soil),
-                  y=Mean,
-                  color=Site,
-                  shape=Habitat,
-                  group=Cat)
-    )+
-  facet_wrap(~Site)+
-  ylab("log(Biomass)")+
-  xlab("Soil")+
-  
-  theme_bw()+
-  theme(panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        axis.line=element_line(colour="black")
-        )+
-  geom_line(
-    size=.8,
-    position=pd
-            )+
-  geom_point(
-    size=3,
-    position=pd
-  )+
-  geom_errorbar(
-    width=0.2,
-    position=pd,
-    aes(
-      ymin=(Mean-SE),
-      ymax=(Mean+SE)
-      ))
+comp_int_site_panel_gg <- ggplot(data=mydata_site_sum,aes(x=factor(Soil),y=Mean,color=Site,shape=Habitat,group=Cat))+facet_wrap(~Site)+ylab("log(Biomass)")+xlab("Soil")+theme_bw()+theme(panel.border=element_blank(),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"))+geom_line(size=.8,position=pd)+geom_point(size=3,position=pd)+geom_errorbar(width=0.2,position=pd,aes(ymin=(Mean-SE),ymax=(Mean+SE)))
 
 comp_int_site_panel_gg
+```
+
+###Boxplots
+```{r}
+competition2_gg<-ggplot(log_mydata)+
+  geom_boxplot(aes(x=Soil, y=log_Dittrichia, fill = Population))+
+  theme_classic()+
+  facet_grid(Habitat~.)+
+  labs(y="log(Biomass)", fill = "Population", x="Soil")
+competition2_gg
+ggsave(plot = competition2_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition2_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
 ```
 
 ## Biomass Scatterplot
