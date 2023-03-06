@@ -94,8 +94,10 @@ Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: populati
 
 All data combined.
 
-NEEDS:
-Actually this graph doesn't show what Ingrid wants at all... take a look at the greenhouse photo
+NEEDS: (4 plots total)
+X-axis should have Competition (None, Festuca, Bromus)
+Y-axis should be either biomass or growth rate (2 plots)
+2 plots, one with construction soil, one with vegetated soil
 ```{r}
 mydata_all_fit<-lm(log_mydata$log_Dittrichia~Soil*Habitat,data=log_mydata)
 x<-c("Soil","Habitat")
@@ -104,13 +106,36 @@ pd<-position_dodge(.2)
 mydata_all_anova<-anova(mydata_all_fit)
 mydata_all_anova
 
-comp_int_all_gg<-ggplot(data=mydata_all_fit_df,aes(x=factor(Soil),y=emmean,shape=Habitat,group=Habitat))+ylab("log(Biomass)")+xlab("Soil Type")+scale_y_continuous(limits=c(2.4,5.5),breaks=c(2.5,3,3.5,4,4.5,5,5.5))+theme_bw()+theme(panel.border=element_blank(),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"))+geom_line(size=1,position=pd,color=c("gray58","gray58","forestgreen","forestgreen"))+geom_point(size=3,position=pd,color=c("gray58","gray58","forestgreen","forestgreen"))+geom_errorbar(color=c("gray58","gray58","forestgreen","forestgreen"),width=0.2,position=pd,aes(ymin=(emmean-SE),ymax=(emmean+SE)))
+comp_int_all_gg<-ggplot(data=mydata_all_fit_df,
+                        aes(x=factor(Soil),
+                            y=emmean,shape=Habitat,
+                            group=Habitat))+
+  ylab("log(Biomass)")+
+  xlab("Soil Type")+
+  scale_y_continuous(limits=c(2.4,5.5),
+                     breaks=c(2.5,3,3.5,4,4.5,5,5.5))+
+  theme_bw()+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=1,
+            position=pd,
+            color=c("gray58","gray58","forestgreen","forestgreen"))+
+  geom_point(size=3,position=pd,
+             color=c("gray58","gray58","forestgreen","forestgreen"))+
+  geom_errorbar(color=c("gray58","gray58","forestgreen","forestgreen"),
+                width=0.2,
+                position=pd,
+                aes(ymin=(emmean-SE),
+                    ymax=(emmean+SE)))
 
 comp_int_all_gg
 ```
 
 
 ###Boxplot
+Not using
 ```{r}
 competition1_gg<-ggplot(log_mydata)+
   geom_boxplot(aes(x=Competition, y=log_Dittrichia, fill = Soil))+
@@ -124,7 +149,7 @@ ggsave(plot = competition1_gg, file = "/Users/Miranda/Documents/Education/UC San
 ##Biomass x Competition and Soil and Population
 
 ### Interaction Plots
-
+Not used
 Plot by site.
 ```{r}
 mydata_site_sum<-log_mydata%>%group_by(Habitat,Soil,Site)%>%summarise(Mean=mean(log_Dittrichia),SD=sd(log_Dittrichia),N=length(log_Dittrichia))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
@@ -147,6 +172,7 @@ comp_int_site_panel_gg
 ```
 
 ###Boxplots
+Not using
 ```{r}
 competition2_gg<-ggplot(log_mydata)+
   geom_boxplot(aes(x=Soil, y=log_Dittrichia, fill = Population))+
@@ -160,18 +186,22 @@ ggsave(plot = competition2_gg, file = "/Users/Miranda/Documents/Education/UC San
 ## Biomass Scatterplot
 ```{r}
 #Prep data for scatterplot
-competition_scatter <- log_mydata %>% 
-  filter(Competition != "None") %>%
-  filter(Grass_biomass != 0) %>% 
-  mutate(scx = log(Grass_biomass), scy = log(Dittrichia_biomass)) %>% 
-  mutate(type = paste(Soil, Competition, sep="/"))
+competition_scatter<-log_mydata%>% 
+  filter(Competition!="None")%>%
+  filter(Grass_biomass!= 0)%>% 
+  mutate(scx=log(Grass_biomass),scy=log(Dittrichia_biomass))%>% 
+  mutate(type=paste(Soil,Competition,sep="/"))
 
-competition_scatter_gg<- ggplot(competition_scatter)+
-  geom_point(aes(x=scx, y=scy, shape = Soil, color = Competition))+
+competition_scatter_gg<-ggplot(competition_scatter)+
+  geom_point(aes(
+    x=scx,
+    y=scy,
+    shape=Soil,
+    color=Competition))+
   scale_color_manual(values = c("magenta", "turquoise"))+
   geom_smooth(method=lm, aes(x=scx, y=scy, linetype = Soil), color = "black")+
   theme_classic()+
-  labs(y = "Dittrichia biomass (g)", x ="Grass biomass (g)", shape = "Soil", color = "Competition")
+  labs(y = "Dittrichia graveolens biomass (g)", x ="Grass biomass (g)", shape = "Soil", color = "Competition")
 competition_scatter_gg
 
 ggsave(plot = competition_scatter_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition_scatter_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
