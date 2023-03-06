@@ -175,8 +175,7 @@ ggsave(plot = germ_rate2_gg, file = "/Users/Miranda/Documents/Education/UC Santa
 ##Germination Success X Treatment and Habitat
 ###Interaction Plot
 
-NEEDS: 
-
+NEEDS:
 Legends need to be colored green and grey
 ```{r}
 mydata_all_fit<-lm(mydata$DaysToGerm~Treatment*Habitat,data=mydata)
