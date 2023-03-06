@@ -119,6 +119,7 @@ exp(ranef(fullmodel2)$Site) # Pretty even among all the sites
 NEEDS:
 Lines need to start at 0, although points don't begin until day 3
 Combine legends together and have gray and green with different symbols
+Colors should be Forest Green (Vegetated) and Gray58 (Roadside)
 ```{r}
 germ_rate1<-mydata %>% 
   filter(DaysToGerm != 0) %>% 
