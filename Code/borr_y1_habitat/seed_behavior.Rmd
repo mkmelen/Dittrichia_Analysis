@@ -117,66 +117,75 @@ exp(ranef(fullmodel2)$Site) # Pretty even among all the sites
 ##Proportion Germinated x Time with Habitat and Treatment
 
 NEEDS:
-Lines need to start at 0, although points don't begin until day 3
-Combine legends together and have gray and green with different symbols
-Colors should be Forest Green (Vegetated) and Gray58 (Roadside)
+Error bars! But will need to calculate based on original data with different sample sizes
 ```{r}
-germ_rate1<-mydata %>% 
-  filter(DaysToGerm != 0) %>% 
-  mutate(PlotTreatment = paste(Habitat, Treatment, sep="/")) %>% 
-  group_by(PlotTreatment) %>% 
-  count(DaysToGerm) %>% 
-  mutate(CumulativeSum=cumsum(n)) %>% 
-  mutate(Proportion=CumulativeSum/400) #400 seeds per group, 4 groups (2 Habitats x 2 Treatments)
+fakedata1<-data.frame(Habitat=c("Away","Roadside","Away","Roadside"),Treatment=c("Construction","Vegetated","Vegetated","Construction"),DaysToGerm=c(0),type=c("fake")) #make fake data to pull line back to 0
+
+mydata1<-mydata%>%
+    filter(DaysToGerm!=0)%>% 
+  mutate(type=c("real"))%>%bind_rows(fakedata1) #add a column that differentiates real from fake data
   
-germ_rate1_gg<-ggplot(germ_rate1)+
-  geom_line(aes(x=DaysToGerm, y=Proportion, color = PlotTreatment), linewidth = 0.5)+
-  geom_point(aes(x=DaysToGerm, y=Proportion, color = PlotTreatment, shape = PlotTreatment), size = 1.5)+
+germ_rate1<-mydata1%>% 
+  mutate(PlotTreatment=paste(Habitat,Treatment, sep="/"))%>% 
+  group_by(PlotTreatment,type)%>% 
+  count(DaysToGerm)%>% 
+  mutate(CumulativeSum=cumsum(n))%>% 
+  mutate(Proportion=CumulativeSum/400) #calculating proportions using 400 seeds per group, 4 groups (2 Habitats x 2 Treatments)
+  
+germ_rate1_gg<-ggplot(germ_rate1,aes(x=DaysToGerm,y=Proportion,color=PlotTreatment,shape=PlotTreatment))+
+  geom_line(linewidth=0.5)+
+  geom_point(aes(size=type))+
   theme_classic()+
   ylim(0,1)+
-  scale_x_continuous(name = "Days to Germination", limits = c(0,12), breaks = seq(0,12,1))+
-  labs(y="Proportion Germinated", color = "Habitat/Treatment")
+  scale_x_continuous(name="Days to Germination",limits=c(0,12),breaks=seq(0,12,1))+
+  scale_size_manual(values=c(0,1.5),guide="none")+
+  scale_color_manual(values=c("forestgreen","forestgreen","gray58","gray58"))+
+  labs(y="Proportion Germinated",color="Habitat/Treatment",shape="Habitat/Treatment")
 germ_rate1_gg
 
-ggsave(plot = germ_rate1_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate1_gg.png", width = 20, height = 20, units = "cm", dpi = 800)
-
+ggsave(plot=germ_rate1_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate1_gg.png",width=20,height=20,units="cm",dpi=800)
 ```
 
 ##Proportion Germinated x Time with Habitat and Population
 
 NEEDS:
-Lines need to start at 0, although points don't begin until day 3
-Combine legends together and have gray and green with different symbols
+Error bars! See comment above.
 ```{r}
-germ_rate2<-mydata %>% 
-  filter(DaysToGerm != 0) %>% 
-  mutate(PlotTreatment = paste(Population, Treatment, sep="/")) %>% 
-  group_by(PlotTreatment) %>% 
-  count(DaysToGerm) %>% 
+fakedata2<-unique(mydata[c("Population","Treatment")])%>%
+  mutate(type="fake",DaysToGerm=0)
+
+mydata2<-mydata%>%
+    filter(DaysToGerm!=0) %>% 
+  mutate(type=c("real"))%>%bind_rows(fakedata2) #add a column that differentiates real from fake data
+
+germ_rate2<-mydata2%>% 
+  mutate(PlotTreatment=paste(Population,Treatment,sep="/"))%>% 
+  group_by(PlotTreatment,type)%>% 
+  count(DaysToGerm)%>% 
   mutate(CumulativeSum=cumsum(n)) %>% 
-  mutate(Proportion=CumulativeSum/50) 
-  
+  mutate(Proportion=CumulativeSum/50) #calculating proportions using 50 seeds per group
+
 germ_rate2_gg<-ggplot(germ_rate2)+
-  geom_line(aes(x=DaysToGerm, y=Proportion, color = PlotTreatment), size = 0.5)+
-  geom_point(aes(x=DaysToGerm, y=Proportion, color = PlotTreatment, shape = PlotTreatment), size = 1.5)+
+  geom_line(aes(x=DaysToGerm,y=Proportion,color=PlotTreatment),size=0.5)+
+  geom_point(aes(x=DaysToGerm,y=Proportion,color=PlotTreatment,shape=PlotTreatment,size=type))+
   theme_classic()+
   ylim(0,1)+
-  scale_x_continuous(name = "Days to Germination", limits = c(0,12), breaks = seq(0,12,1))+
-  scale_shape_manual(values = c(16, 17, 1, 2, 16, 17, 1, 2,
-                                16, 17, 1, 2, 16, 17, 1, 2,
-                                16, 17, 1, 2, 16, 17, 1, 2,
-                                16, 17, 1, 2, 16, 17, 1, 2))+
-  labs(y="Proportion Germinated", color = "Population/Treatment", shape = "Population/Treatment")
+  scale_x_continuous(name="Days to Germination",limits=c(0,12),breaks=seq(0,12,1))+
+  scale_size_manual(values=c(0,1.5),guide="none")+
+  scale_shape_manual(values=c(1, 19, 1, 19, 0, 15, 0, 15, # 8 shape numbers in this array
+                                2, 17, 2, 17, 5, 23, 5, 23,
+                                6, 25, 6, 25, 3, 12, 3, 12,
+                                4, 13, 4, 13, 8, 11, 8, 11))+
+  scale_color_manual(values=rep(c("forestgreen","forestgreen","gray58","gray58"),times=8))+
+  labs(y="Proportion Germinated",color="Population/Treatment",shape="Population/Treatment")
 germ_rate2_gg
 
-ggsave(plot = germ_rate2_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate2_gg.png", width = 25, height = 20, units = "cm", dpi = 800)
+ggsave(plot=germ_rate2_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate2_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
 
 ##Germination Success X Treatment and Habitat
 ###Interaction Plot
 
-NEEDS:
-Legends need to be colored green and grey
 ```{r}
 mydata_all_fit<-lm(mydata$DaysToGerm~Treatment*Habitat,data=mydata)
 x<-c("Treatment","Habitat")
@@ -185,43 +194,64 @@ pd<-position_dodge(.2)
 mydata_all_anova<-anova(mydata_all_fit)
 mydata_all_anova
 
-germ_int_all_gg<-ggplot(data=mydata_all_fit_df,aes(x=factor(Treatment),y=emmean,shape=Habitat,group=Habitat))+ylab("Proportion Germinated")+xlab("Soil Type")+scale_y_continuous(limits=c(2.1,2.6),breaks=c(2.1,2.2,2.3,2.4,2.5,2.6))+theme_bw()+theme(panel.border=element_blank(),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"))+geom_line(size=1,position=pd,color=c("forestgreen","gray58","gray58","gray58"))+geom_point(size=3,position=pd,color=c("forestgreen","forestgreen","gray58","gray58"))+geom_errorbar(color=c("forestgreen","forestgreen","gray58","gray58"),width=0.2,position=pd,aes(ymin=(emmean-SE),ymax=(emmean+SE)))
-
+germ_int_all_gg<-ggplot(data=mydata_all_fit_df,
+                        aes(x=factor(Treatment),
+                            y=emmean,
+                            shape=Habitat,
+                            group=Habitat,
+                            color=Habitat))+
+  ylab("Proportion Germinated")+
+  xlab("Soil Type")+
+  scale_y_continuous(limits=c(2.1,2.6),
+                     breaks=c(2.1,2.2,2.3,2.4,2.5,2.6))+
+  theme_bw()+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=1,position=pd)+
+  geom_point(size=3,position=pd)+
+  scale_color_manual(values=c("forestgreen","gray58"))+
+  geom_errorbar(width=0.2,position=pd,
+                aes(ymin=(emmean-SE),
+                    ymax=(emmean+SE)))
 germ_int_all_gg
+
+ggsave(plot=germ_int_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_int_all_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
 
 ###Boxplot
 
 ```{r}
-germ_success1<-mydata %>% 
-  filter(DaysToGerm != 0) %>% 
-  mutate(PlotTreatment = paste(Habitat, Treatment, sep="/")) %>% 
-  group_by(Habitat, Treatment) %>% 
-  count(DaysToGerm) %>% 
-  mutate(CumulativeSum=cumsum(n)) %>% 
+germ_success1<-mydata%>% 
+  filter(DaysToGerm!=0)%>% 
+  mutate(PlotTreatment=paste(Habitat,Treatment,sep="/"))%>% 
+  group_by(Habitat,Treatment)%>% 
+  count(DaysToGerm)%>% 
+  mutate(CumulativeSum=cumsum(n))%>% 
   mutate(Proportion=CumulativeSum/400) 
 
 germ_success1_gg<-ggplot(germ_success1)+
-  geom_boxplot(aes(x=Treatment, y=Proportion, fill = Habitat), size = 0.5)+
+  geom_boxplot(aes(x=Treatment,y=Proportion,fill=Habitat),size=0.5)+
   theme_classic()+
   ylim(0,1)+
-  scale_fill_manual(values = c("forestgreen","gray58"))+
-  labs(y="Proportion Germinated", fill = "Habitat", x="Treatment")
+  scale_fill_manual(values=c("forestgreen","gray58"))+
+  labs(y="Proportion Germinated",fill="Habitat",x="Treatment")
 germ_success1_gg
 
-ggsave(plot = germ_success1_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_success1_gg.png", width = 20, height = 20, units = "cm", dpi = 800)
+ggsave(plot=germ_success1_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_success1_gg.png",width=20,height=20,units="cm",dpi=800)
 
 #Or using facet_grid
 germ_success1F_gg<-ggplot(germ_success1)+
-  geom_boxplot(aes(x=Treatment, y=Proportion, fill = Habitat), size = .5)+
+  geom_boxplot(aes(x=Treatment,y=Proportion,fill=Habitat),size=.5)+
   theme_classic()+
   ylim(0,1)+
   facet_grid(Habitat~.)+
-  scale_fill_manual(values = c("forestgreen","gray58"))+
-  labs(y="Proportion Germinated", fill = "Habitat", x="Treatment")
+  scale_fill_manual(values=c("forestgreen","gray58"))+
+  labs(y="Proportion Germinated",fill="Habitat",x="Treatment")
 germ_success1F_gg
 
-ggsave(plot = germ_success1F_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_success1F_gg.png", width = 20, height = 20, units = "cm", dpi = 800)
+ggsave(plot=germ_success1F_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_success1F_gg.png",width=20,height=20,units="cm",dpi=800)
 ```
 
 ##Germination Success x Treatment and Population
@@ -232,15 +262,47 @@ Legend = 8 symbols, gray for roadside habitat and green for vegetated (away) hab
 Combined legend
 Y-axis numbers should be out of 1.00 to show proportion
 ```{r}
-mydata_site_sum<-mydata%>%group_by(Habitat,Treatment,Site)%>%summarise(Mean=mean(DaysToGerm),SD=sd(DaysToGerm),N=length(DaysToGerm))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
+mydata_site_sum<-mydata%>%
+  group_by(Habitat,Treatment,Site)%>%
+  summarise(Mean=mean(DaysToGerm),
+            SD=sd(DaysToGerm),
+            N=length(DaysToGerm))%>%
+  mutate(SE=SD/sqrt(N))%>%
+  mutate(Cat=paste(Site,Habitat,sep="_"))
 
 pd<-position_dodge(.2)
-germ_int_site_gg <- ggplot(data=mydata_site_sum,aes(x=factor(Treatment),y=Mean,color=Site,shape=Habitat,group=Cat))+ylab("Proportion Germinated")+xlab("Soil Type")+theme_bw()+theme(panel.border=element_blank(),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"))+geom_line(size=.8,position=pd)+geom_point(size=3,position=pd)+geom_errorbar(width=0.2,position=pd,aes(ymin=(Mean-SE),ymax=(Mean+SE)))
+germ_int_site_gg<-ggplot(data=mydata_site_sum,
+                         aes(x=factor(Treatment),
+                             y=Mean,
+                             color=Site,
+                             shape=Habitat,
+                             group=Cat))+
+  ylab("Proportion Germinated")+
+  xlab("Soil Type")+
+  theme_bw()+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=.8,position=pd)+
+  geom_point(size=3,position=pd)+
+  #scale_color_manual(values=c(1, 19, 1, 19, 0, 15, 0, 15, # 8 shape numbers in this array
+  #                             2, 17, 2, 17, 5, 23, 5, 23,
+  #                             6, 25, 6, 25, 3, 12, 3, 12,
+  #                             4, 13, 4, 13, 8, 11, 8, 11))+
+  #scale_color_manual(values=rep(c("forestgreen","forestgreen","gray58","gray58"),times=8))+
+  geom_errorbar(width=0.2,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))
 
 germ_int_site_gg
+
+ggsave(plot=germ_int_site_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_int_site_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
 
 ###Boxplot
+Not using
 ```{r}
 germ_success2<-mydata %>% 
   filter(DaysToGerm != 0) %>% 
@@ -263,8 +325,7 @@ ggsave(plot = germ_success2_gg, file = "/Users/Miranda/Documents/Education/UC Sa
 
 #Autoplot: Proportion Germinated
 
-NEEDS:
-How do I flip these so that germination on day 0 is at 0 and germination goes up as time continues?
+Not using
 
 ```{r}
 #Plot by habitat
