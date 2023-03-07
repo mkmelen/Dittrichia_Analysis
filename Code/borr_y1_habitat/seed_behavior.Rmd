@@ -118,16 +118,22 @@ exp(ranef(fullmodel2)$Site) # Pretty even among all the sites
 
 NEEDS:
 Error bars! But will need to calculate based on original data with different sample sizes
+
+group_by(Habitat,Treatment,Site)%>%
+  summarise(Mean=mean(DaysToGerm),
+            SD=sd(DaysToGerm),
+            N=length(DaysToGerm))%>%
+  mutate(SE=SD/sqrt(N))%>%
 ```{r}
 fakedata1<-data.frame(Habitat=c("Away","Roadside","Away","Roadside"),Treatment=c("Construction","Vegetated","Vegetated","Construction"),DaysToGerm=c(0),type=c("fake")) #make fake data to pull line back to 0
 
 mydata1<-mydata%>%
     filter(DaysToGerm!=0)%>% 
-  mutate(type=c("real"))%>%bind_rows(fakedata1) #add a column that differentiates real from fake data
+  mutate(type=c("real"))%>%bind_rows(fakedata1) #add a column that differentiates real from fake data so that data points only show on real data
   
 germ_rate1<-mydata1%>% 
-  mutate(PlotTreatment=paste(Habitat,Treatment, sep="/"))%>% 
-  group_by(PlotTreatment,type)%>% 
+  mutate(PlotTreatment=paste(Habitat,Treatment,sep="/"))%>% 
+  group_by(PlotTreatment,type)%>%
   count(DaysToGerm)%>% 
   mutate(CumulativeSum=cumsum(n))%>% 
   mutate(Proportion=CumulativeSum/400) #calculating proportions using 400 seeds per group, 4 groups (2 Habitats x 2 Treatments)
@@ -160,18 +166,28 @@ mydata2<-mydata%>%
 
 germ_rate2<-mydata2%>% 
   mutate(PlotTreatment=paste(Population,Treatment,sep="/"))%>% 
-  group_by(PlotTreatment,type)%>% 
+  group_by(PlotTreatment,type)%>%
   count(DaysToGerm)%>% 
   mutate(CumulativeSum=cumsum(n)) %>% 
   mutate(Proportion=CumulativeSum/50) #calculating proportions using 50 seeds per group
 
 germ_rate2_gg<-ggplot(germ_rate2)+
-  geom_line(aes(x=DaysToGerm,y=Proportion,color=PlotTreatment),size=0.5)+
-  geom_point(aes(x=DaysToGerm,y=Proportion,color=PlotTreatment,shape=PlotTreatment,size=type))+
+  geom_line(aes(x=DaysToGerm,
+                y=Proportion,
+                color=PlotTreatment),
+            size=0.5)+
+  geom_point(aes(x=DaysToGerm,
+                 y=Proportion,
+                 color=PlotTreatment,
+                 shape=PlotTreatment,
+                 size=type))+
   theme_classic()+
   ylim(0,1)+
-  scale_x_continuous(name="Days to Germination",limits=c(0,12),breaks=seq(0,12,1))+
-  scale_size_manual(values=c(0,1.5),guide="none")+
+  scale_x_continuous(name="Days to Germination",
+                     limits=c(0,12),
+                     breaks=seq(0,12,1))+
+  scale_size_manual(values=c(0,1.5),
+                    guide="none")+
   scale_shape_manual(values=c(1, 19, 1, 19, 0, 15, 0, 15, # 8 shape numbers in this array
                                 2, 17, 2, 17, 5, 23, 5, 23,
                                 6, 25, 6, 25, 3, 12, 3, 12,
@@ -187,23 +203,30 @@ ggsave(plot=germ_rate2_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz
 ###Interaction Plot
 
 ```{r}
-mydata_all_fit<-lm(mydata$DaysToGerm~Treatment*Habitat,data=mydata)
-x<-c("Treatment","Habitat")
-mydata_all_fit_df<-data.table(summary(emmeans(mydata_all_fit,specs=x)))
-pd<-position_dodge(.2)
-mydata_all_anova<-anova(mydata_all_fit)
-mydata_all_anova
+#NOT HELPFUL: This is actually days to germinate, and not proportion
+#mydata_all_fit<-lm(mydata$DaysToGerm~Treatment*Habitat,data=mydata)
+#x<-c("Treatment","Habitat")
+#mydata_all_fit_df<-data.table(summary(emmeans(mydata_all_fit,specs=x))) 
+#mydata_all_anova<-anova(mydata_all_fit)
+#mydata_all_anova
 
-germ_int_all_gg<-ggplot(data=mydata_all_fit_df,
+pd<-position_dodge(.2)
+
+germ_rate3<-mydata%>% 
+  group_by(Treatment,Habitat)%>%
+  summarise(Mean=mean(PropGermDish),
+            SD=sd(PropGermDish),
+            N=length(PropGermDish))%>%
+  mutate(SE=SD/sqrt(N))
+
+germ_int_all_gg<-ggplot(data=germ_rate3,
                         aes(x=factor(Treatment),
-                            y=emmean,
+                            y=Mean,
                             shape=Habitat,
                             group=Habitat,
                             color=Habitat))+
   ylab("Proportion Germinated")+
   xlab("Soil Type")+
-  scale_y_continuous(limits=c(2.1,2.6),
-                     breaks=c(2.1,2.2,2.3,2.4,2.5,2.6))+
   theme_bw()+
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
@@ -213,8 +236,8 @@ germ_int_all_gg<-ggplot(data=mydata_all_fit_df,
   geom_point(size=3,position=pd)+
   scale_color_manual(values=c("forestgreen","gray58"))+
   geom_errorbar(width=0.2,position=pd,
-                aes(ymin=(emmean-SE),
-                    ymax=(emmean+SE)))
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))
 germ_int_all_gg
 
 ggsave(plot=germ_int_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_int_all_gg.png",width=25,height=20,units="cm",dpi=800)
@@ -257,26 +280,22 @@ ggsave(plot=germ_success1F_gg,file="/Users/Miranda/Documents/Education/UC Santa 
 ##Germination Success x Treatment and Population
 ###Interaction Plot
 
-NEEDS: 
-Legend = 8 symbols, gray for roadside habitat and green for vegetated (away) habitat
-Combined legend
-Y-axis numbers should be out of 1.00 to show proportion
 ```{r}
 mydata_site_sum<-mydata%>%
   group_by(Habitat,Treatment,Site)%>%
-  summarise(Mean=mean(DaysToGerm),
-            SD=sd(DaysToGerm),
-            N=length(DaysToGerm))%>%
+  summarise(Mean=mean(PropGermDish),
+            SD=sd(PropGermDish),
+            N=length(PropGermDish))%>%
   mutate(SE=SD/sqrt(N))%>%
-  mutate(Cat=paste(Site,Habitat,sep="_"))
+  mutate(Legend=paste(Site,Habitat,sep="/"))
 
 pd<-position_dodge(.2)
 germ_int_site_gg<-ggplot(data=mydata_site_sum,
                          aes(x=factor(Treatment),
                              y=Mean,
-                             color=Site,
-                             shape=Habitat,
-                             group=Cat))+
+                             color=Legend,
+                             shape=Legend,
+                             group=Legend))+
   ylab("Proportion Germinated")+
   xlab("Soil Type")+
   theme_bw()+
@@ -286,16 +305,16 @@ germ_int_site_gg<-ggplot(data=mydata_site_sum,
         axis.line=element_line(colour="black"))+
   geom_line(size=.8,position=pd)+
   geom_point(size=3,position=pd)+
-  #scale_color_manual(values=c(1, 19, 1, 19, 0, 15, 0, 15, # 8 shape numbers in this array
-  #                             2, 17, 2, 17, 5, 23, 5, 23,
-  #                             6, 25, 6, 25, 3, 12, 3, 12,
-  #                             4, 13, 4, 13, 8, 11, 8, 11))+
-  #scale_color_manual(values=rep(c("forestgreen","forestgreen","gray58","gray58"),times=8))+
+  scale_shape_manual(values=c(19, 19, 15, 15,
+                               17, 17, 23, 23,
+                               25, 25, 3, 3,
+                               4, 4, 8, 8))+
+  scale_color_manual(values=rep(c("forestgreen","gray58"),times=16))+
+  labs(y="Proportion Germinated",color="Population/Habitat",shape="Population/Habitat")+
   geom_errorbar(width=0.2,
                 position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))
-
 germ_int_site_gg
 
 ggsave(plot=germ_int_site_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_int_site_gg.png",width=25,height=20,units="cm",dpi=800)
