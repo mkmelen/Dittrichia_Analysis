@@ -99,45 +99,47 @@ X-axis should have Competition (None, Festuca, Bromus)
 Y-axis should be either biomass or growth rate (2 plots)
 2 plots, one with construction soil, one with field soil
 ```{r}
-mydata_all_fit<-lm(log_mydata$log_Dittrichia~Soil*Habitat,data=log_mydata)
-x<-c("Soil","Habitat")
-mydata_all_fit_df<-data.table(summary(emmeans(mydata_all_fit,specs=x)))
-pd<-position_dodge(.2)
-mydata_all_anova<-anova(mydata_all_fit)
-mydata_all_anova
+pd<-position_dodge(0.1)
 
-comp_int_all_gg<-ggplot(data=mydata_all_fit_df,
+comp_int_all<-log_mydata%>% 
+  group_by(Soil,Habitat)%>%
+  summarise(Mean=mean(log_Dittrichia),
+            SD=sd(log_Dittrichia),
+            N=length(log_Dittrichia))%>%
+  mutate(SE=SD/sqrt(N))
+
+
+comp_int_all_gg<-ggplot(data=comp_int_all,
                         aes(x=factor(Soil),
-                            y=emmean,
+                            y=Mean,
                             shape=Habitat,
-                            group=Habitat))+
+                            group=Habitat,
+                            color=Habitat))+
   ylab("log(Biomass)")+
-  xlab("Soil Type")+
-  scale_y_continuous(limits=c(2.4,5.5),
-                     breaks=c(2.5,3,3.5,4,4.5,5,5.5))+
-  theme_bw()+
+  coord_cartesian(ylim = c(2,6))+
+  xlab("")+
+  theme_bw(base_size=16)+
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
         axis.line=element_line(colour="black"))+
   geom_line(size=1,
-            position=pd,
-            color=c("gray58","gray58","forestgreen","forestgreen"))+
-  geom_point(size=3,position=pd,
-             color=c("gray58","gray58","forestgreen","forestgreen"))+
-  geom_errorbar(color=c("gray58","gray58","forestgreen","forestgreen"),
-                width=0.2,
+            position=pd)+
+  geom_point(size=3,
+             position=pd)+
+  scale_color_manual(values=c("gray58","forestgreen"))+
+  geom_errorbar(width=0.15,
                 position=pd,
-                aes(ymin=(emmean-SE),
-                    ymax=(emmean+SE)))
-
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))
 comp_int_all_gg
-```
 
+#ggsave(plot=comp_int_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_all_gg.png",width=25,height=20,units="cm",dpi=800)
+```
 
 ###Boxplot
 Not using
-```{r}
+```{r eval=FALSE, include=FALSE}
 competition1_gg<-ggplot(log_mydata)+
   geom_boxplot(aes(x=Competition, y=log_Dittrichia, fill = Soil))+
   theme_classic()+
@@ -174,7 +176,7 @@ comp_int_site_panel_gg
 
 ###Boxplots
 Not using
-```{r}
+```{r eval=FALSE, include=FALSE}
 competition2_gg<-ggplot(log_mydata)+
   geom_boxplot(aes(x=Soil, y=log_Dittrichia, fill = Population))+
   theme_classic()+

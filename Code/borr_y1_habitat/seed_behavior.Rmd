@@ -230,8 +230,10 @@ germ_int_all_gg<-ggplot(data=germ_rate3,
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
         axis.line=element_line(colour="black"))+
-  geom_line(size=1,position=pd)+
-  geom_point(size=3,position=pd)+
+  geom_line(size=1,
+            position=pd)+
+  geom_point(size=3,
+             position=pd)+
   scale_color_manual(values=c("gray58","forestgreen"))+
   geom_errorbar(width=0.15,
                 position=pd,
@@ -244,7 +246,7 @@ ggsave(plot=germ_int_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cr
 
 ###Boxplot
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 germ_success1<-mydata%>% 
   filter(DaysToGerm!=0)%>% 
   mutate(PlotTreatment=paste(Habitat,Treatment,sep="/"))%>% 
@@ -322,7 +324,7 @@ ggsave(plot=germ_int_site_gg,file="/Users/Miranda/Documents/Education/UC Santa C
 
 ###Boxplot
 Not using
-```{r}
+```{r eval=FALSE, include=FALSE}
 germ_success2<-mydata %>% 
   filter(DaysToGerm != 0) %>% 
   mutate(PlotTreatment = paste(Habitat, Treatment, sep="/")) %>% 
@@ -346,7 +348,7 @@ ggsave(plot = germ_success2_gg, file = "/Users/Miranda/Documents/Education/UC Sa
 
 Not using
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 #Plot by habitat
 model_graph1<-survfit(Surv(DaysToGerm,Censor)~Habitat,data=mydata)
 autoplot(model_graph1)+labs(x="\n Time to Germination (Days)",y="Germination Probabilities\n",title="Germination Times Of Seeds from \n Roadside and Away Habitats\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))

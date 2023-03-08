@@ -77,13 +77,13 @@ This dataframe has one row per plant (800 observations). Data are for survivorsh
 mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/field_relative_fitness/field_relative_fitness_2021.csv",stringsAsFactors=T)
 str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
 mydata$Site<-as.character(mydata$Site)
-mydata$Treatment<-factor(mydata$Treatment,levels=c("Control","Biomass Removal","Hemizonia","Raking","Raking + Clipping")) #Changing the contrast order so that everything is compared to Control
+mydata$Treatment<-factor(mydata$Treatment,levels=c("Control","Biomass Removal","Hemizonia","Raking","Raking & Clipping")) #Changing the contrast order so that everything is compared to Control
 ```
 
 #Early Growth
-This code uses Growth data with Habitat (roadside and off-road) and Treatment in a glmm model. Anova and Tukey tests are used on the successful Model4 with the creation of a box plot as a finished product.
+This code uses Growth data with Habitat (roadside and vegetated) and Treatment in a glmm model. Anova and Tukey tests are used on the successful Model4 with the creation of a box plot as a finished product.
 
-Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and off-road; R or O)
+Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and vegetated; R or O)
 
 Also Note: Growth data is a measure of growth of longest leaf. Each plant was measured upon transplanting into the field in March and then again in June 2021. This plant has a juvenile stage of a basal rosette, and then it bolts and produced smaller cauline leaves. The goal was to capture early growth data for this plant before bolting occurs so that the measurements capture the basal rosette stage, however in some cases the plants bolted earlier than expected and the resulting measurement was smaller than previous. In these cases we determined that the data should be removed from the dataset as the negative number (or changing it to a zero) does not reflect the biological importance of the measurement.
 
@@ -237,9 +237,9 @@ ggsave(plot = growth_boxplot3, file = "/Users/Miranda/Documents/Education/UC San
 ```
 
 #Reproductive Biomass
-This code uses Biomass data with Habitat (roadside and off-road) and Treatment in a lmer model. ANOVA and Tukey are used on the successful Model 3 with the creation of a box plot as a finished product.
+This code uses Biomass data with Habitat (roadside and vegetated) and Treatment in a lmer model. ANOVA and Tukey are used on the successful Model 3 with the creation of a box plot as a finished product.
 
-Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and off-road; R or O)
+Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and vegetated; R or O)
 
 Also Note: Biomass data is a measure of aboveground biomass of all individuals harvested from the site. In some cases this was before they budded, but we harvested the wilted plant in case that information was needed in the future. Here we only want to look at biomass (well, log(Biomass)) for reproductive individuals.
 
@@ -365,7 +365,7 @@ ggplot(data=reproduction_mydata,aes(x=Habitat,y=log(Biomass)))+geom_boxplot() #p
 ```
 
 #Survival Analysis
-This code uses NumDaysAlive data with Habitat (roadside and off-road) and Treatment in a Cox proportional hazards model to assess survival. Information here: https://cran.r-project.org/web/packages/coxme/vignettes/coxme.pdf. "Surv" creates a survival object to combine the days column (NumDaysAlive) and the reproductive censor column (ReproductionCensor) to be used as a response variable in a model formula. The model follows the same syntax as linear models (lm, lmer, etc). Fixed effects: "var1 * var2" will give you the interaction term and the individual variables: so "var1 + var2 + var1:var2". To add random effects, type "+ (1|random effect)". 
+This code uses NumDaysAlive data with Habitat (roadside and vegetated) and Treatment in a Cox proportional hazards model to assess survival. Information here: https://cran.r-project.org/web/packages/coxme/vignettes/coxme.pdf. "Surv" creates a survival object to combine the days column (NumDaysAlive) and the reproductive censor column (ReproductionCensor) to be used as a response variable in a model formula. The model follows the same syntax as linear models (lm, lmer, etc). Fixed effects: "var1 * var2" will give you the interaction term and the individual variables: so "var1 + var2 + var1:var2". To add random effects, type "+ (1|random effect)". 
 
 ##Histograms
 ```{r}
@@ -458,13 +458,13 @@ AIC(cox_fullmodel3,cox_fullmodel4) #Looks like fullmodel4 is the better model be
 Plot by habitat
 ```{r}
 cox_model_graph1<-survfit(Surv(NumDaysAlive,CensorReproduction)~Habitat,data=mydata)
-autoplot(cox_model_graph1)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Off-road Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+autoplot(cox_model_graph1)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Vegetated Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
 ```
 
 Plot by all treatment
 ```{r}
 cox_model_graph2<-survfit(Surv(NumDaysAlive,CensorReproduction)~Treatment,data=mydata)
-autoplot(cox_model_graph2)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Off-road Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+autoplot(cox_model_graph2)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Vegetated Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
 ```
 Post hoc Tukey
 ```{r}
@@ -475,8 +475,8 @@ Plot by 2 treatments (Control and Biomass Removal), and adding in Habitat
 ```{r}
 cox_sub_mydata<-subset(mydata,Treatment%in%c('Control','Biomass Removal'))
 cox_model_graph3<-survfit(Surv(NumDaysAlive,CensorReproduction)~Treatment,data=cox_sub_mydata)
-autoplot(cox_model_graph3)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Off-road Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+autoplot(cox_model_graph3)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Vegetated Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
 
 cox_model_graph3<-survfit(Surv(NumDaysAlive,CensorReproduction)~Treatment+Habitat,data=cox_sub_mydata)
-autoplot(cox_model_graph3)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Off-road Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+autoplot(cox_model_graph3)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Vegetated Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
 ```
