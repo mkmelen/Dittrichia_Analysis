@@ -108,7 +108,8 @@ mydata_all_anova
 
 comp_int_all_gg<-ggplot(data=mydata_all_fit_df,
                         aes(x=factor(Soil),
-                            y=emmean,shape=Habitat,
+                            y=emmean,
+                            shape=Habitat,
                             group=Habitat))+
   ylab("log(Biomass)")+
   xlab("Soil Type")+

@@ -26,9 +26,9 @@ Assumptions for cox models: https://www.theanalysisfactor.com/assumptions-cox-re
 ###Linear mixed-effects models
 Linear Mixed Effects models are used for regression analyses involving dependent data. For a tutorial: https://doi.org/10.1177/2515245920960351
 
-fullmodel <- lmer(log(Biomass) ~   #Response variable: biomass
-          Habitat * Treatment +    #Fixed effects and their interactions(*)
-          (1|Site) + (1|Block),    #Random effect with random intercept only
+fullmodel<-lmer(log(Biomass)~   #Response variable: biomass
+          Habitat*Treatment+    #Fixed effects and their interactions(*)
+          (1|Site)+(1|Block),   #Random effect with random intercept only
           data=mydata)             #Dataframe
   
 ###Generalized linear mixed models
@@ -192,7 +192,7 @@ summary(growth_fullmodel4)
 ###Post-Hoc Test
 Remove non-significant interaction terms before running the Tukey.
 ```{r}
-#?emmeans, emmeans(model, pairwise ~ treatment)
+#?emmeans,emmeans(model,pairwise~treatment)
 growth_fullmodel4.1<-glmmTMB(Growth.Rate~Treatment+(1|Site)+(1|Block),family=beta_family(),data=growth_mydata)
 summary(growth_fullmodel4.1)
 emmeans(growth_fullmodel4.1,pairwise~Treatment)
@@ -205,8 +205,8 @@ growth_boxplot1<-ggplot(growth_mydata)+
   geom_boxplot(aes(x=Habitat, y=Growth.Rate), size = 0.5)+
   theme_classic()+
   ylim(0,1)+
-  scale_fill_manual(values = c("forestgreen","gray58"))+
-  labs(y="Early Growth Rate", fill = "Habitat", x = "Habitat")
+  scale_fill_manual(values=c("forestgreen","gray58"))+
+  labs(y="Early Growth Rate",fill="Habitat",x="Habitat")
 growth_boxplot1
 
 ggsave(plot = growth_boxplot1, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplot1.png", width = 20, height = 20, units = "cm", dpi = 800)
