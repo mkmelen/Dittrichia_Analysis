@@ -145,7 +145,7 @@ germ_rate1_gg<-ggplot(germ_rate1,
                      breaks=seq(0,12,1))+
   scale_size_manual(values=c(0,3),
                     guide="none")+
-  scale_color_manual(values=c("forestgreen","forestgreen","gray58","gray58"))+
+  scale_color_manual(values=c("gray58","gray58","forestgreen","forestgreen"))+
   labs(y="Proportion Germinated",
        color="Habitat/Treatment",
        shape="Habitat/Treatment")
@@ -232,7 +232,7 @@ germ_int_all_gg<-ggplot(data=germ_rate3,
         axis.line=element_line(colour="black"))+
   geom_line(size=1,position=pd)+
   geom_point(size=3,position=pd)+
-  scale_color_manual(values=c("forestgreen","gray58"))+
+  scale_color_manual(values=c("gray58","forestgreen"))+
   geom_errorbar(width=0.15,
                 position=pd,
                 aes(ymin=(Mean-SE),
@@ -309,7 +309,7 @@ germ_int_site_gg<-ggplot(data=mydata_site_sum,
                                17, 17, 23, 23,
                                25, 25, 3, 3,
                                4, 4, 8, 8))+
-  scale_color_manual(values=rep(c("forestgreen","gray58"),times=16))+
+  scale_color_manual(values=rep(c("gray58","forestgreen"),times=16))+
   labs(y="Proportion Germinated",color="Population/Habitat",shape="Population/Habitat")+
   geom_errorbar(width=1.2,
                 position=pd,

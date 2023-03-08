@@ -97,7 +97,7 @@ All data combined.
 NEEDS: (4 plots total)
 X-axis should have Competition (None, Festuca, Bromus)
 Y-axis should be either biomass or growth rate (2 plots)
-2 plots, one with construction soil, one with vegetated soil
+2 plots, one with construction soil, one with field soil
 ```{r}
 mydata_all_fit<-lm(log_mydata$log_Dittrichia~Soil*Habitat,data=log_mydata)
 x<-c("Soil","Habitat")
