@@ -326,7 +326,7 @@ ggsave(plot=germ_int_site_gg,file="/Users/Miranda/Documents/Education/UC Santa C
 Not using
 ```{r eval=FALSE, include=FALSE}
 germ_success2<-mydata %>% 
-  filter(DaysToGerm != 0) %>% 
+  filter(DaysToGerm!= 0) %>% 
   mutate(PlotTreatment = paste(Habitat, Treatment, sep="/")) %>% 
   group_by(Population, Treatment, Habitat) %>% 
   count(DaysToGerm) %>% 

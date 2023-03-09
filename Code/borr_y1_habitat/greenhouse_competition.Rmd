@@ -46,78 +46,84 @@ library(Sleuth2)
 ```
 
 #Load Data
-This dataframe has one row per pot (768 observations). Data are Dittrichia_biomass and Grass_biomass, both measured in grams. NAs in biomass columns are "no data" because there was no grass present in that pot at the time of measurement.
+This dataframe has one row per pot (768 observations). Data are Dittrichia_biomass and Grass_biomass, both measured in grams, and DittrichiaLLL_mm_3 which is the longest leaf length in mm. NAs in  columns are "no data" because there was no grass present in that pot at the time of measurement.
 ```{r}
-mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/greenhouse_competition/competition_biomass.csv",stringsAsFactors=T)
+mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/greenhouse_competition/greenhouse_competition.csv",stringsAsFactors=T)
+# change "NA" to "0"
+mydata1<-mydata %>% 
+  replace_na(list(Dittrichia_biomass=0,Grass_biomass=0,DittrichiaLLL_mm_3=0,GrassHeight_cm_3=0))
 str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
-
-# change "NA" biomass to "0"
-mydata1 <- mydata %>% 
-  replace_na(list(Dittrichia_biomass = 0, Grass_biomass = 0))
 ```
 
-#Histograms
+#Dittrichia Biomass
+
+##Histograms
 ```{r}
 #Dittrichia biomass
 hist(mydata1$Dittrichia_biomass,col='steelblue',main='Original')
 #Grass biomass
 hist(mydata1$Grass_biomass,col='steelblue',main='Original')
 #By soil type
-ggplot(mydata1,aes(x=Dittrichia_biomass))+geom_histogram()+facet_wrap(vars(Soil))
-ggplot(mydata1,aes(x=Grass_biomass))+geom_histogram()+facet_wrap(vars(Soil))
+ggplot(mydata1,aes(x=Dittrichia_biomass))+
+  geom_histogram()+
+  facet_wrap(vars(Soil))
+ggplot(mydata1,aes(x=Grass_biomass))+
+  geom_histogram()+
+  facet_wrap(vars(Soil))
 ```
+
 Data is skewed, so let's try log transforming. However, the values are all <0 which create negative numbers when log transforming, therefore we need to multiply to move the decimal and then check the data again.
 
 ```{r}
 #Prepare data for log transform
-log_mydata <- mydata1 %>% 
-  mutate(Dittrichia_biomass10000 = Dittrichia_biomass*10000, Grass_biomass10000 = Grass_biomass*10000) %>% 
-  filter(Dittrichia_biomass != 0) %>% 
-  mutate(log_Dittrichia = log(Dittrichia_biomass10000)) %>% 
-  mutate(log_Grass = log(Grass_biomass10000))
+log_mydata<-mydata1%>% 
+  mutate(Dittrichia_biomass10000=Dittrichia_biomass*10000,Grass_biomass10000=Grass_biomass*10000)%>% 
+  filter(Dittrichia_biomass!=0)%>% 
+  mutate(log_Dittrichia=log(Dittrichia_biomass10000))%>% 
+  mutate(log_Grass=log(Grass_biomass10000))
 
 hist(log_mydata$log_Dittrichia,col='steelblue',main='Original')
-hist(log_mydata$log_Grass,col='steelblue',main='Original') 
+shapiro.test(log_mydata$log_Dittrichia) #does not improve with log transform
+hist(log_mydata$log_Grass,col='steelblue',main='Original')
+shapiro.test(log_mydata$log_Grass) #does not compute?
 ```
 
-#Model
+##Model
 
-##Best Model
+###Best Model
 
-##Risk Assessment
+###Risk Assessment
 
-#ggplot
-##Biomass x Competition and Soil
+##ggplot
+###Biomass x Competition and Soil
 
-###Interaction Plot
+####Interaction Plot
 Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and off-road; R or O)
 
 All data combined.
 
-NEEDS: (4 plots total)
-X-axis should have Competition (None, Festuca, Bromus)
-Y-axis should be either biomass or growth rate (2 plots)
-2 plots, one with construction soil, one with field soil
+#####Biomass vs. Competition: Construction soil
 ```{r}
 pd<-position_dodge(0.1)
 
-comp_int_all<-log_mydata%>% 
-  group_by(Soil,Habitat)%>%
+comp_int_bio_con<-log_mydata%>% 
+  filter(Soil=="Construction Soil") %>% 
+  group_by(Competition,Habitat)%>%
   summarise(Mean=mean(log_Dittrichia),
             SD=sd(log_Dittrichia),
             N=length(log_Dittrichia))%>%
   mutate(SE=SD/sqrt(N))
 
-
-comp_int_all_gg<-ggplot(data=comp_int_all,
-                        aes(x=factor(Soil),
+comp_int_bio_con_gg<-ggplot(data=comp_int_bio_con,
+                        aes(x=factor(Competition,levels=c("None","Festuca","Bromus")),
                             y=Mean,
                             shape=Habitat,
                             group=Habitat,
                             color=Habitat))+
   ylab("log(Biomass)")+
-  coord_cartesian(ylim = c(2,6))+
+  coord_cartesian(ylim = c(1,8))+
   xlab("")+
+  ggtitle("Construction Soil")+
   theme_bw(base_size=16)+
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
@@ -132,58 +138,151 @@ comp_int_all_gg<-ggplot(data=comp_int_all,
                 position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))
-comp_int_all_gg
+comp_int_bio_con_gg
 
-#ggsave(plot=comp_int_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_all_gg.png",width=25,height=20,units="cm",dpi=800)
+ggsave(plot=comp_int_bio_con_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_con_gg.png",width=25,height=20,units="cm",dpi=800)
+```
+#####Biomass vs. Competition: Field soil
+```{r}
+pd<-position_dodge(0.1)
+
+comp_int_bio_field<-log_mydata%>% 
+  filter(Soil=="Field Soil") %>% 
+  group_by(Competition,Habitat)%>%
+  summarise(Mean=mean(log_Dittrichia),
+            SD=sd(log_Dittrichia),
+            N=length(log_Dittrichia))%>%
+  mutate(SE=SD/sqrt(N))
+
+comp_int_bio_field_gg<-ggplot(data=comp_int_bio_field,
+                        aes(x=factor(Competition,levels=c("None","Festuca","Bromus")),
+                            y=Mean,
+                            shape=Habitat,
+                            group=Habitat,
+                            color=Habitat))+
+  ylab("log(Biomass)")+
+  coord_cartesian(ylim = c(1,8))+
+  xlab("")+
+  ggtitle("Field Soil")+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=1,
+            position=pd)+
+  geom_point(size=3,
+             position=pd)+
+  scale_color_manual(values=c("gray58","forestgreen"))+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))
+comp_int_bio_field_gg
+
+ggsave(plot=comp_int_bio_field_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_field_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
 
-###Boxplot
+#####Boxplot
 Not using
 ```{r eval=FALSE, include=FALSE}
 competition1_gg<-ggplot(log_mydata)+
-  geom_boxplot(aes(x=Competition, y=log_Dittrichia, fill = Soil))+
+  geom_boxplot(aes(x=Competition, 
+                   y=log_Dittrichia, 
+                   fill=Soil))+
   theme_classic()+
-  scale_fill_manual(values = c("gray58", "forestgreen"))+
-  labs(y="log(Biomass)", fill = "Soil", x="Competition")
+  scale_fill_manual(values=c("gray58","forestgreen"))+
+  labs(y="log(Biomass)",
+       fill="Soil",
+       x="Competition")
 competition1_gg
-ggsave(plot = competition1_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition1_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
+ggsave(plot=competition1_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition1_gg.png", width=20,height=25,units ="cm",dpi=800)
 ```
 
-##Biomass x Competition and Soil and Population
+###Biomass x Competition and Soil and Population
 
-### Interaction Plots
+#### Interaction Plots
 Not used
 Plot by site.
-```{r}
-mydata_site_sum<-log_mydata%>%group_by(Habitat,Soil,Site)%>%summarise(Mean=mean(log_Dittrichia),SD=sd(log_Dittrichia),N=length(log_Dittrichia))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
+```{r eval=FALSE, include=FALSE}
+mydata_site_sum<-log_mydata%>%
+  group_by(Habitat,Soil,Site)%>%
+  summarise(Mean=mean(log_Dittrichia),
+            SD=sd(log_Dittrichia),
+            N=length(log_Dittrichia))%>%
+  mutate(SE=SD/sqrt(N))%>%
+  mutate(Cat=paste(Site,Habitat,sep="_"))
 
 pd<-position_dodge(.8)
-comp_int_site_gg <- ggplot(data=mydata_site_sum,aes(x=factor(Soil),y=Mean,color=Site,shape=Habitat,group=Cat))+ylab("log(Biomass)")+xlab("Soil")+theme_bw()+theme(panel.border=element_blank(),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"))+geom_line(size=.8,position=pd)+geom_point(size=3,position=pd)+geom_errorbar(width=0.2,position=pd,aes(ymin=(Mean-SE),ymax=(Mean+SE)))
-
-comp_int_site_gg
+comp_int_site_gg<-ggplot(data=mydata_site_sum,
+                         aes(x=factor(Soil),
+                             y=Mean,
+                             color=Site,
+                             shape=Habitat,
+                             group=Cat))+
+  ylab("log(Biomass)")+
+  xlab("Soil")+
+  theme_bw()+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=.8,position=pd)+
+  geom_point(size=3,position=pd)+
+  geom_errorbar(width=0.2,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))
+#comp_int_site_gg
 ```
 
 Facet to make panels of the by site plot.
 
-```{r}
-mydata_site_sum<-log_mydata%>%group_by(Habitat,Soil,Site)%>%summarise(Mean=mean(log_Dittrichia),SD=sd(log_Dittrichia),N=length(log_Dittrichia))%>%mutate(SE=SD/sqrt(N))%>%mutate(Cat=paste(Site,Habitat,sep="_"))
+```{r eval=FALSE, include=FALSE}
+mydata_site_sum<-log_mydata%>%
+  group_by(Habitat,Soil,Site)%>%
+  summarise(Mean=mean(log_Dittrichia),
+            SD=sd(log_Dittrichia),
+            N=length(log_Dittrichia))%>%
+  mutate(SE=SD/sqrt(N))%>%
+  mutate(Cat=paste(Site,Habitat,sep="_"))
 
 pd<-position_dodge(.2)
-comp_int_site_panel_gg <- ggplot(data=mydata_site_sum,aes(x=factor(Soil),y=Mean,color=Site,shape=Habitat,group=Cat))+facet_wrap(~Site)+ylab("log(Biomass)")+xlab("Soil")+theme_bw()+theme(panel.border=element_blank(),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"))+geom_line(size=.8,position=pd)+geom_point(size=3,position=pd)+geom_errorbar(width=0.2,position=pd,aes(ymin=(Mean-SE),ymax=(Mean+SE)))
-
-comp_int_site_panel_gg
+comp_int_site_panel_gg<-ggplot(data=mydata_site_sum,
+                               aes(x=factor(Soil),
+                                   y=Mean,
+                                   color=Site,
+                                   shape=Habitat,
+                                   group=Cat))+
+  facet_wrap(~Site)+
+  ylab("log(Biomass)")+
+  xlab("Soil")+
+  theme_bw()+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=.8,position=pd)+
+  geom_point(size=3,position=pd)+
+  geom_errorbar(width=0.2,position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))
+#comp_int_site_panel_gg
 ```
 
-###Boxplots
+####Boxplots
 Not using
 ```{r eval=FALSE, include=FALSE}
 competition2_gg<-ggplot(log_mydata)+
-  geom_boxplot(aes(x=Soil, y=log_Dittrichia, fill = Population))+
+  geom_boxplot(aes(x=Soil,
+                   y=log_Dittrichia,
+                   fill=Population))+
   theme_classic()+
   facet_grid(Habitat~.)+
-  labs(y="log(Biomass)", fill = "Population", x="Soil")
-competition2_gg
-ggsave(plot = competition2_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition2_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
+  labs(y="log(Biomass)",
+       fill="Population",
+       x="Soil")
+#competition2_gg
 ```
 
 ## Biomass Scatterplot
@@ -191,21 +290,154 @@ ggsave(plot = competition2_gg, file = "/Users/Miranda/Documents/Education/UC San
 #Prep data for scatterplot
 competition_scatter<-log_mydata%>% 
   filter(Competition!="None")%>%
-  filter(Grass_biomass!= 0)%>% 
-  mutate(scx=log(Grass_biomass),scy=log(Dittrichia_biomass))%>% 
+  filter(Grass_biomass!=0)%>% 
+  mutate(scx=log(Grass_biomass),
+         scy=log(Dittrichia_biomass))%>% 
   mutate(type=paste(Soil,Competition,sep="/"))
 
+#Make the scatterplot
 competition_scatter_gg<-ggplot(competition_scatter)+
   geom_point(aes(
     x=scx,
     y=scy,
-    shape=Soil,
-    color=Competition))+
-  scale_color_manual(values = c("magenta", "turquoise"))+
-  geom_smooth(method=lm, aes(x=scx, y=scy, linetype = Soil), color = "black")+
-  theme_classic()+
-  labs(y = "Dittrichia graveolens biomass (g)", x ="Grass biomass (g)", shape = "Soil", color = "Competition")
+    shape=type,
+    color=Habitat))+
+  guides(fill=none)+
+  scale_color_manual(values=c("gray58","forestgreen"))+
+  scale_shape_manual(values=c(1,19,2,17))+
+  geom_smooth(method=lm,
+              aes(x=scx,
+                  y=scy,
+                  linetype=Soil),
+              color="black")+
+  theme_classic(base_size=16)+
+  labs(y="Dittrichia graveolens log(biomass) (g)",
+       x="Grass log(biomass) (g)",
+       shape="Soil/Competition",
+       color="Habitat",
+       linetype="")
 competition_scatter_gg
 
-ggsave(plot = competition_scatter_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition_scatter_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
+ggsave(plot=competition_scatter_gg,file ="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition_scatter_gg.png",width=20,height=25,units="cm",dpi=800)
+```
+
+
+#Dittrichia Growth
+
+Here we need to filter the data to only look at plant growth > 0
+```{r}
+mydata_Dgrowth<-mydata%>%filter(DittrichiaLLL_mm_3>0) #Here I am only looking at the Dittrichia growth data that is greater than 0
+#mydata_Ggrowth<-mydata%>%filter(GrassHeight_cm_3>0) #Here I am only looking at the Dittrichia growth data that is greater than 0
+```
+
+##Histograms
+
+```{r}
+#Dittrichia longest leaf length
+hist(mydata_Dgrowth$DittrichiaLLL_mm_3,col='steelblue',main='Original')
+```
+
+Data is skewed, so let's try log transforming.
+```{r}
+#Prepare data for log transform
+log_mydata_Dgrowth<-mydata_Dgrowth%>% 
+  filter(Dittrichia_biomass!=0)%>%
+ mutate(log_Dgrowth=log(DittrichiaLLL_mm_3))
+
+hist(log_mydata_Dgrowth$log_Dgrowth,col='steelblue',main='Original')
+shapiro.test(log_mydata_Dgrowth$log_Dgrowth) #does not improve with log transform
+```
+
+
+##Model
+###Best Model
+###Risk Assessment
+##ggplot
+###Growth Rate x Competition and Soil
+
+####Interaction Plot
+Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and off-road; R or O)
+
+All data combined.
+
+#####Growth Rate vs. Competition: Construction soil
+```{r}
+pd<-position_dodge(0.1)
+
+comp_int_grow_con<-log_mydata_Dgrowth%>% 
+  filter(Soil=="Construction Soil")%>% 
+  group_by(Competition,Habitat)%>%
+  summarise(Mean=mean(log_Dgrowth),
+            SD=sd(log_Dgrowth),
+            N=length(log_Dgrowth))%>%
+  mutate(SE=SD/sqrt(N))
+
+comp_int_grow_con_gg<-ggplot(data=comp_int_grow_con,
+                        aes(x=factor(Competition,levels=c("None","Festuca","Bromus")),
+                            y=Mean,
+                            shape=Habitat,
+                            group=Habitat,
+                            color=Habitat))+
+  ylab("log(Growth) mm")+
+  coord_cartesian(ylim = c(1,4.5))+
+  xlab("")+
+  ggtitle("Construction Soil")+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=1,
+            position=pd)+
+  geom_point(size=3,
+             position=pd)+
+  scale_color_manual(values=c("gray58","forestgreen"))+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))
+comp_int_grow_con_gg
+
+ggsave(plot=comp_int_grow_con_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_grow_con_gg.png",width=25,height=20,units="cm",dpi=800)
+```
+
+#####Growth Rate vs. Competition: Field soil
+```{r}
+pd<-position_dodge(0.1)
+
+comp_int_grow_field<-log_mydata_Dgrowth%>% 
+  filter(Soil=="Field Soil") %>% 
+  group_by(Competition,Habitat)%>%
+  summarise(Mean=mean(log_Dgrowth),
+            SD=sd(log_Dgrowth),
+            N=length(log_Dgrowth))%>%
+  mutate(SE=SD/sqrt(N))
+
+comp_int_grow_field_gg<-ggplot(data=comp_int_grow_field,
+                        aes(x=factor(Competition,levels=c("None","Festuca","Bromus")),
+                            y=Mean,
+                            shape=Habitat,
+                            group=Habitat,
+                            color=Habitat))+
+  ylab("log(Growth) mm")+
+  coord_cartesian(ylim=c(1,4.5))+
+  xlab("")+
+  ggtitle("Field Soil")+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=1,
+            position=pd)+
+  geom_point(size=3,
+             position=pd)+
+  scale_color_manual(values=c("gray58","forestgreen"))+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))
+comp_int_grow_field_gg
+
+ggsave(plot=comp_int_grow_field_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_grow_field_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
