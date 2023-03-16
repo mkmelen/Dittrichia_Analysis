@@ -131,27 +131,30 @@ germ_rate1<-mydata1%>%
   mutate(CumulativeSum=cumsum(n))%>% #here we take the cumulative sum of the number we just counted
   mutate(Proportion=CumulativeSum/400) #here we calculate the proportions using 400 seeds per group, 4 groups (2 Habitats x 2 Treatments)
 
-germ_rate1_gg<-ggplot(germ_rate1,
-                      aes(x=DaysToGerm,
-                          y=Proportion,
-                          color=PlotTreatment,
-                          shape=PlotTreatment))+
+germ_rate1_gg<-ggplot(germ_rate1,#making a graph with ggplot using germ_rate1 data
+                      aes(x=DaysToGerm, #variable for x-axis
+                          y=Proportion, #variable for y-axis
+                          color=PlotTreatment, #how colors should be assigned
+                          shape=PlotTreatment))+ #how shapes should be assigned
   geom_line(linewidth=0.5)+ #now we make the line
   geom_point(aes(size=type))+ #now we add the data points
-  theme_classic(base_size=16)+
-  ylim(0,1)+
-  scale_x_continuous(name="Days to Germination",
-                     limits=c(0,12),
-                     breaks=seq(0,12,1))+
-  scale_size_manual(values=c(0,3),
+  theme_classic(base_size=16)+ #classic theme and base_size is the font size for labels
+  scale_y_continuous(name="Proportion Germinated", #y-axis: title
+                     limits=c(0,1), #y-axis: range
+                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+ #y-axis: manual incremental breaks
+  scale_x_continuous(name="Days to Germination", #x-axis: title
+                     limits=c(0,12), #x-axis: range
+                     breaks=seq(0,12,1))+ #x-axis: incremental breaks by giving range and requesting a sequence by 1
+  scale_size_manual(values=c(0,5), #second number controls the size of the point
                     guide="none")+
-  scale_color_manual(values=c("gray58","gray58","forestgreen","forestgreen"))+
+  scale_color_manual(values=c("gray85","gray85","forestgreen","forestgreen"))+ #colors assigned in order of the legend
   labs(y="Proportion Germinated",
-       color="Habitat/Treatment",
-       shape="Habitat/Treatment")
+       fill="Source Habitat/Soil Type",
+       color="Source Habitat/Soil Type",
+       shape="Source Habitat/Soil Type")
 germ_rate1_gg
 
-ggsave(plot=germ_rate1_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate1_gg.png",width=20,height=20,units="cm",dpi=800)
+ggsave(plot=germ_rate1_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate1_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 ##Proportion Germinated x Time with Habitat and Population
@@ -184,23 +187,27 @@ germ_rate2_gg<-ggplot(germ_rate2)+
                  size=type))+ #now we add the data points
   theme_classic(base_size=16)+
   ylim(0,1)+
+  scale_y_continuous(name="Proportion Germinated",
+                     limits=c(0,1),
+                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+
   scale_x_continuous(name="Days to Germination",
                      limits=c(0,12),
                      breaks=seq(0,12,1))+
-  scale_size_manual(values=c(0,3),
+  scale_size_manual(values=c(0,5),
                     guide="none")+
   scale_shape_manual(values=c(1, 19, 1, 19, 0, 15, 0, 15, # 8 shape numbers in this array
                                 2, 17, 2, 17, 5, 23, 5, 23,
                                 6, 25, 6, 25, 3, 12, 3, 12,
                                 4, 13, 4, 13, 8, 11, 8, 11))+
-  scale_color_manual(values=rep(c("forestgreen","forestgreen","gray58","gray58"),
+  scale_color_manual(values=rep(c("forestgreen","forestgreen","gray85","gray85"),
                                 times=8))+
   labs(y="Proportion Germinated",
-       color="Population/Treatment",
-       shape="Population/Treatment")
+       fill="Source Habitat/Soil Type",
+       color="Source Habitat/Soil Type",
+       shape="Source Habitat/Soil Type")
 germ_rate2_gg #print graph
 
-ggsave(plot=germ_rate2_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate2_gg.png",width=25,height=20,units="cm",dpi=800)
+ggsave(plot=germ_rate2_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate2_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 ##Germination Success X Treatment and Habitat
@@ -223,25 +230,32 @@ germ_int_all_gg<-ggplot(data=germ_rate3,
                             group=Habitat,
                             color=Habitat))+
   ylab("Proportion Germinated")+
-  coord_cartesian(ylim = c(0,1))+
+  coord_cartesian(ylim=c(0,1))+
   xlab("")+
   theme_bw(base_size=16)+
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
         axis.line=element_line(colour="black"))+
+  scale_y_continuous(name="Proportion Germinated",
+                     limits=c(0,1),
+                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+
   geom_line(size=1,
             position=pd)+
-  geom_point(size=3,
+  geom_point(size=5,
              position=pd)+
-  scale_color_manual(values=c("gray58","forestgreen"))+
+  scale_color_manual(values=c("gray85","forestgreen"))+
   geom_errorbar(width=0.15,
                 position=pd,
                 aes(ymin=(Mean-SE),
-                    ymax=(Mean+SE)))
+                    ymax=(Mean+SE)))+
+  labs(y="Proportion Germinated",
+       fill="Source Habitat",
+       color="Source Habitat",
+       shape="Source Habitat")
 germ_int_all_gg
 
-ggsave(plot=germ_int_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_int_all_gg.png",width=25,height=20,units="cm",dpi=800)
+ggsave(plot=germ_int_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_int_all_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 ###Boxplot
@@ -299,49 +313,61 @@ germ_int_site_gg<-ggplot(data=mydata_site_sum,
                              group=Legend))+
   ylab("Proportion Germinated")+
   coord_cartesian(ylim = c(0,1))+
-  xlab("Soil Type")+
+  xlab("")+
   theme_bw(base_size=16)+
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
         axis.line=element_line(colour="black"))+
-  geom_line(size=.8,position=pd)+
-  geom_point(size=3,position=pd)+
+  scale_y_continuous(name="Proportion Germinated",
+                     limits=c(0,1),
+                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+
+  geom_line(size=.8,
+            position=pd)+
+  geom_point(size=5,
+             position=pd)+
   scale_shape_manual(values=c(19, 19, 15, 15,
                                17, 17, 23, 23,
                                25, 25, 3, 3,
                                4, 4, 8, 8))+
-  scale_color_manual(values=rep(c("gray58","forestgreen"),times=16))+
-  labs(y="Proportion Germinated",color="Population/Habitat",shape="Population/Habitat")+
+  scale_color_manual(values=rep(c("gray85","forestgreen"),times=16))+
+  labs(y="Proportion Germinated",
+       color="Population/Source Habitat",
+       shape="Population/Source Habitat")+
   geom_errorbar(width=1.2,
                 position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))
 germ_int_site_gg
 
-ggsave(plot=germ_int_site_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_int_site_gg.png",width=25,height=20,units="cm",dpi=800)
+ggsave(plot=germ_int_site_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_int_site_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 ###Boxplot
 Not using
 ```{r eval=FALSE, include=FALSE}
-germ_success2<-mydata %>% 
-  filter(DaysToGerm!= 0) %>% 
-  mutate(PlotTreatment = paste(Habitat, Treatment, sep="/")) %>% 
-  group_by(Population, Treatment, Habitat) %>% 
-  count(DaysToGerm) %>% 
-  mutate(CumulativeSum=cumsum(n)) %>% 
+germ_success2<-mydata%>% 
+  filter(DaysToGerm!= 0)%>% 
+  mutate(PlotTreatment=paste(Habitat,Treatment,sep="/"))%>% 
+  group_by(Population,Treatment,Habitat)%>% 
+  count(DaysToGerm)%>% 
+  mutate(CumulativeSum=cumsum(n))%>% 
   mutate(Proportion=CumulativeSum/50) 
 
 germ_success2_gg<-ggplot(germ_success2)+
-  geom_boxplot(aes(x=Treatment, y=Proportion, fill = Population), size = 0.5)+
+  geom_boxplot(aes(x=Treatment,
+                   y=Proportion,
+                   fill=Population),
+               size=0.5)+
   theme_classic()+
   ylim(0,1)+
   facet_grid(Habitat~.)+
-  labs(y="Proportion Germinated", fill = "Population", x="Treatment")
+  labs(y="Proportion Germinated",
+       fill="Population",
+       x="Treatment")
 germ_success2_gg
 
-ggsave(plot = germ_success2_gg, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_success2_gg.png", width = 20, height = 25, units = "cm", dpi = 800)
+ggsave(plot=germ_success2_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_success2_gg.png",width=20,height=25,units="cm",dpi=800)
 ```
 
 #Autoplot: Proportion Germinated
@@ -350,14 +376,58 @@ Not using
 
 ```{r eval=FALSE, include=FALSE}
 #Plot by habitat
-model_graph1<-survfit(Surv(DaysToGerm,Censor)~Habitat,data=mydata)
-autoplot(model_graph1)+labs(x="\n Time to Germination (Days)",y="Germination Probabilities\n",title="Germination Times Of Seeds from \n Roadside and Away Habitats\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+model_graph1<-survfit(Surv(DaysToGerm,Censor)~
+                        Habitat,
+                      data=mydata)
+
+autoplot(model_graph1)+
+  labs(x="\n Time to Germination (Days)",
+       y="Germination Probabilities\n",
+       title="Germination Times Of Seeds from \n Roadside and Away Habitats\n")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        axis.title.y=element_text(face="bold",color="Black",
+                                  size=12),
+        legend.title=element_text(face="bold",
+                                  size=10))
 
 #Plot by habitat and treatment
-model_graph2<-survfit(Surv(DaysToGerm,Censor)~Habitat+Treatment,data=mydata)
-autoplot(model_graph2)+labs(x="\n Time to Germination (Days)",y="Germination Probabilities\n",title="Germination Times Of Seeds from \n Roadside and Away Habitats\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+model_graph2<-survfit(Surv(DaysToGerm,Censor)~
+                        Habitat+Treatment,
+                      data=mydata)
+
+autoplot(model_graph2)+
+  labs(x="\n Time to Germination (Days)",
+       y="Germination Probabilities\n",
+       title="Germination Times Of Seeds from \n Roadside and Away Habitats\n")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        legend.title=element_text(face="bold",
+                                  size=10))
 
 #Plot by site and treatment
-model_graph3<-survfit(Surv(DaysToGerm,Censor)~Site+Treatment,data=mydata)
-autoplot(model_graph3)+labs(x="\n Time to Germination (Days)",y="Germination Probabilities\n",title="Germination Times Of Seeds from \n Roadside and Away Habitats\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+model_graph3<-survfit(Surv(DaysToGerm,Censor)~
+                        Site+Treatment,
+                      data=mydata)
+
+autoplot(model_graph3)+
+  labs(x="\n Time to Germination (Days)",
+       y="Germination Probabilities\n",
+       title="Germination Times Of Seeds from \n Roadside and Away Habitats\n")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        legend.title=element_text(face="bold",
+                                  size=10))
 ```

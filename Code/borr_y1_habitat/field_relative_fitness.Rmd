@@ -77,7 +77,8 @@ This dataframe has one row per plant (800 observations). Data are for survivorsh
 mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/field_relative_fitness/field_relative_fitness_2021.csv",stringsAsFactors=T)
 str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
 mydata$Site<-as.character(mydata$Site)
-mydata$Treatment<-factor(mydata$Treatment,levels=c("Control","Biomass Removal","Hemizonia","Raking","Raking & Clipping")) #Changing the contrast order so that everything is compared to Control
+mydata$Treatment<-factor(mydata$Treatment,
+                         levels=c("Grassland","Biomass Removal","Hemizonia","Raking","Raking & Clipping")) #Changing the contrast order so that everything is compared to Grassland (control)
 ```
 
 #Early Growth
@@ -99,21 +100,24 @@ growth_mydata$Growth.Rate<-growth_mydata$Growth/growth_mydata$Num.Days.Growth #F
 ##Histograms
 Original data
 ```{r}
-hist(growth_mydata$Growth.Rate,col='steelblue',main='Original') #Original data is skewed, let's test for normality and consider log transforming the data
+hist(growth_mydata$Growth.Rate,
+     col='steelblue',main='Original') #Original data is skewed, let's test for normality and consider log transforming the data
 shapiro.test(growth_mydata$Growth.Rate)
 ```
 
 Log transform data (https://www.statology.org/transform-data-in-r/)
 ```{r}
 log_growth_mydata<-log10(growth_mydata$Growth.Rate)
-hist(log_growth_mydata,col='steelblue',main='Log Transformed') #Log transformed data, this looks better than the original distribution
+hist(log_growth_mydata,
+     col='steelblue',main='Log Transformed') #Log transformed data, this looks better than the original distribution
 shapiro.test(log_growth_mydata) #Data does not improve with log transformation
 ```
 
 Next I tried a square root transformation, which improved the distribution, but my first model failed the singular fit (see Model 1).
 ```{r}
 sqrt_growth_mydata<-sqrt(growth_mydata$Growth.Rate)
-hist(sqrt_growth_mydata,col='steelblue',main='Log Transformed') #Square root transformed data looks better than the original distribution
+hist(sqrt_growth_mydata,
+     col='steelblue',main='Log Transformed') #Square root transformed data looks better than the original distribution
 shapiro.test(sqrt_growth_mydata)
 ```
 
@@ -129,7 +133,11 @@ Site as a random effect does not explain any of the variance in the model, there
 
 ##Model 2 - lmer: Modeling Site as a fixed effect and Block as a random effect
 ```{r}
-growth_fullmodel2<-lmer(log(Growth.Rate)~Habitat*Treatment+Site+(1|Block),data=growth_mydata)
+growth_fullmodel2<-lmer(log(Growth.Rate)~
+                          Habitat*Treatment+
+                          Site+
+                          (1|Block),
+                        data=growth_mydata)
 summary(growth_fullmodel2) #As a fixed effect, one of the Sites (OAP) is significant.
 anova(growth_fullmodel2) #Site as a fixed effect accounts for 3% of the variance
 ```
@@ -144,9 +152,14 @@ plot(myDHARMagraph2) #plotting graph. At this point, you don't want any text or 
 ```
 
 ##Model 3 - glmer.nb: Negative Binomial
-```{r}
-growth_fullmodel3<-glmer.nb(Growth.Rate~Habitat*Treatment+(1|Site)+(1|Block),data=growth_mydata)
-isSingular(growth_fullmodel3,tol=1e-4)
+```{r eval=FALSE, include=FALSE}
+growth_fullmodel3<-glmer.nb(Growth.Rate~
+                              Habitat*Treatment+
+                              (1|Site)+
+                              (1|Block),
+                            data=growth_mydata) #this barfs right now, not sure why
+isSingular(growth_fullmodel3,
+           tol=1e-4)
 #summary(growth_fullmodel3)
 #qqnorm(resid(growth_fullmodel3)) #qqplot
 #qqline(resid(growth_fullmodel3)) #add the line
@@ -159,8 +172,13 @@ So this model isn't working well either. Let's try building a model and fitting 
 
 ##Model 4 - glmm: Beta Distribution
 Now I'm using glmm because I'm fitting to other distributions (beta)
-```{r}
-growth_fullmodel4<-glmmTMB(Growth.Rate~Habitat*Treatment+(1|Site)+(1|Block),family=beta_family(),data=growth_mydata)
+```{r eval=FALSE, include=FALSE}
+growth_fullmodel4<-glmmTMB(Growth.Rate~
+                             Habitat*Treatment+
+                             (1|Site)+
+                             (1|Block),
+                           family=beta_family(),
+                           data=growth_mydata) 
 summary(growth_fullmodel4)
 qqnorm(resid(growth_fullmodel4)) #qqplot
 qqline(resid(growth_fullmodel4)) #add the line
@@ -170,22 +188,31 @@ plot(myDHARMagraph4) #plotting graph. Looks good, but check the outliers to make
 ```
 
 We should check the outliers in the the DHARMa plot to make sure they make sense.
-```{r}
+```{r eval=FALSE, include=FALSE}
 growth_outlier_boxplot1<-ggplot(growth_mydata)+
-  geom_boxplot(aes(x=Habitat, y=Growth.Rate), size = 0.5)+
+  geom_boxplot(aes(x=Habitat,
+                   y=Growth.Rate),
+               size=0.5)+
   theme_classic()+
   ylim(0,1)+
-  scale_fill_manual(values = c("forestgreen","gray58"))+
-  labs(y="Early Growth Rate", fill = "Habitat", x = "Habitat")
+  scale_fill_manual(values=c("forestgreen","gray85"))+
+  labs(y="Early Growth Rate",
+       fill="Habitat",
+       x="Habitat")
 growth_outlier_boxplot1
 
-max(growth_mydata$Growth.Rate[growth_mydata$Habitat== "Away"])
-max(growth_mydata$Growth.Rate[growth_mydata$Habitat== "Roadside"]) #Yes, these outliers make sense, so I don't need to worry about the red stars in the DHARMa plot.
+max(growth_mydata$Growth.Rate[growth_mydata$Habitat=="Away"])
+max(growth_mydata$Growth.Rate[growth_mydata$Habitat=="Roadside"]) #Yes, these outliers make sense, so I don't need to worry about the red stars in the DHARMa plot.
 ```
 
 ###Best Model
 ```{r}
-#growth_fullmodel4<-glmmTMB(Growth.Rate~Habitat*Treatment+(1|Site)+(1|Block),family=beta_family(),data=growth_mydata)
+growth_fullmodel4<-glmmTMB(Growth.Rate~
+                             Habitat*Treatment+
+                             (1|Site)+
+                             (1|Block),
+                           family=beta_family(),
+                           data=growth_mydata)
 summary(growth_fullmodel4)
 ```
 
@@ -193,47 +220,161 @@ summary(growth_fullmodel4)
 Remove non-significant interaction terms before running the Tukey.
 ```{r}
 #?emmeans,emmeans(model,pairwise~treatment)
-growth_fullmodel4.1<-glmmTMB(Growth.Rate~Treatment+(1|Site)+(1|Block),family=beta_family(),data=growth_mydata)
+growth_fullmodel4.1<-glmmTMB(Growth.Rate~
+                               Treatment+
+                               (1|Site)+
+                               (1|Block),
+                             family=beta_family(),
+                             data=growth_mydata)
 summary(growth_fullmodel4.1)
-emmeans(growth_fullmodel4.1,pairwise~Treatment)
+emmeans(growth_fullmodel4.1,
+        pairwise~Treatment)
 ```
 
-##ggplot - glmm
+###ggplot
+####Interaction plot
+#####Biomass x Treatment: Growth
 ```{r}
+pd<-position_dodge(0)
+
+growth_mydata1<-growth_mydata%>% 
+  replace_na(list(Biomass=0))%>%
+  filter(CensorReproduction==1)%>%
+  filter(Treatment=="Biomass Removal"|Treatment=="Grassland")%>%
+  group_by(Treatment,Habitat)%>%
+  summarise(Mean=mean(Biomass),
+            SD=sd(Biomass),
+            N=length(Biomass))%>%
+  mutate(SE=SD/sqrt(N))
+
+field_int_bio_grow_gg<-ggplot(growth_mydata1,
+                        aes(x=factor(Treatment,levels=c("Biomass Removal","Grassland")),
+                            y=Mean,
+                            shape=Habitat,
+                            group=Habitat,
+                            color=Habitat))+
+  ylab("Biomass (g)")+
+  coord_cartesian(ylim = c(0,10))+
+  xlab("")+
+  ggtitle("Biomass of Dittrichia graveolens that budded")+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=1,
+            position=pd)+
+  geom_point(size=5,
+             position=pd)+
+  scale_color_manual(values=c("gray85","forestgreen"))+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))+
+  labs(y="Dittrichia graveolens Biomass (g)",
+       color="Source Habitat",
+       shape="Source Habitat")
+field_int_bio_grow_gg
+
+ggsave(plot=field_int_bio_grow_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/field_int_bio_grow_gg.png",width=25,height=15,units="cm",dpi=800)
+```
+
+#####Growth Rate x Treatment: Growth
+```{r}
+pd<-position_dodge(0)
+
+growth_mydata2<-growth_mydata%>% 
+  replace_na(list(Growth.Rate=0))%>%
+  filter(CensorReproduction==1)%>%
+  filter(Treatment=="Biomass Removal"|Treatment=="Grassland")%>%
+  group_by(Treatment,Habitat)%>%
+  summarise(Mean=mean(Growth.Rate),
+            SD=sd(Growth.Rate),
+            N=length(Growth.Rate))%>%
+  mutate(SE=SD/sqrt(N))
+
+field_int_rate_grow_gg<-ggplot(growth_mydata2,
+                        aes(x=factor(Treatment,levels=c("Biomass Removal","Grassland")),
+                            y=Mean,
+                            shape=Habitat,
+                            group=Habitat,
+                            color=Habitat))+
+  ylab("Growth Rate \n (Change in Leaf Length/Days)")+
+  coord_cartesian(ylim = c(0,0.5))+
+  xlab("")+
+  ggtitle("Growth of Dittrichia graveolens that budded")+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=1,
+            position=pd)+
+  geom_point(size=5,
+             position=pd)+
+  scale_color_manual(values=c("gray85","forestgreen"))+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))+
+  labs(y="Growth Rate \n (Change in Leaf Length/Days)",
+       color="Source Habitat",
+       shape="Source Habitat")
+field_int_rate_grow_gg
+
+ggsave(plot=field_int_rate_grow_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/field_int_rate_grow_gg.png",width=25,height=15,units="cm",dpi=800)
+```
+
+
+####Boxplot
+```{r eval=FALSE, include=FALSE}
 #Boxplot with Early Growth Rate by Habitat
 growth_boxplot1<-ggplot(growth_mydata)+
-  geom_boxplot(aes(x=Habitat, y=Growth.Rate), size = 0.5)+
+  geom_boxplot(aes(x=Habitat,
+                   y=Growth.Rate),
+               size=0.5)+
   theme_classic()+
   ylim(0,1)+
   scale_fill_manual(values=c("forestgreen","gray58"))+
-  labs(y="Early Growth Rate",fill="Habitat",x="Habitat")
+  labs(y="Early Growth Rate",
+       fill="Habitat",
+       x="Habitat")
 growth_boxplot1
 
-ggsave(plot = growth_boxplot1, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplot1.png", width = 20, height = 20, units = "cm", dpi = 800)
+ggsave(plot=growth_boxplot1,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplot1.png",width=20,height=20,units="cm",dpi=800)
 
 #Boxplot with Early Growth Rate by All Treatments
 growth_boxplot2<-ggplot(growth_mydata)+
-  geom_boxplot(aes(x=Treatment, y=Growth.Rate), size = 0.5)+
+  geom_boxplot(aes(x=Treatment,
+                   y=Growth.Rate),
+               size=0.5)+
   theme_classic()+
   ylim(0,1)+
-  scale_fill_manual(values = c("forestgreen","gray58"))+
-  labs(y="Early Growth Rate", fill = "Habitat", x = "Treatment")
+  scale_fill_manual(values=c("forestgreen","gray85"))+
+  labs(y="Early Growth Rate",
+       fill="Habitat",
+       x="Treatment")
 growth_boxplot2
 
-ggsave(plot = growth_boxplot2, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplot2.png", width = 20, height = 20, units = "cm", dpi = 800)
+ggsave(plot=growth_boxplot2,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplot2.png",width=20,height=20,units="cm",dpi=800)
 
 #Boxplot with Early Growth Rate by 2 treatments (Control and Biomass Removal)
-sub_growth_mydata<-subset(growth_mydata,Treatment%in%c('Control','Biomass Removal'))
+sub_growth_mydata<-subset(growth_mydata,
+                          Treatment%in%c('Control','Biomass Removal'))
 
 growth_boxplot3<-ggplot(sub_growth_mydata)+
-  geom_boxplot(aes(x=Treatment, y=Growth.Rate), size = 0.5)+
+  geom_boxplot(aes(x=Treatment,
+                   y=Growth.Rate),
+               size=0.5)+
   theme_classic()+
   ylim(0,1)+
-  scale_fill_manual(values = c("forestgreen","gray58"))+
-  labs(y="Early Growth Rate", fill = "Habitat", x = "Treatment")
+  scale_fill_manual(values=c("forestgreen","gray85"))+
+  labs(y="Early Growth Rate",
+       fill="Habitat",
+       x="Treatment")
 growth_boxplot3
 
-ggsave(plot = growth_boxplot3, file = "/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplo3.png", width = 20, height = 20, units = "cm", dpi = 800)
+#ggsave(plot=growth_boxplot3,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplo3.png",width=20,height=20,units="cm",dpi=800)
 ```
 
 #Reproductive Biomass
@@ -265,7 +406,11 @@ shapiro.test(log_reproduction_mydata)
 
 ##Model 1 - lmer: Modeling Habitat and Treatment with Site and Block as random effects
 ```{r}
-fullmodel1<-lmer(log(Biomass)~Habitat*Treatment+(1|Site)+(1|Block),data=reproduction_mydata)
+fullmodel1<-lmer(log(Biomass)~
+                   Habitat*Treatment+
+                   (1|Site)+
+                   (1|Block),
+                 data=reproduction_mydata)
 isSingular(fullmodel1,tol=1e-4)
 summary(fullmodel1) #Variance explained by Site = 0.000
 anova(fullmodel1)
@@ -276,7 +421,11 @@ hist(predict(fullmodel1,type="response"))
 
 ##Model 2 - lmer: Modeling Site as a fixed effect
 ```{r}
-fullmodel2<-lmer(log(Biomass)~Habitat*Treatment+Site+(1|Block),data=reproduction_mydata)
+fullmodel2<-lmer(log(Biomass)~
+                   Habitat*Treatment+
+                   Site+
+                   (1|Block),
+                 data=reproduction_mydata)
 summary(fullmodel2)
 anova(fullmodel2)
 #Site as a fixed effect is not significant, therefore it should not be used as a fixed effect in addition to it not being used as a random effect.
@@ -284,7 +433,10 @@ anova(fullmodel2)
 
 ##Model 3 - lmer: Site is removed from this model because it explains very little of the variance
 ```{r}
-fullmodel3<-lmer(log(Biomass)~Habitat*Treatment+(1|Block),data=reproduction_mydata)
+fullmodel3<-lmer(log(Biomass)~
+                   Habitat*Treatment+
+                   (1|Block),
+                 data=reproduction_mydata)
 summary(fullmodel3)
 anova(fullmodel3)
 ```
@@ -321,14 +473,20 @@ summary(fullmodel5)
 
 ###Best Model
 ```{r}
-#fullmodel3<-lmer(log(Biomass)~Habitat*Treatment+(1|Block),data=reproduction_mydata)
+fullmodel3<-lmer(log(Biomass)~
+                   Habitat*Treatment+
+                   (1|Block),
+                 data=reproduction_mydata)
 summary(fullmodel3)
 ```
 
 ###Post-Hoc Test
 You should remove non-significant interaction terms before running a post-hoc test. It is difficult to judge the main effects (Habitat and Site) when you also have the interaction term present, so when it is not significant, fit a new model without it.
 ```{r}
-fullmodel3.1<-lmer(log(Biomass)~Treatment+(1|Block),data=reproduction_mydata)
+fullmodel3.1<-lmer(log(Biomass)~
+                     Treatment+
+                     (1|Block),
+                   data=reproduction_mydata)
 summary(fullmodel3.1)
 anova(fullmodel3.1)
 qqnorm(resid(fullmodel3.1)) #qqplot
@@ -339,7 +497,11 @@ plot(myDHARMagraph3.1) #plotting graph
 ```
 
 ```{r}
-fullmodel3.2<-lmer(log(Biomass)~Treatment+(1|Block)+(1|Population),data=mydata)
+fullmodel3.2<-lmer(log(Biomass)~
+                     Treatment+
+                     (1|Block)+
+                     (1|Population),
+                   data=mydata)
 summary(fullmodel3.2)
 anova(fullmodel3.2)
 qqnorm(resid(fullmodel3.2)) #qqplot
@@ -360,8 +522,14 @@ emmeans(fullmodel3.2,pairwise~Treatment)
 
 ##ggplot - lmer
 ```{r}
-ggplot(data=reproduction_mydata,aes(x=Treatment,y=log(Biomass)))+geom_boxplot() #plot data from log(data)
-ggplot(data=reproduction_mydata,aes(x=Habitat,y=log(Biomass)))+geom_boxplot() #plot data from log(data)
+ggplot(data=reproduction_mydata,
+       aes(x=Treatment,
+           y=log(Biomass)))+
+  geom_boxplot() #plot data from log(data)
+ggplot(data=reproduction_mydata,
+       aes(x=Habitat,
+           y=log(Biomass)))+
+  geom_boxplot() #plot data from log(data)
 ```
 
 #Survival Analysis
@@ -382,7 +550,10 @@ ggplot(mydata,aes(x=NumDaysAlive))+geom_histogram()+facet_wrap(vars(Treatment)) 
 ##Cox Model
 Start by making a simple model with no random effects. This will be compared to the full model with random effects.
 ```{r}
-cox_simplemodel1<-coxph(Surv(NumDaysAlive,CensorReproduction)~Habitat*Treatment,data=mydata)
+cox_simplemodel1<-coxph(Surv(NumDaysAlive,
+                             CensorReproduction)~
+                          Habitat*Treatment,
+                        data=mydata)
 summary(cox_simplemodel1)
 print(cox_simplemodel1)
 predict(cox_simplemodel1)
@@ -391,7 +562,11 @@ hist(predict(cox_simplemodel1))
 
 Now make a full model using random effects
 ```{r}
-cox_fullmodel1<-coxme(Surv(NumDaysAlive,CensorReproduction)~Habitat*Treatment+(1|Site)+(1|Block),data=mydata)
+cox_fullmodel1<-coxme(Surv(NumDaysAlive,CensorReproduction)~
+                        Habitat*Treatment+
+                        (1|Site)+
+                        (1|Block),
+                      data=mydata)
 summary(cox_fullmodel1)
 print(cox_fullmodel1)
 predict(cox_fullmodel1)
@@ -407,7 +582,12 @@ AIC(cox_simplemodel1,cox_fullmodel1) #But comparing the AIC scores is easiest. K
 
 Now, let's make a model with no interaction term
 ```{r}
-cox_fullmodel2<-coxme(Surv(NumDaysAlive,CensorReproduction)~Habitat+Treatment+(1|Site)+(1|Block),data=mydata) 
+cox_fullmodel2<-coxme(Surv(NumDaysAlive,CensorReproduction)~
+                        Habitat+
+                        Treatment+
+                        (1|Site)+
+                        (1|Block),
+                      data=mydata) 
 summary(cox_fullmodel2)
 ```
 
@@ -419,7 +599,12 @@ AIC(cox_fullmodel1,cox_fullmodel2) #Interaction term is not significant and the 
 
 So, now let's add in population nested under site as a random effect
 ```{r}
-cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~Habitat+Treatment+(1|Site/Population)+(1|Block),data=mydata) 
+cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~
+                        Habitat+
+                        Treatment+
+                        (1|Site/Population)+
+                        (1|Block),
+                      data=mydata) 
 summary(cox_fullmodel3)
 ```
 
@@ -431,15 +616,19 @@ AIC(cox_fullmodel2,cox_fullmodel3) #Looks like fullmodel3 is the better model be
 
 ###Best Model
 ```{r}
-#cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~Habitat+Treatment+(1|Site/Population)+(1|Block),data=mydata) 
+cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~
+                        Habitat+
+                        Treatment+
+                        (1|Site/Population)+
+                        (1|Block),
+                      data=mydata) 
 summary(cox_fullmodel3)
 ```
 
 ###Risk Assessment
 These values are found in the model summary, but if you want to pull them out, here is how you interpret them.
+1 = no effect, <1 = decreased risk of death, >1 = increased risk of death.
 ```{r}
-#1 = no effect, <1 = decreased risk of death, >1 = increased risk of death.
-
 exp(coef(cox_fullmodel3)) #This should be interpreted that Biomass Removal is almost 5% more likely to survive to reproduction compared to Control, and Raking + Clipping is about 2.5% more likely to survive to reproduction compared to Control.
 exp(ranef(cox_fullmodel3)$Block)
 exp(ranef(cox_fullmodel3)$Site) # Pretty even among all the sites
@@ -448,35 +637,186 @@ Anova(cox_fullmodel3)
 
 Looks like roadside and offroad plants are the same, so let's combine them together in a model (aka, removing the Habitat term)
 ```{r}
-cox_fullmodel4<-coxme(Surv(NumDaysAlive,CensorReproduction)~Treatment+(1|Site/Population)+(1|Block),data=mydata) 
+cox_fullmodel4<-coxme(Surv(NumDaysAlive,CensorReproduction)~
+                        Treatment+
+                        (1|Site/Population)+
+                        (1|Block),
+                      data=mydata) 
 summary(cox_fullmodel4)
 summary(cox_fullmodel3)
 anova(cox_fullmodel3,cox_fullmodel4) #Significant
 AIC(cox_fullmodel3,cox_fullmodel4) #Looks like fullmodel4 is the better model because the AIC score is within 2 points of each other, therefore the models are assessed the same and you should take the simpler model. But this is for another manuscript, probably.
 ```
+
+##ggplot
+###Interaction Plot
+
+```{r}
+pd<-position_dodge(0)
+
+surv_mydata1<-mydata%>%
+  filter(Treatment=="Biomass Removal"|Treatment=="Grassland")%>%
+  group_by(Treatment,Habitat)%>%
+  summarise(Mean=mean(PropBudSite),
+            SD=sd(PropBudSite),
+            N=length(PropBudSite))%>%
+  mutate(SE=SD/sqrt(N))
+
+field_int_surv_all_gg<-ggplot(data=surv_mydata1,
+                        aes(x=factor(Treatment,levels=c("Biomass Removal","Grassland")),
+                            y=Mean,
+                            shape=Habitat,
+                            group=Habitat,
+                            color=Habitat))+
+  ylab("Proportion Survival to Bud")+
+  coord_cartesian(ylim=c(0,1))+
+  xlab("")+
+  theme_classic(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  scale_y_continuous(name="Proportion Survival to Bud",
+                     limits=c(0,1),
+                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+
+  geom_line(size=1,
+            position=pd)+
+  geom_point(size=5,
+             position=pd)+
+  scale_color_manual(values=c("gray85","forestgreen"))+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))+
+  labs(y="Proportion Survival to Bud",
+       fill="Source Habitat",
+       color="Source Habitat",
+       shape="Source Habitat")
+field_int_surv_all_gg
+
+ggsave(plot=field_int_surv_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/field_int_surv_all_gg.png",width=25,height=15,units="cm",dpi=800)
+```
+
+##autoplot - Survival Curves
+Plot by habitat test
+```{r}
+pd<-position_dodge(0)
+
+cox_model_data1<-mydata%>%
+  filter(Treatment=="Biomass Removal"|Treatment=="Grassland")
+
+cox_model_graph1<-survfit(Surv(NumDaysAlive,CensorReproduction)~
+                            Habitat,
+                          data=cox_model_data1)
+
+surv_curve_habitat_treat<-ggplot(data=cox_model_graph1)+
+  aes(x=time,
+      y=surv,
+      shape=strata,
+      group=strata,
+      color=strata)+
+ theme_classic(base_size=16)+
+  scale_y_continuous(name="Survival Probability",
+                     limits=c(0,1),
+                     breaks=seq(0.0,1.0,0.1))+
+  scale_x_continuous(name="Survival Time (Days)",
+                     limits=c(0,275),
+                     breaks=seq(0,275,20))+
+  geom_step(size=1,
+            position=pd)+
+  geom_point(size=5,
+             position=pd)+
+  scale_color_manual(values=c("gray85","forestgreen"))+
+  labs(x="Survival Time (Days)",
+       y="Survival Probability")
+
+surv_curve_habitat_treat
+```
+
 ##autoplot - Survival Curves
 Plot by habitat
 ```{r}
-cox_model_graph1<-survfit(Surv(NumDaysAlive,CensorReproduction)~Habitat,data=mydata)
-autoplot(cox_model_graph1)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Vegetated Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+cox_model_graph1<-survfit(Surv(NumDaysAlive,CensorReproduction)~
+                            Habitat,
+                          data=mydata)
+
+autoplot(cox_model_graph1)+
+  labs(x="\n Survival Time (Days)",
+       y="Survival Probabilities\n",
+       title="Survival Times Of \n Roadside and Vegetated Populations\n")+
+  theme_bw(base_size=16)+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        legend.title=element_text(face="bold",
+                                  size=10))
 ```
 
 Plot by all treatment
 ```{r}
-cox_model_graph2<-survfit(Surv(NumDaysAlive,CensorReproduction)~Treatment,data=mydata)
-autoplot(cox_model_graph2)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Vegetated Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+cox_model_graph2<-survfit(Surv(NumDaysAlive,CensorReproduction)~
+                            Treatment,
+                          data=mydata)
+
+autoplot(cox_model_graph2)+
+  labs(x="\n Survival Time (Days)",
+       y="Survival Probabilities\n",
+       title="Survival Times Of \n Roadside and Vegetated Populations\n")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",size=12),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        legend.title=element_text(face="bold",
+                                  size=10))
 ```
 Post hoc Tukey
 ```{r}
-summary(glht(cox_fullmodel4, mcp(Treatment="Tukey")))
+summary(glht(cox_fullmodel4,mcp(Treatment="Tukey")))
 ```
 
 Plot by 2 treatments (Control and Biomass Removal), and adding in Habitat
 ```{r}
 cox_sub_mydata<-subset(mydata,Treatment%in%c('Control','Biomass Removal'))
-cox_model_graph3<-survfit(Surv(NumDaysAlive,CensorReproduction)~Treatment,data=cox_sub_mydata)
-autoplot(cox_model_graph3)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Vegetated Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+cox_model_graph3<-survfit(Surv(NumDaysAlive,CensorReproduction)~
+                            Treatment,
+                          data=cox_sub_mydata)
 
-cox_model_graph3<-survfit(Surv(NumDaysAlive,CensorReproduction)~Treatment+Habitat,data=cox_sub_mydata)
-autoplot(cox_model_graph3)+labs(x="\n Survival Time (Days)",y="Survival Probabilities\n",title="Survival Times Of \n Roadside and Vegetated Populations\n")+theme(plot.title=element_text(hjust=0.5),axis.title.x=element_text(face="bold",color="Black",size = 12),axis.title.y=element_text(face="bold",color="Black",size=12),legend.title=element_text(face="bold",size=10))
+autoplot(cox_model_graph3)+
+  labs(x="\n Survival Time (Days)",
+       y="Survival Probabilities\n",
+       title="Survival Times Of \n Roadside and Vegetated Populations\n")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        legend.title=element_text(face="bold",
+                                  size=10))
+
+cox_model_graph3<-survfit(Surv(NumDaysAlive,CensorReproduction)~
+                            Treatment+
+                            Habitat,
+                          data=cox_sub_mydata)
+
+autoplot(cox_model_graph3)+
+  labs(x="\n Survival Time (Days)",
+       y="Survival Probabilities\n",
+       title="Survival Times Of \n Roadside and Vegetated Populations\n")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        legend.title=element_text(face="bold",
+                                  size=10))
 ```

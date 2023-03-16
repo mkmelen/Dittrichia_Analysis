@@ -103,8 +103,8 @@ Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: populati
 All data combined.
 
 #####Biomass vs. Competition: Construction soil
-```{r}
-pd<-position_dodge(0.1)
+```{r eval=FALSE, include=FALSE}
+pd<-position_dodge(0)
 
 comp_int_bio_con<-log_mydata%>% 
   filter(Soil=="Construction Soil") %>% 
@@ -121,10 +121,13 @@ comp_int_bio_con_gg<-ggplot(data=comp_int_bio_con,
                             group=Habitat,
                             color=Habitat))+
   ylab("log(Biomass)")+
-  coord_cartesian(ylim = c(1,8))+
+  #coord_cartesian(ylim=c(1,8))+
   xlab("")+
   ggtitle("Construction Soil")+
-  theme_bw(base_size=16)+
+  theme_classic(base_size=16)+
+  scale_y_continuous(name="Proportion Germinated", #y-axis: title
+                     limits=c(0,8), #x-axis: range
+                     breaks=seq(0,8,1))+ #x-axis: incremental breaks by giving range and requesting a sequence by 1
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
@@ -133,7 +136,7 @@ comp_int_bio_con_gg<-ggplot(data=comp_int_bio_con,
             position=pd)+
   geom_point(size=3,
              position=pd)+
-  scale_color_manual(values=c("gray58","forestgreen"))+
+  scale_color_manual(values=c("gray85","forestgreen"))+
   geom_errorbar(width=0.15,
                 position=pd,
                 aes(ymin=(Mean-SE),
@@ -143,8 +146,8 @@ comp_int_bio_con_gg
 ggsave(plot=comp_int_bio_con_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_con_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
 #####Biomass vs. Competition: Field soil
-```{r}
-pd<-position_dodge(0.1)
+```{r eval=FALSE, include=FALSE}
+pd<-position_dodge(0)
 
 comp_int_bio_field<-log_mydata%>% 
   filter(Soil=="Field Soil") %>% 
@@ -161,7 +164,10 @@ comp_int_bio_field_gg<-ggplot(data=comp_int_bio_field,
                             group=Habitat,
                             color=Habitat))+
   ylab("log(Biomass)")+
-  coord_cartesian(ylim = c(1,8))+
+   scale_y_continuous(name="Proportion Germinated", #y-axis: title
+                     limits=c(0,8), #x-axis: range
+                     breaks=seq(0,8,1))+ #x-axis: incremental breaks by giving range and requesting a sequence by 1
+  #coord_cartesian(ylim = c(1,8))+
   xlab("")+
   ggtitle("Field Soil")+
   theme_bw(base_size=16)+
@@ -173,7 +179,7 @@ comp_int_bio_field_gg<-ggplot(data=comp_int_bio_field,
             position=pd)+
   geom_point(size=3,
              position=pd)+
-  scale_color_manual(values=c("gray58","forestgreen"))+
+  scale_color_manual(values=c("gray85","forestgreen"))+
   geom_errorbar(width=0.15,
                 position=pd,
                 aes(ymin=(Mean-SE),
@@ -181,6 +187,55 @@ comp_int_bio_field_gg<-ggplot(data=comp_int_bio_field,
 comp_int_bio_field_gg
 
 ggsave(plot=comp_int_bio_field_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_field_gg.png",width=25,height=20,units="cm",dpi=800)
+```
+#####Biomass vs. Competition: Both Soils
+Let's try putting both soil types together here.
+```{r}
+pd<-position_dodge(0)
+
+comp_int_bio_all<-log_mydata%>% 
+  group_by(Soil,Competition,Habitat)%>%
+  summarise(Mean=mean(log_Dittrichia),
+            SD=sd(log_Dittrichia),
+            N=length(log_Dittrichia))%>%
+  mutate(SE=SD/sqrt(N))
+
+comp_int_bio_all_gg<-ggplot(data=comp_int_bio_all,
+                        aes(x=factor(Competition,levels=c("None","Festuca","Bromus")),
+                            y=Mean))+
+  ylab("log(Biomass)")+
+   scale_y_continuous(name="Dittrichia graveolens biomass (log(g))", #y-axis: title
+                     limits=c(0,8), #x-axis: range
+                     breaks=seq(0,8,1))+ #x-axis: incremental breaks by giving range and requesting a sequence by 1
+  xlab("")+
+  ggtitle("")+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(size=1,
+            position=pd,
+            aes(linetype=Soil,
+                group=interaction(Soil,Habitat),
+                color=Habitat))+
+  geom_point(size=5,
+             position=pd,
+             aes(shape=Habitat,
+                 color=Habitat))+
+  scale_color_manual(values=c("gray85","forestgreen"))+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE),
+                    color=Habitat))+
+  labs(y="Dittrichia graveolens biomass (log(g))d",
+       color="Source Habitat",
+       shape="Source Habitat",
+       linetype="Soil Type")
+comp_int_bio_all_gg
+
+ggsave(plot=comp_int_bio_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_all_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 #####Boxplot
@@ -288,7 +343,7 @@ competition2_gg<-ggplot(log_mydata)+
 ## Biomass Scatterplot
 ```{r}
 #Prep data for scatterplot
-competition_scatter<-log_mydata%>% 
+comp_scatter<-log_mydata%>% 
   filter(Competition!="None")%>%
   filter(Grass_biomass!=0)%>% 
   mutate(scx=log(Grass_biomass),
@@ -296,14 +351,14 @@ competition_scatter<-log_mydata%>%
   mutate(type=paste(Soil,Competition,sep="/"))
 
 #Make the scatterplot
-competition_scatter_gg<-ggplot(competition_scatter)+
+comp_scatter_gg<-ggplot(comp_scatter)+
   geom_point(aes(
     x=scx,
     y=scy,
     shape=type,
     color=Habitat))+
   guides(fill=none)+
-  scale_color_manual(values=c("gray58","forestgreen"))+
+  scale_color_manual(values=c("gray85","forestgreen"))+
   scale_shape_manual(values=c(1,19,2,17))+
   geom_smooth(method=lm,
               aes(x=scx,
@@ -311,14 +366,14 @@ competition_scatter_gg<-ggplot(competition_scatter)+
                   linetype=Soil),
               color="black")+
   theme_classic(base_size=16)+
-  labs(y="Dittrichia graveolens log(biomass) (g)",
-       x="Grass log(biomass) (g)",
-       shape="Soil/Competition",
-       color="Habitat",
+  labs(y="Dittrichia graveolens biomass (log(g))",
+       x="Grass biomass (log(g))",
+       shape="Soil Type/Competition Species",
+       color="Source Habitat",
        linetype="")
-competition_scatter_gg
+comp_scatter_gg
 
-ggsave(plot=competition_scatter_gg,file ="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition_scatter_gg.png",width=20,height=25,units="cm",dpi=800)
+ggsave(plot=comp_scatter_gg,file ="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_scatter_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 
@@ -361,8 +416,8 @@ Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: populati
 All data combined.
 
 #####Growth Rate vs. Competition: Construction soil
-```{r}
-pd<-position_dodge(0.1)
+```{r eval=FALSE, include=FALSE}
+pd<-position_dodge(0)
 
 comp_int_grow_con<-log_mydata_Dgrowth%>% 
   filter(Soil=="Construction Soil")%>% 
@@ -391,7 +446,7 @@ comp_int_grow_con_gg<-ggplot(data=comp_int_grow_con,
             position=pd)+
   geom_point(size=3,
              position=pd)+
-  scale_color_manual(values=c("gray58","forestgreen"))+
+  scale_color_manual(values=c("gray85","forestgreen"))+
   geom_errorbar(width=0.15,
                 position=pd,
                 aes(ymin=(Mean-SE),
@@ -402,7 +457,7 @@ ggsave(plot=comp_int_grow_con_gg,file="/Users/Miranda/Documents/Education/UC San
 ```
 
 #####Growth Rate vs. Competition: Field soil
-```{r}
+```{r eval=FALSE, include=FALSE}
 pd<-position_dodge(0.1)
 
 comp_int_grow_field<-log_mydata_Dgrowth%>% 
@@ -432,7 +487,7 @@ comp_int_grow_field_gg<-ggplot(data=comp_int_grow_field,
             position=pd)+
   geom_point(size=3,
              position=pd)+
-  scale_color_manual(values=c("gray58","forestgreen"))+
+  scale_color_manual(values=c("gray85","forestgreen"))+
   geom_errorbar(width=0.15,
                 position=pd,
                 aes(ymin=(Mean-SE),
