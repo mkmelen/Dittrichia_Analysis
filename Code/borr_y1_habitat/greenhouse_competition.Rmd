@@ -75,12 +75,12 @@ ggplot(mydata1,aes(x=Grass_biomass))+
 Data is skewed, so let's try log transforming. However, the values are all <0 which create negative numbers when log transforming, therefore we need to multiply to move the decimal and then check the data again.
 
 ```{r}
-#Prepare data for log transform
+#Prepare data for log transform (doing ln and log10)
 log_mydata<-mydata1%>% 
   mutate(Dittrichia_biomass10000=Dittrichia_biomass*10000,Grass_biomass10000=Grass_biomass*10000)%>% 
   filter(Dittrichia_biomass!=0)%>% 
-  mutate(log_Dittrichia=log(Dittrichia_biomass10000))%>% 
-  mutate(log_Grass=log(Grass_biomass10000))
+  mutate(log_Dittrichia=log10(Dittrichia_biomass10000))%>%
+  mutate(log_Grass=log10(Grass_biomass10000))
 
 hist(log_mydata$log_Dittrichia,col='steelblue',main='Original')
 shapiro.test(log_mydata$log_Dittrichia) #does not improve with log transform
@@ -189,7 +189,7 @@ comp_int_bio_field_gg
 ggsave(plot=comp_int_bio_field_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_field_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
 #####Biomass vs. Competition: Both Soils
-Let's try putting both soil types together here.
+Let's try putting both soil types together here and using the log10 data.
 ```{r}
 pd<-position_dodge(0)
 
@@ -203,16 +203,16 @@ comp_int_bio_all<-log_mydata%>%
 comp_int_bio_all_gg<-ggplot(data=comp_int_bio_all,
                         aes(x=factor(Competition,levels=c("None","Festuca","Bromus")),
                             y=Mean))+
-  scale_y_continuous(expression(italic("Dittrichia graveolens")~biomass ~""~(log(g10^4))),
-                     limits=c(0,8), #y-axis: range
-                     breaks=seq(0,8,1))+ #y-axis: incremental breaks by giving range and requesting a sequence by 1
+  scale_y_continuous(expression(atop(italic("Dittrichia graveolens")~biomass, (log[10](gx10^4)))),
+                     limits=c(0,4), #y-axis: range
+                     breaks=seq(0,4,1))+ #y-axis: incremental breaks by giving range and requesting a sequence by 1
   xlab("")+
   ggtitle("")+
   theme_classic(base_size=16)+
-  theme(panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        axis.line=element_line(colour="black"))+
+  # theme(panel.border=element_blank(),
+  #       panel.grid.major=element_blank(),
+  #       panel.grid.minor=element_blank(),
+  #       axis.line=element_line(colour="black"))+ 
   geom_line(size=1,
             position=pd,
             aes(linetype=Soil,
@@ -355,10 +355,10 @@ comp_scatter_gg<-ggplot(comp_scatter)+
     y=scy,
     shape=type,
     color=Habitat))+
-  scale_y_continuous(expression(italic("Dittrichia graveolens")~biomass ~""~(log(g10^4))),
+  scale_y_continuous(expression(atop(italic("Dittrichia graveolens")~biomass, (log[10](gx10^4)))),
                      limits=c(0,7), #y-axis: range
                      breaks=seq(0,7,1))+ #y-axis: incremental breaks by giving range and requesting a sequence by 1
-  scale_x_continuous(expression("Grass"~biomass ~""~(log(g10^4))),
+  scale_x_continuous(expression("Grass"~biomass ~""~(log[10](gx10^4))),
                      limits=c(2,11), #x-axis: range
                      breaks=seq(2,11,1))+ #x-axis: incremental breaks by giving range and requesting a sequence by 1
   guides(fill=none)+
