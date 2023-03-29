@@ -203,13 +203,12 @@ comp_int_bio_all<-log_mydata%>%
 comp_int_bio_all_gg<-ggplot(data=comp_int_bio_all,
                         aes(x=factor(Competition,levels=c("None","Festuca","Bromus")),
                             y=Mean))+
-  ylab("log(Biomass)")+
-   scale_y_continuous(name="Dittrichia graveolens biomass (log(g))", #y-axis: title
-                     limits=c(0,8), #x-axis: range
-                     breaks=seq(0,8,1))+ #x-axis: incremental breaks by giving range and requesting a sequence by 1
+  scale_y_continuous(expression(italic("Dittrichia graveolens")~biomass ~""~(log(g10^4))),
+                     limits=c(0,8), #y-axis: range
+                     breaks=seq(0,8,1))+ #y-axis: incremental breaks by giving range and requesting a sequence by 1
   xlab("")+
   ggtitle("")+
-  theme_bw(base_size=16)+
+  theme_classic(base_size=16)+
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
@@ -229,8 +228,7 @@ comp_int_bio_all_gg<-ggplot(data=comp_int_bio_all,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE),
                     color=Habitat))+
-  labs(y="Dittrichia graveolens biomass (log(g))d",
-       color="Source Habitat",
+  labs(color="Source Habitat",
        shape="Source Habitat",
        linetype="Soil Type")
 comp_int_bio_all_gg
@@ -346,8 +344,8 @@ competition2_gg<-ggplot(log_mydata)+
 comp_scatter<-log_mydata%>% 
   filter(Competition!="None")%>%
   filter(Grass_biomass!=0)%>% 
-  mutate(scx=log(Grass_biomass),
-         scy=log(Dittrichia_biomass))%>% 
+  mutate(scx=log(Grass_biomass10000),
+         scy=log(Dittrichia_biomass10000))%>% 
   mutate(type=paste(Soil,Competition,sep="/"))
 
 #Make the scatterplot
@@ -357,6 +355,12 @@ comp_scatter_gg<-ggplot(comp_scatter)+
     y=scy,
     shape=type,
     color=Habitat))+
+  scale_y_continuous(expression(italic("Dittrichia graveolens")~biomass ~""~(log(g10^4))),
+                     limits=c(0,7), #y-axis: range
+                     breaks=seq(0,7,1))+ #y-axis: incremental breaks by giving range and requesting a sequence by 1
+  scale_x_continuous(expression("Grass"~biomass ~""~(log(g10^4))),
+                     limits=c(2,11), #x-axis: range
+                     breaks=seq(2,11,1))+ #x-axis: incremental breaks by giving range and requesting a sequence by 1
   guides(fill=none)+
   scale_color_manual(values=c("gray85","forestgreen"))+
   scale_shape_manual(values=c(1,19,2,17))+
@@ -366,8 +370,12 @@ comp_scatter_gg<-ggplot(comp_scatter)+
                   linetype=Soil),
               color="black")+
   theme_classic(base_size=16)+
-  labs(y="Dittrichia graveolens biomass (log(g))",
-       x="Grass biomass (log(g))",
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  labs(y="Dittrichia graveolens biomass (log(g10^4))",
+       x="Grass biomass (log(g10^4))",
        shape="Soil Type/Competition Species",
        color="Source Habitat",
        linetype="")

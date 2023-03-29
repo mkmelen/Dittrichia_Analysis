@@ -172,7 +172,7 @@ So this model isn't working well either. Let's try building a model and fitting 
 
 ##Model 4 - glmm: Beta Distribution
 Now I'm using glmm because I'm fitting to other distributions (beta)
-```{r eval=FALSE, include=FALSE}
+```{r}
 growth_fullmodel4<-glmmTMB(Growth.Rate~
                              Habitat*Treatment+
                              (1|Site)+
@@ -188,7 +188,7 @@ plot(myDHARMagraph4) #plotting graph. Looks good, but check the outliers to make
 ```
 
 We should check the outliers in the the DHARMa plot to make sure they make sense.
-```{r eval=FALSE, include=FALSE}
+```{r}
 growth_outlier_boxplot1<-ggplot(growth_mydata)+
   geom_boxplot(aes(x=Habitat,
                    y=Growth.Rate),
@@ -256,12 +256,14 @@ field_int_bio_grow_gg<-ggplot(growth_mydata1,
   ylab("Biomass (g)")+
   coord_cartesian(ylim = c(0,10))+
   xlab("")+
-  ggtitle("Biomass of Dittrichia graveolens that budded")+
+  #ggtitle("Biomass of Dittrichia graveolens that budded")+
   theme_bw(base_size=16)+
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
-        axis.line=element_line(colour="black"))+
+        axis.line=element_line(colour="black"),
+        axis.title.y=ggtext::element_markdown(),
+        legend.position = c(0.8, 0.8))+
   geom_line(size=1,
             position=pd)+
   geom_point(size=5,
@@ -271,7 +273,7 @@ field_int_bio_grow_gg<-ggplot(growth_mydata1,
                 position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))+
-  labs(y="Dittrichia graveolens Biomass (g)",
+  labs(y="*Dittrichia graveolens* Biomass (g)",
        color="Source Habitat",
        shape="Source Habitat")
 field_int_bio_grow_gg
@@ -299,15 +301,17 @@ field_int_rate_grow_gg<-ggplot(growth_mydata2,
                             shape=Habitat,
                             group=Habitat,
                             color=Habitat))+
-  ylab("Growth Rate \n (Change in Leaf Length/Days)")+
   coord_cartesian(ylim = c(0,0.5))+
   xlab("")+
-  ggtitle("Growth of Dittrichia graveolens that budded")+
   theme_bw(base_size=16)+
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
-        axis.line=element_line(colour="black"))+
+        axis.line=element_line(colour="black"),
+        axis.title.y=ggtext::element_markdown(),
+        legend.position = c(0.8, 0.8))+
+ # ggtitle("Growth of Dittrichia graveolens that budded")+
+  ylab("*Dittrichia graveolens* \n (Change in Leaf Length/Days)")+
   geom_line(size=1,
             position=pd)+
   geom_point(size=5,
@@ -317,7 +321,7 @@ field_int_rate_grow_gg<-ggplot(growth_mydata2,
                 position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))+
-  labs(y="Growth Rate \n (Change in Leaf Length/Days)",
+  labs(y="Change in *Dittrichia graveolens* Leaf Length/Day",
        color="Source Habitat",
        shape="Source Habitat")
 field_int_rate_grow_gg
@@ -675,7 +679,8 @@ field_int_surv_all_gg<-ggplot(data=surv_mydata1,
   theme(panel.border=element_blank(),
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
-        axis.line=element_line(colour="black"))+
+        axis.line=element_line(colour="black"),
+        legend.position = c(0.8, 0.8))+
   scale_y_continuous(name="Proportion Survival to Bud",
                      limits=c(0,1),
                      breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+
