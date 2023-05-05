@@ -114,10 +114,14 @@ exp(ranef(fullmodel2)$Site) # Pretty even among all the sites
 ```
 
 #ggplot
-##Proportion Germinated x Time with Habitat and Treatment
+##Proportion Germinated x Time with Habitat and Treatment (all data pooled)
 
-```{r}
-fakedata1<-data.frame(Habitat=c("Vegetated","Roadside","Vegetated","Roadside"),Treatment=c("Construction Soil","Field Soil","Field Soil","Construction Soil"),DaysToGerm=c(0),type=c("fake")) #we want the graph to start at zero, but the data starts on day 2, so here we create fake data for the line to use
+```{r eval=FALSE, include=FALSE}
+#we want the graph to start at zero, but the data starts on day 2, so here we create fake data for the line to use
+fakedata1<-data.frame(Habitat=c("Vegetated","Roadside","Vegetated","Roadside"),
+                      Treatment=c("Construction Soil","Field Soil","Field Soil","Construction Soil"),
+                      DaysToGerm=c(0),
+                      type=c("fake"))
 
 mydata1<-mydata%>%
   filter(DaysToGerm!=0)%>% #our real data has some zeros because some seeds didn't germinate, but we need those to be removed since they are not real zeros
@@ -160,6 +164,114 @@ germ_rate1_gg<-ggplot(germ_rate1,#making a graph with ggplot using germ_rate1 da
 germ_rate1_gg
 
 ggsave(plot=germ_rate1_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate1_gg.png",width=25,height=15,units="cm",dpi=800)
+```
+
+##Proportion Germinated x Time with Habitat and Treatment (data pooled by dish)
+
+```{r}
+#I have 160 dishes (DishNum) with 10 seeds germinating on different days, 4 treatments (PlotTreatment), so 40 reps for each PlotTreatment... the average of those 40 reps should be plotted with the errorbars using the global mean
+
+mydata3<-mydata%>%
+  filter(DaysToGerm!=0)%>% #our real data has some zeros because some seeds didn't germinate, but we need those to be removed since they are not real zeros
+  mutate(type=c("real")) #here we add a column identifies our real
+
+germ_rate4<-mydata3%>% 
+  group_by(DishNum,GermDate,Habitat,Treatment,DaysToGerm)%>%
+  summarize(NumGerm=n(),PropGerm=NumGerm/10)%>% 
+  mutate(PlotTreatment=paste(Habitat,Treatment,sep="/"))%>% #create a new column called PlotTreatment combining Habitat and Treatment with a / to separate
+  group_by(DishNum)%>% 
+  mutate(CumPropGerm=cumsum(PropGerm))
+
+#make empty data frame to fill with closest or actual number
+germ_rate5<-data.frame(PlotTreatment="blank",
+                      DaysToGerm=c(rep(seq(1,12,1),40)),
+                      DishNum=rep(seq(1,160,1),each=12),
+                      PropGerm=0,CumPropGerm=0)%>% #CANNOT DO THIS!!! WRONG TO HAVE THESE PIPE TOGETHER
+  filter(germ_rate5$DishNum%in%germ_rate4$DishNum) #actually prefilter dish numbers
+
+#for loop to fill in missing data, may take a bit, warnings are just about making empty data frame
+for (i in 1:nrow(germ_rate5)){
+  #first check if the dish number is in the data set
+  if(germ_rate5$DishNum[i]%in%germ_rate4$DishNum){
+    #make temporary data frame of the data set of dish
+    temp<-germ_rate4%>%
+      filter(DishNum==germ_rate5$DishNum[i])%>%#first filter for the right dish
+      mutate(diff=DaysToGerm-as.numeric(germ_rate5$DaysToGerm[i]))
+    #now filter for specific day
+    filltemp<-temp%>% #subtract day
+      filter(diff<=0)%>% #filter for either earlier or same day
+      filter(diff==max(diff))#filter for exact match or closest
+    if(nrow(filltemp)>0){#check if it is empty data frame, meaning no close day
+      germ_rate5[i,]<-c(filltemp$PlotTreatment,germ_rate5$DaysToGerm[i],germ_rate5$DishNum[i],filltemp$PropGerm,filltemp$CumPropGerm)
+    }else{
+    germ_rate5[i,]<-c(temp$PlotTreatment[1],germ_rate5$DaysToGerm[i],germ_rate5$DishNum[i],0,0)
+  }}
+  else{#if there is no data for the dish just skip.
+    next
+  }
+}
+
+#we want the graph to start at zero, but the data starts on day 2, so here we create fake data for the line to use
+fakedata3<-data.frame(PlotTreatment=c("Roadside/Construction Soil","Roadside/Field Soil","Vegetated/Construction Soil","Vegetated/Field Soil"),
+                      DaysToGerm=c(0),
+                      DishNum=c(0),
+                      PropGerm=c(0),
+                      CumPropGerm=c(0),
+                      type=c("fake"))
+
+fakedata3$DaysToGerm<-as.character(fakedata3$DaysToGerm)
+fakedata3$DishNum<-as.character(fakedata3$DishNum)
+fakedata3$PropGerm<-as.character(fakedata3$PropGerm) 
+fakedata3$CumPropGerm<-as.character(fakedata3$CumPropGerm)
+fakedata3$type<-as.character(fakedata3$type) 
+
+#put real data and fake data together
+germ_rate6<-germ_rate5%>%
+  mutate(type=c("real"))%>% #here we add a column to identify our real data
+  bind_rows(fakedata3) #now we add our fake data so that we have one dataframe with real and fake data (labeled, of course)
+
+#make a summary table  
+germ_rate7<-germ_rate6%>% 
+  group_by(type,DaysToGerm,PlotTreatment)%>% 
+  summarize(mean_CumPropGerm=mean(CumPropGerm,
+                               na.rm=TRUE),
+            sd_prop=sd(CumPropGerm,na.rm=TRUE),
+            se_prop=sd_prop/sqrt(40))
+  
+germ_rate7_gg<-ggplot(germ_rate7, #making a graph with ggplot
+                      aes(x=DaysToGerm, #variable for x-axis
+                          y=CumPropGerm, #variable for y-axis
+                          color=PlotTreatment, #how colors should be assigned
+                          shape=PlotTreatment))+ #how shapes should be assigned
+  geom_line(linewidth=0.5)+ #now we make the line
+  geom_point(aes(size=type))+ #now we add the data points
+  #geom_errorbar( #and here are the error bars!
+#                aes(ymin=mean_CumPropGerm-se_prop,
+#                    ymax=mean_CumPropGerm+se_prop),
+#                width=0.2,size=0.5,
+#                position=position_dodge(width=0.5))+
+  theme_bw(base_size=16)+ #theme and base_size is the font size for labels
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"),
+        legend.position = c(0.8, 0.3))+ #position of our legend
+  scale_y_continuous(name="Proportion Germinated", #y-axis: title
+                     limits=c(0,1), #y-axis: range
+                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+ #y-axis: manual incremental breaks
+  scale_x_continuous(name="Days to Germination", #x-axis: title
+                     limits=c(0,12), #x-axis: range
+                     breaks=seq(0,12,1))+ #x-axis: incremental breaks by giving range and requesting a sequence by 1
+  scale_size_manual(values=c(0,5), #second number controls the size of the point
+                    guide="none")+
+  scale_color_manual(values=c("gray85","gray85","forestgreen","forestgreen"))+ #colors assigned in order of the legend
+  labs(y="Proportion Germinated",
+       fill="Source Habitat/Soil Type",
+       color="Source Habitat/Soil Type",
+       shape="Source Habitat/Soil Type")
+germ_rate7_gg
+
+ggsave(plot=germ_rate7_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate7_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 ##Proportion Germinated x Time with Habitat and Population
