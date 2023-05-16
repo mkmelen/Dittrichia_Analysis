@@ -149,7 +149,7 @@ All data combined.
 
 #####Biomass vs. Competition: Construction soil
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 pd<-position_dodge(0)
 
 comp_int_bio_con<-log_mydata%>% 
@@ -189,12 +189,12 @@ comp_int_bio_con_gg<-ggplot(data=comp_int_bio_con,
                     ymax=(Mean+SE)))
 comp_int_bio_con_gg
 
-ggsave(plot=comp_int_bio_con_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_con_gg.png",width=25,height=20,units="cm",dpi=800)
+#ggsave(plot=comp_int_bio_con_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_con_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
 
 #####Biomass vs. Competition: Field soil
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 pd<-position_dodge(0)
 
 comp_int_bio_field<-log_mydata%>% 
@@ -234,7 +234,7 @@ comp_int_bio_field_gg<-ggplot(data=comp_int_bio_field,
                     ymax=(Mean+SE)))
 comp_int_bio_field_gg
 
-ggsave(plot=comp_int_bio_field_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_field_gg.png",width=25,height=20,units="cm",dpi=800)
+#ggsave(plot=comp_int_bio_field_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_field_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
 
 #####Biomass vs. Competition: Both Soils Let's try putting both soil
@@ -280,6 +280,55 @@ comp_int_bio_all_gg<-ggplot(data=comp_int_bio_all,
                     color=Habitat))+
   labs(color="Source Habitat",
        shape="Source Habitat",
+       linetype="Soil Type")
+comp_int_bio_all_gg
+
+#ggsave(plot=comp_int_bio_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_all_gg.png",width=25,height=15,units="cm",dpi=800)
+```
+
+#####Biomass vs. Competition: Both Soils but no habitat
+Soil types together here and using the log10 data and µg as my units.
+
+```{r}
+pd<-position_dodge(0)
+
+comp_int_bio_all<-log_mydata%>% 
+  group_by(Soil,Competition)%>%
+  summarise(Mean=mean(log_Dittrichia),
+            SD=sd(log_Dittrichia),
+            N=length(log_Dittrichia))%>%
+  mutate(SE=SD/sqrt(N))
+
+comp_int_bio_all_gg<-ggplot(data=comp_int_bio_all,
+                        aes(x=factor(Competition,levels=c("None","Bromus","Festuca")),
+                            y=Mean))+
+  scale_y_continuous(expression(atop(italic("Dittrichia graveolens")~biomass, (log[10](mg)))),
+                     limits=c(-1,3), #y-axis: range
+                     breaks=seq(-1,3,1))+ #y-axis: incremental breaks by giving range and requesting a sequence by 1
+  xlab("")+
+  ggtitle("")+
+  theme_classic(base_size=24)+
+  # theme(panel.border=element_blank(),
+  #       panel.grid.major=element_blank(),
+  #       panel.grid.minor=element_blank(),
+  #       axis.line=element_line(colour="black"))+ 
+  geom_line(size=1,
+            position=pd,
+            aes(linetype=Soil,
+                group=interaction(Soil),
+                color=Soil))+
+  geom_point(size=8,
+             position=pd,
+             aes(shape=Soil,
+                 color=Soil))+
+  scale_color_manual(values=c("gray85","forestgreen","black"))+
+  geom_errorbar(width=0.2,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE),
+                    color="Soil"))+
+  labs(color="Soil Type",
+       shape="Soil Type",
        linetype="Soil Type")
 comp_int_bio_all_gg
 
@@ -330,7 +379,7 @@ comp_int_bio_all_gg<-ggplot(data=comp_int_bio_all,
        linetype="Soil Type")
 comp_int_bio_all_gg
 
-ggsave(plot=comp_int_bio_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_all_gg.png",width=25,height=15,units="cm",dpi=800)
+#ggsave(plot=comp_int_bio_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_bio_all_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 #####Boxplot Not using
@@ -346,7 +395,7 @@ competition1_gg<-ggplot(log_mydata)+
        fill="Soil",
        x="Competition")
 competition1_gg
-ggsave(plot=competition1_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition1_gg.png", width=20,height=25,units ="cm",dpi=800)
+#ggsave(plot=competition1_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/competition1_gg.png", width=20,height=25,units ="cm",dpi=800)
 ```
 
 ###Biomass x Competition and Soil and Population
@@ -355,7 +404,7 @@ ggsave(plot=competition1_gg,file="/Users/Miranda/Documents/Education/UC Santa Cr
 
 Not used Plot by site.
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 mydata_site_sum<-log_mydata%>%
   group_by(Habitat,Soil,Site)%>%
   summarise(Mean=mean(log_Dittrichia),
@@ -384,12 +433,12 @@ comp_int_site_gg<-ggplot(data=mydata_site_sum,
                 position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))
-#comp_int_site_gg
+comp_int_site_gg
 ```
 
 Facet to make panels of the by site plot.
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 mydata_site_sum<-log_mydata%>%
   group_by(Habitat,Soil,Site)%>%
   summarise(Mean=mean(log_Dittrichia),
@@ -418,12 +467,12 @@ comp_int_site_panel_gg<-ggplot(data=mydata_site_sum,
   geom_errorbar(width=0.2,position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))
-#comp_int_site_panel_gg
+comp_int_site_panel_gg
 ```
 
 ####Boxplots Not using
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 competition2_gg<-ggplot(log_mydata)+
   geom_boxplot(aes(x=Soil,
                    y=log_Dittrichia,
@@ -433,7 +482,7 @@ competition2_gg<-ggplot(log_mydata)+
   labs(y="log(Biomass)",
        fill="Population",
        x="Soil")
-#competition2_gg
+competition2_gg
 ```
 
 ## Biomass Scatterplot
@@ -480,7 +529,7 @@ comp_scatter_gg<-ggplot(comp_scatter)+
        linetype="")
 comp_scatter_gg
 
-ggsave(plot=comp_scatter_gg,file ="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_scatter_gg.png",width=25,height=15,units="cm",dpi=800)
+#ggsave(plot=comp_scatter_gg,file ="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_scatter_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 
@@ -526,7 +575,7 @@ comp_scatter_gg<-ggplot(comp_scatter)+
        linetype="")
 comp_scatter_gg
 
-ggsave(plot=comp_scatter_gg,file ="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_scatter_gg.png",width=25,height=15,units="cm",dpi=800)
+#ggsave(plot=comp_scatter_gg,file ="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_scatter_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 #Dittrichia Growth
@@ -568,7 +617,7 @@ All data combined.
 
 #####Growth Rate vs. Competition: Construction soil
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 pd<-position_dodge(0)
 
 comp_int_grow_con<-log_mydata_Dgrowth%>% 
@@ -605,12 +654,12 @@ comp_int_grow_con_gg<-ggplot(data=comp_int_grow_con,
                     ymax=(Mean+SE)))
 comp_int_grow_con_gg
 
-ggsave(plot=comp_int_grow_con_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_grow_con_gg.png",width=25,height=20,units="cm",dpi=800)
+#ggsave(plot=comp_int_grow_con_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_grow_con_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
 
 #####Growth Rate vs. Competition: Field soil
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 pd<-position_dodge(0.1)
 
 comp_int_grow_field<-log_mydata_Dgrowth%>% 
@@ -647,5 +696,5 @@ comp_int_grow_field_gg<-ggplot(data=comp_int_grow_field,
                     ymax=(Mean+SE)))
 comp_int_grow_field_gg
 
-ggsave(plot=comp_int_grow_field_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_grow_field_gg.png",width=25,height=20,units="cm",dpi=800)
+#ggsave(plot=comp_int_grow_field_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_grow_field_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
