@@ -278,7 +278,7 @@ field_int_bio_grow_gg<-ggplot(growth_mydata1,
        shape="Source Habitat")
 field_int_bio_grow_gg
 
-ggsave(plot=field_int_bio_grow_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/field_int_bio_grow_gg.png",width=25,height=15,units="cm",dpi=800)
+#ggsave(plot=field_int_bio_grow_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/field_int_bio_grow_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 #####Growth Rate x Treatment: Growth
@@ -326,12 +326,12 @@ field_int_rate_grow_gg<-ggplot(growth_mydata2,
        shape="Source Habitat")
 field_int_rate_grow_gg
 
-ggsave(plot=field_int_rate_grow_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/field_int_rate_grow_gg.png",width=25,height=15,units="cm",dpi=800)
+#ggsave(plot=field_int_rate_grow_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/field_int_rate_grow_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 
 ####Boxplot
-```{r eval=FALSE, include=FALSE}
+```{r}
 #Boxplot with Early Growth Rate by Habitat
 growth_boxplot1<-ggplot(growth_mydata)+
   geom_boxplot(aes(x=Habitat,
@@ -345,7 +345,7 @@ growth_boxplot1<-ggplot(growth_mydata)+
        x="Habitat")
 growth_boxplot1
 
-ggsave(plot=growth_boxplot1,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplot1.png",width=20,height=20,units="cm",dpi=800)
+#ggsave(plot=growth_boxplot1,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplot1.png",width=20,height=20,units="cm",dpi=800)
 
 #Boxplot with Early Growth Rate by All Treatments
 growth_boxplot2<-ggplot(growth_mydata)+
@@ -360,7 +360,7 @@ growth_boxplot2<-ggplot(growth_mydata)+
        x="Treatment")
 growth_boxplot2
 
-ggsave(plot=growth_boxplot2,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplot2.png",width=20,height=20,units="cm",dpi=800)
+#ggsave(plot=growth_boxplot2,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/growth_boxplot2.png",width=20,height=20,units="cm",dpi=800)
 
 #Boxplot with Early Growth Rate by 2 treatments (Control and Biomass Removal)
 sub_growth_mydata<-subset(growth_mydata,
@@ -526,10 +526,25 @@ emmeans(fullmodel3.2,pairwise~Treatment)
 
 ##ggplot - lmer
 ```{r}
+biomass_gg<-ggplot(data=reproduction_mydata,
+       aes(x=factor(Treatment,levels=c("Grassland","Biomass Removal","Raking","Raking & Clipping","Hemizonia")),
+           y=log(Biomass)))+
+  scale_y_continuous(expression(atop(italic("Dittrichia graveolens")~biomass, (log[10](mg)))))+
+    xlab("Treatment")+
+  ggtitle("")+
+  theme_classic(base_size=20)+
+  geom_boxplot() #plot data from log(data)
+biomass_gg
+
+ggsave(plot=biomass_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/biomass_gg.png",width=25,height=15,units="cm",dpi=800)
+  
+
+
 ggplot(data=reproduction_mydata,
        aes(x=Treatment,
            y=log(Biomass)))+
   geom_boxplot() #plot data from log(data)
+  
 ggplot(data=reproduction_mydata,
        aes(x=Habitat,
            y=log(Biomass)))+
@@ -699,8 +714,72 @@ field_int_surv_all_gg<-ggplot(data=surv_mydata1,
        shape="Source Habitat")
 field_int_surv_all_gg
 
-ggsave(plot=field_int_surv_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/field_int_surv_all_gg.png",width=25,height=15,units="cm",dpi=800)
+#ggsave(plot=field_int_surv_all_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/field_int_surv_all_gg.png",width=25,height=15,units="cm",dpi=800)
+
+surv_mydata2<-mydata%>%
+  group_by(Treatment,Habitat)%>%
+  summarise(Mean=mean(PropBudSite),
+            SD=sd(PropBudSite),
+            N=length(PropBudSite))%>%
+  mutate(SE=SD/sqrt(N))
+
+field_int_surv_all_gg<-ggplot(data=surv_mydata2,
+                        aes(x=factor(Treatment,levels=c("Biomass Removal","Grassland","Raking","Raking & Clipping","Hemizonia")),
+                            y=Mean,
+                            shape=Habitat,
+                            group=Habitat,
+                            color=Habitat))+
+  ylab("Proportion Survival to Bud")+
+  coord_cartesian(ylim=c(0,1))+
+  xlab("")+
+  theme_classic(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"),
+        legend.position = c(0.8, 0.8))+
+  scale_y_continuous(name="Proportion Survival to Bud",
+                     limits=c(0,1),
+                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+
+  geom_line(size=1,
+            position=pd)+
+  geom_point(size=5,
+             position=pd)+
+  scale_color_manual(values=c("gray85","forestgreen"))+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Mean-SE),
+                    ymax=(Mean+SE)))+
+  labs(y="Proportion Survival to Bud",
+       fill="Source Habitat",
+       color="Source Habitat",
+       shape="Source Habitat")
+field_int_surv_all_gg
+
+
+
+
+as.numeric(PropBudSite)
+survival_gg<-ggplot(data=mydata,
+       aes(x=factor(Treatment,levels=c("Grassland","Biomass Removal","Raking","Raking & Clipping","Hemizonia")),
+           y=as.numeric(PropBudSite)))+
+  labs(y="Proportion Survival to Bud",
+       x="Treatment")+
+  ggtitle("")+
+  theme_classic(base_size=20)+
+  geom_boxplot()
+survival_gg
+
+ggsave(plot=survival_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
+
+```{r}
+boxplot(mydata$PropBudSite~mydata$Treatment,xaxt="n",xlab=NA,ylab="Proportion Survival to Bud",las=1)
+axis(1,at=seq(1,5,1),labels=c("Grassland","Biomass\nRemoval","Hemizonia","Raking","Raking &\nClipping"))
+
+boxplot(mydata$PropBudSite~mydata$Treatment,ylab="Proportion Survival to Bud",las=1)
+```
+
 
 ##autoplot - Survival Curves
 Plot by habitat test
@@ -767,18 +846,22 @@ cox_model_graph2<-survfit(Surv(NumDaysAlive,CensorReproduction)~
                             Treatment,
                           data=mydata)
 
-autoplot(cox_model_graph2)+
+survival_auto<-autoplot(cox_model_graph2)+
   labs(x="\n Survival Time (Days)",
-       y="Survival Probabilities\n",
-       title="Survival Times Of \n Roadside and Vegetated Populations\n")+
+       y="Survival Probabilities",
+       title="")+
   theme(plot.title=element_text(hjust=0.5),
         axis.title.x=element_text(face="bold",
-                                  color="Black",size=12),
+                                  color="Black",size=20),
         axis.title.y=element_text(face="bold",
                                   color="Black",
-                                  size=12),
+                                  size=20),
         legend.title=element_text(face="bold",
-                                  size=10))
+                                  size=12))
+        #scale_fill_discrete(name="Treatment")
+survival_auto
+
+ggsave(plot=survival_auto,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_auto.png",width=25,height=15,units="cm",dpi=800)
 ```
 Post hoc Tukey
 ```{r}
@@ -825,3 +908,65 @@ autoplot(cox_model_graph3)+
         legend.title=element_text(face="bold",
                                   size=10))
 ```
+
+#2022 data
+
+```{r}
+mydata_dig<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/field_relative_fitness/borr_dig_trim_control_2022.csv",stringsAsFactors=T)
+mydata_shade<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/field_relative_fitness/borr_shade_none_2022.csv",stringsAsFactors=T)
+mydata_water<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/field_relative_fitness/borr_water_nutrients_roots_2022.csv",stringsAsFactors=T)
+```
+
+Let's manipulate the data!
+
+```{r}
+pldate <- mydata_dig %>% 
+  select(Plant_ID, Treatment, PlantDate.L., PlantDate.R.) %>% 
+  pivot_longer(cols=starts_with("PlantDate"), names_to = "Position", values_to = "PlantDate", names_prefix = "PlantDate.")%>% 
+  mutate(Position=str_replace(Position,".$",""))
+
+plmeas<-mydata_dig %>% 
+  select(Plant_ID,Treatment,LeftMeasure..mm.,RightMeasure..mm.) %>% 
+  rename("Measure_mm_L"="LeftMeasure..mm.","Measure_mm_R"="RightMeasure..mm.") %>%
+  pivot_longer(cols=starts_with("Measure"), names_to = "Position", values_to = "Measurement_mm", names_prefix = "Measure_mm_")
+
+plmort<-mydata_dig %>% 
+  select(Plant_ID,Treatment,Mortality.Date..L.,Mortality.Date..R.) %>% 
+  pivot_longer(cols=starts_with("Mortality"),names_to = "Position",values_to = "MortalityDate",names_prefix = "Mortality.Date..") %>% 
+  mutate(Position=str_replace(Position,".$",""))
+
+dig_work <- left_join(pldate, plmeas, by=c("Plant_ID","Treatment","Position")) %>% 
+  left_join(., plmort, by=c("Plant_ID","Treatment","Position"))
+
+library(lubridate)
+dig_calc <-dig_work %>% 
+  mutate(Censor=1,NumDaysAlive= (as.numeric(yday(mdy(MortalityDate)))-as.numeric(yday(mdy(PlantDate)))))
+
+cox_model_dig<-survfit(Surv(NumDaysAlive,Censor)~
+                            Treatment,
+                          data=dig_calc)
+
+survival_dig<-autoplot(cox_model_dig)+
+  labs(x="\n Survival Time (Days)",
+       y="Survival Probabilities",
+       title="")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",size=20),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=20),
+        legend.title=element_text(face="bold",
+                                  size=12))
+        #scale_fill_discrete(name="Treatment")
+survival_dig
+
+ggsave(plot=survival_auto,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_auto.png",width=25,height=15,units="cm",dpi=800)
+```
+
+```
+
+
+
+Let's make some graphs!
+
