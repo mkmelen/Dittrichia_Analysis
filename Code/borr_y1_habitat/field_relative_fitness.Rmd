@@ -759,7 +759,6 @@ field_int_surv_all_gg
 
 
 
-as.numeric(PropBudSite)
 survival_gg<-ggplot(data=mydata,
        aes(x=factor(Treatment,levels=c("Grassland","Biomass Removal","Raking","Raking & Clipping","Hemizonia")),
            y=as.numeric(PropBudSite)))+
@@ -917,38 +916,38 @@ mydata_shade<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittric
 mydata_water<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/field_relative_fitness/borr_water_nutrients_roots_2022.csv",stringsAsFactors=T)
 ```
 
-Let's manipulate the data!
+Let's manipulate the dig data!
 
 ```{r}
-pldate <- mydata_dig %>% 
-  select(Plant_ID, Treatment, PlantDate.L., PlantDate.R.) %>% 
-  pivot_longer(cols=starts_with("PlantDate"), names_to = "Position", values_to = "PlantDate", names_prefix = "PlantDate.")%>% 
+pldate_dig<-mydata_dig %>% 
+  select(Plant_ID,Row,Treatment,PlantDate.L.,PlantDate.R.)%>% 
+  pivot_longer(cols=starts_with("PlantDate"),names_to="Position",values_to="PlantDate",names_prefix="PlantDate.")%>% 
   mutate(Position=str_replace(Position,".$",""))
 
-plmeas<-mydata_dig %>% 
-  select(Plant_ID,Treatment,LeftMeasure..mm.,RightMeasure..mm.) %>% 
+plmeas_dig<-mydata_dig%>% 
+  select(Plant_ID,Row,Treatment,LeftMeasure..mm.,RightMeasure..mm.)%>% 
   rename("Measure_mm_L"="LeftMeasure..mm.","Measure_mm_R"="RightMeasure..mm.") %>%
-  pivot_longer(cols=starts_with("Measure"), names_to = "Position", values_to = "Measurement_mm", names_prefix = "Measure_mm_")
+  pivot_longer(cols=starts_with("Measure"),names_to="Position",values_to="Measurement_mm",names_prefix="Measure_mm_")
 
-plmort<-mydata_dig %>% 
-  select(Plant_ID,Treatment,Mortality.Date..L.,Mortality.Date..R.) %>% 
-  pivot_longer(cols=starts_with("Mortality"),names_to = "Position",values_to = "MortalityDate",names_prefix = "Mortality.Date..") %>% 
+plmort_dig<-mydata_dig%>% 
+  select(Plant_ID,Row,Treatment,Mortality.Date..L.,Mortality.Date..R.)%>% 
+  pivot_longer(cols=starts_with("Mortality"),names_to="Position",values_to="MortalityDate",names_prefix="Mortality.Date..")%>% 
   mutate(Position=str_replace(Position,".$",""))
 
-dig_work <- left_join(pldate, plmeas, by=c("Plant_ID","Treatment","Position")) %>% 
-  left_join(., plmort, by=c("Plant_ID","Treatment","Position"))
+dig_work<-left_join(pldate_dig,plmeas_dig,by=c("Plant_ID","Row","Treatment","Position"))%>% 
+  left_join(.,plmort_dig,by=c("Plant_ID","Row","Treatment","Position"))
 
 library(lubridate)
-dig_calc <-dig_work %>% 
-  mutate(Censor=1,NumDaysAlive= (as.numeric(yday(mdy(MortalityDate)))-as.numeric(yday(mdy(PlantDate)))))
+dig_calc<-dig_work%>% 
+  mutate(Censor=1,NumDaysAlive=(as.numeric(yday(mdy(MortalityDate)))-as.numeric(yday(mdy(PlantDate)))))
 
 cox_model_dig<-survfit(Surv(NumDaysAlive,Censor)~
                             Treatment,
                           data=dig_calc)
 
 survival_dig<-autoplot(cox_model_dig)+
-  labs(x="\n Survival Time (Days)",
-       y="Survival Probabilities",
+  labs(x="Time (Days)",
+       y="Survival",
        title="")+
   theme(plot.title=element_text(hjust=0.5),
         axis.title.x=element_text(face="bold",
@@ -961,12 +960,336 @@ survival_dig<-autoplot(cox_model_dig)+
         #scale_fill_discrete(name="Treatment")
 survival_dig
 
-ggsave(plot=survival_auto,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_auto.png",width=25,height=15,units="cm",dpi=800)
+ggsave(plot=survival_dig,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_dig.png",width=25,height=15,units="cm",dpi=800)
 ```
 
+Let's manipulate the shade data!
+
+```{r}
+pldate_shade<-mydata_shade %>% 
+  select(Plant_ID,Plot,Treatment,PlantDate.L.,PlantDate.R.)%>% 
+  pivot_longer(cols=starts_with("PlantDate"),names_to="Position",values_to="PlantDate",names_prefix="PlantDate.")%>% 
+  mutate(Position=str_replace(Position,".$",""))
+
+plmeas_shade<-mydata_shade%>% 
+  select(Plant_ID,Plot,Treatment,LeftMeasure.mm.,RightMeasure.mm.)%>% 
+  rename("Measure_mm_L"="LeftMeasure.mm.","Measure_mm_R"="RightMeasure.mm.") %>%
+  pivot_longer(cols=starts_with("Measure"),names_to="Position",values_to="Measurement_mm",names_prefix="Measure_mm_")
+
+plmort_shade<-mydata_shade%>% 
+  select(Plant_ID,Plot,Treatment,Mortality.Date..L.,Mortality.Date..R.)%>% 
+  pivot_longer(cols=starts_with("Mortality"),names_to="Position",values_to="MortalityDate",names_prefix="Mortality.Date..")%>% 
+  mutate(Position=str_replace(Position,".$",""))
+
+shade_work<-left_join(pldate_shade,plmeas_shade,by=c("Plant_ID","Plot","Treatment","Position"))%>% 
+  left_join(.,plmort_shade,by=c("Plant_ID","Plot","Treatment","Position"))
+
+library(lubridate)
+shade_calc<-shade_work%>% 
+  mutate(Censor=1,NumDaysAlive=(as.numeric(yday(mdy(MortalityDate)))-as.numeric(yday(mdy(PlantDate)))))
+
+cox_model_shade<-survfit(Surv(NumDaysAlive,Censor)~
+                            Treatment,
+                          data=shade_calc)
+
+survival_shade<-autoplot(cox_model_shade)+
+  labs(x="Time (Days)",
+       y="Survival",
+       title="")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",size=20),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=20),
+        legend.title=element_text(face="bold",
+                                  size=12))
+survival_shade
+
+ggsave(plot=survival_shade,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_shade.png",width=25,height=15,units="cm",dpi=800)
 ```
 
 
+Let's manipulate the water data!
 
-Let's make some graphs!
+```{r}
+pldate_water<-mydata_water %>% 
+  select(Plant_ID,Plot,Competition,Treatment,PlantDate.L.,PlantDate.R.)%>% 
+  pivot_longer(cols=starts_with("PlantDate"),names_to="Position",values_to="PlantDate",names_prefix="PlantDate.")%>% 
+  mutate(Position=str_replace(Position,".$",""))
 
+plmeas_water<-mydata_water%>% 
+  select(Plant_ID,Plot,Competition,Treatment,LeftMeasure.mm.,RightMeasure.mm.)%>% 
+  rename("Measure_mm_L"="LeftMeasure.mm.","Measure_mm_R"="RightMeasure.mm.") %>%
+  pivot_longer(cols=starts_with("Measure"),names_to="Position",values_to="Measurement_mm",names_prefix="Measure_mm_")
+
+plmort_water<-mydata_water%>% 
+  select(Plant_ID,Plot,Competition,Treatment,Mortality.Date..L.,Mortality.Date..R.)%>% 
+  pivot_longer(cols=starts_with("Mortality"),names_to="Position",values_to="MortalityDate",names_prefix="Mortality.Date..")%>% 
+  mutate(Position=str_replace(Position,".$",""))
+
+water_work<-left_join(pldate_water,plmeas_water,by=c("Plant_ID","Plot","Competition","Treatment","Position"))%>% 
+  left_join(.,plmort_water,by=c("Plant_ID","Plot","Competition","Treatment","Position"))
+
+library(lubridate)
+water_calc<-water_work%>% 
+  mutate(Censor=1,NumDaysAlive=(as.numeric(yday(mdy(MortalityDate)))-as.numeric(yday(mdy(PlantDate)))))
+
+cox_model_water<-survfit(Surv(NumDaysAlive,Censor)~
+                            Treatment+Competition,
+                          data=water_calc)
+
+survival_water<-autoplot(cox_model_water)+
+  labs(x="Time (Days)",
+       y="Survival",
+       title="")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",size=20),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=20),
+        legend.title=element_text(face="bold",
+                                  size=12))
+        #scale_fill_discrete(name="Treatment")
+survival_water
+
+ggsave(plot=survival_water,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_water.png",width=25,height=15,units="cm",dpi=800)
+```
+
+
+```{r}
+#Now just looking at each treatment with weed cloth or no weed cloth present
+
+water_calc_w<-water_calc%>% 
+  filter(Treatment=="Water")
+cox_model_Twater<-survfit(Surv(NumDaysAlive,Censor)~
+                            Competition,
+                          data=water_calc_w)
+
+survival_Twater<-autoplot(cox_model_Twater)+
+  labs(x="Time (Days)",
+       y="Survival",
+       title="")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",size=20),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=20),
+        legend.title=element_text(face="bold",
+                                  size=12))
+        #scale_fill_discrete(name="Treatment")
+survival_Twater
+
+ggsave(plot=survival_Twater,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_Twater.png",width=25,height=15,units="cm",dpi=800)
+
+water_calc_f<-water_calc%>% 
+  filter(Treatment=="Fertilizer")
+cox_model_Tfertilizer<-survfit(Surv(NumDaysAlive,Censor)~
+                            Competition,
+                          data=water_calc_f)
+
+survival_Tfertilizer<-autoplot(cox_model_Tfertilizer)+
+  labs(x="Time (Days)",
+       y="Survival",
+       title="")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",size=20),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=20),
+        legend.title=element_text(face="bold",
+                                  size=12))
+        #scale_fill_discrete(name="Treatment")
+survival_Tfertilizer
+
+ggsave(plot=survival_Tfertilizer,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_Tfertilizer.png",width=25,height=15,units="cm",dpi=800)
+
+water_calc_c<-water_calc%>% 
+  filter(Treatment=="Control")
+cox_model_Tcontrol<-survfit(Surv(NumDaysAlive,Censor)~
+                            Competition,
+                          data=water_calc_c)
+
+survival_Tcontrol<-autoplot(cox_model_Tcontrol)+
+  labs(x="Time (Days)",
+       y="Survival",
+       title="")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",size=20),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=20),
+        legend.title=element_text(face="bold",
+                                  size=12))
+        #scale_fill_discrete(name="Treatment")
+survival_Tcontrol
+
+ggsave(plot=survival_Tcontrol,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_Tcontrol.png",width=25,height=15,units="cm",dpi=800)
+```
+
+```{r}
+#Now just looking at each weed cloth or no weed cloth present for all treatments
+
+water_calc_wt<-water_calc%>% 
+  filter(Competition=="Weed Cloth")
+cox_model_Weedt<-survfit(Surv(NumDaysAlive,Censor)~
+                            Treatment,
+                          data=water_calc_wt)
+
+survival_Weedt<-autoplot(cox_model_Weedt)+
+  labs(x="Time (Days)",
+       y="Survival",
+       title="")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",size=20),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=20),
+        legend.title=element_text(face="bold",
+                                  size=12))
+survival_Weedt
+
+ggsave(plot=survival_Weedt,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_Weedt.png",width=25,height=15,units="cm",dpi=800)
+
+water_calc_Nt<-water_calc%>% 
+  filter(Competition=="No Cloth")
+cox_model_Nonet<-survfit(Surv(NumDaysAlive,Censor)~
+                            Treatment,
+                          data=water_calc_Nt)
+
+survival_Nonet<-autoplot(cox_model_Nonet)+
+  labs(x="Time (Days)",
+       y="Survival",
+       title="")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",size=20),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=20),
+        legend.title=element_text(face="bold",
+                                  size=12))
+survival_Nonet
+
+ggsave(plot=survival_Nonet,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_Nonet.png",width=25,height=15,units="cm",dpi=800)
+
+library(patchwork)
+library(ggplot2)
+combined_plot<-survival_Weedt+survival_Nonet
+combined_plot
+
+#Try this from Julia
+#WH_PA + WH_subset + choice + plot_layout(guides = 'collect') +
+#  plot_annotation(tag_levels = 'A', tag_suffix = ')') & 
+#   theme(plot.tag.position = c(0, 1),
+#         plot.tag = element_text(size = 11.5, hjust = 0, vjust = 0))
+```
+
+##Histograms
+```{r}
+#Number of Days Alive - By Treatment
+ggplot(shade_calc,aes(x=NumDaysAlive))+geom_histogram()+facet_wrap(vars(Treatment)) #Here we see that the 3 treatments are right skewed.
+
+ggplot(dig_calc,aes(x=NumDaysAlive))+geom_histogram()+facet_wrap(vars(Treatment)) #Here we see that the 3 treatments are right skewed.
+
+ggplot(water_calc,aes(x=NumDaysAlive))+geom_histogram()+facet_wrap(vars(Treatment)) #Here we see that the 3 treatments are right skewed.
+```
+
+##Cox Model
+Start by making a simple model with no random effects. This will be compared to the full model with random effects.
+```{r}
+cox_simp_shade<-coxph(Surv(NumDaysAlive,
+                             Censor)~
+                          Treatment,
+                        data=shade_calc)
+summary(cox_simp_shade)
+print(cox_simp_shade)
+predict(cox_simp_shade)
+hist(predict(cox_simp_shade))
+
+cox_simp_dig<-coxph(Surv(NumDaysAlive,
+                             Censor)~
+                          Treatment,
+                        data=dig_calc)
+summary(cox_simp_dig)
+print(cox_simp_dig)
+predict(cox_simp_dig)
+hist(predict(cox_simp_dig))
+
+cox_simp_water<-coxph(Surv(NumDaysAlive,
+                             Censor)~
+                          Treatment*Competition,
+                        data=water_calc)
+summary(cox_simp_water)
+print(cox_simp_water)
+predict(cox_simp_water)
+hist(predict(cox_simp_water))
+```
+
+Now make a full model using random effects
+```{r}
+cox_full_dig<-coxme(Surv(NumDaysAlive,Censor)~
+                        Treatment+
+                        (1|Row),
+                      data=dig_calc)
+summary(cox_full_dig)
+print(cox_full_dig)
+predict(cox_full_dig)
+hist(predict(cox_full_dig))
+
+cox_full_shade<-coxme(Surv(NumDaysAlive,Censor)~
+                        Treatment+
+                        (1|Plot),
+                      data=shade_calc)
+summary(cox_full_shade)
+print(cox_full_shade)
+predict(cox_full_shade)
+hist(predict(cox_full_shade))
+
+cox_full_water<-coxme(Surv(NumDaysAlive,Censor)~
+                        Treatment*Competition+
+                        (1|Plot),
+                      data=water_calc)
+summary(cox_full_water)
+print(cox_full_water)
+predict(cox_full_water)
+hist(predict(cox_full_water))
+
+cox_full_water1<-coxme(Surv(NumDaysAlive,Censor)~
+                        Treatment+
+                        Competition+
+                        (1|Plot),
+                      data=water_calc)
+summary(cox_full_water1)
+print(cox_full_water1)
+predict(cox_full_water1)
+hist(predict(cox_full_water1))
+
+coef_values <- c(-0.2301898, -0.1632106, -0.4224990)
+se_values <- c(0.1369386, 0.1401706, 0.1157955)
+
+# Calculate z and p values
+z_values <- coef_values / se_values
+p_values <- 2 * (1 - pnorm(abs(z_values)))
+
+# Print the calculated z and p values
+z_values
+p_values
+```
+
+Now we can compare the models to see which model is best
+```{r}
+anova(cox_simp_dig,cox_full_dig) 
+AIC(cox_simp_dig,cox_full_dig) #But comparing the AIC scores is easiest. Keep the lower AIC score because that is considered the better model. Here the AIC scores are the same, so parsimony says to keep the simple model.
+
+anova(cox_simp_shade,cox_full_shade) 
+AIC(cox_simp_shade,cox_full_shade) #But comparing the AIC scores is easiest. Keep the lower AIC score because that is considered the better model. Here it is the full model because the AIC score is smaller.
+
+anova(cox_simp_water,cox_full_water1,cox_full_water) 
+AIC(cox_simp_water,cox_full_water1,cox_full_water) #But comparing the AIC scores is easiest. Use the middle model (cox_full_water1) with the lowest AIC.
+```
