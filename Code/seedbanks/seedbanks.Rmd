@@ -1,0 +1,104 @@
+---
+title: "seedbanks"
+author: Emma Gloudeman, Miranda Melen
+date: "2023-05-19"
+output: html_document
+---
+
+#Meta Data
+This is year 1 and 2 data from the greenhouse raised bed seedbank experiment.
+
+#Packages
+```{r}
+library(ggplot2)
+library(magrittr)
+library(tidyverse)
+```
+
+#Load Data
+```{r}
+gh_bank_all<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/seedbanks/greenhouse_seedbank_data.csv",stringsAsFactors=T)
+
+rain_data<-na.omit(read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/seedbanks/younger_lagoon_rainfall-hourly.csv"))
+```
+
+##Filter = 200 seeds
+Not every pot received 200 seeds, so here we will filter to only include those that did, to simplify for now.
+```{r}
+gh_bank<-gh_bank_all[gh_bank_all$SeedCount==200,] #filters a data frame gh_bank_all and creates a new data frame gh_bank that contains only the rows where the value in the SeedCount column is equal to 200.
+#view(gh_bank)
+```
+
+##Make a new dataframe
+Here we will calculate the mean germination for each month within the gh_bank data frame and assign them to the prop_means vector
+```{r}
+prop_means=c(mean(gh_bank$Sep1_prop), mean(gh_bank$Oct1_prop), mean(gh_bank$Nov1_prop), 
+    mean(gh_bank$Dec1_prop),mean(gh_bank$Jan1_prop),mean(gh_bank$Feb1_prop),
+    mean(gh_bank$Mar1_prop),mean(gh_bank$Apr1_prop),mean(gh_bank$May1_prop),
+    mean(gh_bank$Jun1_prop),mean(gh_bank$Jul1_prop),mean(gh_bank$Aug1_prop),
+    mean(gh_bank$Sep2_prop),mean(gh_bank$Oct2_prop),mean(gh_bank$Nov2_prop), 
+    mean(gh_bank$Dec2_prop),mean(gh_bank$Jan2_prop),mean(gh_bank$Feb2_prop),
+    mean(gh_bank$Mar2_prop))
+
+#Make months
+months=c('Sep21','Oct21','Nov21','Dec21','Jan22','Feb22','Mar22','Apr22',
+         'May22','Jun22','Jul22','Aug22',
+         'Sep22','Oct22','Nov22','Dec22','Jan23','Feb23','Mar23')
+```
+
+##Summarize rain data
+```{r}
+rain_sum<-rain_data%>% 
+  group_by(MonthNum,Year)%>%
+  summarise(sum=sum(Rainfallmm))
+#View(rain_sum)
+
+rain_sum<-rain_sum[order(rain_sum$Year,rain_sum$MonthNum),]
+
+
+rain<-c(rain_sum$sum[c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)])
+```
+
+##Combine data into new datafram
+Reorder the months
+```{r}
+gh_bank_summary<-data.frame(prop_means,months,rain)
+#View(gh_bank_summary)
+
+gh_bank_summary$months<-ordered(gh_bank_summary$months, levels=c('Sep21','Oct21','Nov21','Dec21','Jan22','Feb22','Mar22','Apr22','May22','Jun22','Jul22','Aug22',                                                        'Sep22','Oct22','Nov22','Dec22','Jan23','Feb23','Mar23'))
+```
+
+#Figure with two y-axis (only data with 200 seeds)
+```{r}
+#set the scale for the right y-axis to 250
+scale <- 250
+
+gh_bank_gg<-ggplot(data=gh_bank_summary,
+                   aes(x=months,
+                       y=prop_means))+
+  geom_line(group=1,
+            color="forestgreen",
+            size=1.2)+
+  geom_point(size=3,
+             color="forestgreen")+
+  xlab("Months")+
+  ylab("Proportion Germinated")+
+  scale_y_continuous(limits=c(0,1),
+                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0),
+                     sec.axis=sec_axis(~.*scale,name="Rainfall (mm)"))+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"),
+        legend.position=c(0.8, 0.4))+
+  geom_bar(data=gh_bank_summary,
+  aes(x=months,
+  y=rain/scale),
+         stat="identity",
+         fill="blue",
+         alpha=0.5)
+gh_bank_gg
+
+ggsave(plot=gh_bank_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/gh_bank_gg.png",width=25,height=15,units="cm",dpi=800)
+```
