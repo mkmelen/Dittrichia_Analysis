@@ -1,0 +1,168 @@
+---
+title: "greenhouse_competition"
+output: html_notebook
+---
+
+Calculate LRR of biomass in greenhouse_competition_fieldsoil.csv
+
+
+```{r}
+library(tidyverse)
+
+gh <- read_csv("../data/greenhouse_competition/greenhouse_competition_fieldsoil.csv")
+```
+
+```{r}
+gh_no_comp <- gh %>% 
+  select(Site, Block, Habitat, Competition, Dittrichia_biomass) %>% 
+  filter(Competition == "None") %>% 
+  select(-Competition) %>% 
+  rename("Divide_val"="Dittrichia_biomass")
+
+gh_lrr <- left_join(gh, gh_no_comp, by=c("Site", "Block", "Habitat")) %>% 
+  filter(Competition != "None") %>% 
+  filter(!is.na(Dittrichia_biomass))# filter out dead Festuca
+
+# count number of obsevations per group
+gh_group_count <- gh_lrr %>% 
+  group_by(Site, Habitat, Competition) %>% 
+  count() %>% 
+  ungroup()
+
+# calculate average
+gh_lrr_calc <- left_join(gh_lrr, gh_group_count) %>% 
+  mutate(LRR = log(as.numeric(Dittrichia_biomass)/as.numeric(Divide_val)), .after=Dittrichia_biomass) %>% 
+  group_by(Site, Habitat, Competition) %>% 
+  mutate(Average_LRR = sum(as.numeric(LRR))/n, .after=LRR)
+
+# calculate SD and SE
+gh_lrr_stats <- gh_lrr_calc %>% 
+  group_by(Site, Habitat, Competition) %>% 
+  summarise(SD=sd(LRR),
+            N=length(LRR))%>%
+  mutate(SE=SD/sqrt(N))
+
+# bind final table
+gh_lrr_done <- left_join(gh_lrr_calc, gh_lrr_stats)
+
+
+```
+
+
+Plotting
+
+```{r}
+pd<-position_dodge(0.1)
+
+gh_lrr_gg <- ggplot(data=gh_lrr_done,
+                        aes(x=factor(Habitat,levels=c("Roadside", "Vegetated")),
+                            y=Average_LRR,
+                            group=Site,
+                            color=Site))+
+  ylab("LRR against competitor")+
+  facet_grid(.~Competition)+
+  xlab("")+
+  ggtitle("")+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(linewidth=1,
+            position=pd)+
+  geom_point(size=3,
+             position=pd)+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Average_LRR-SE),
+                    ymax=(Average_LRR+SE)))
+gh_lrr_gg
+ggsave(plot=gh_lrr_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/gh_lrr_gg.png",width=25,height=20,units="cm",dpi=800)
+```
+
+
+```{r}
+pd<-position_dodge(0.1)
+
+gh_lrr_gg <- ggplot(data=gh_lrr_done,
+                        aes(x=factor(Habitat,levels=c("Roadside", "Vegetated")),
+                            y=Average_LRR,
+                            group=Site,
+                            color=Site))+
+  ylab("LRR against competitor")+
+  facet_grid(Competition~.)+
+  xlab("")+
+  ggtitle("")+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(linewidth=1,
+            position=pd)+
+  geom_point(size=3,
+             position=pd)+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Average_LRR-SE),
+                    ymax=(Average_LRR+SE)))
+gh_lrr_gg
+
+#ggsave(plot=gh_lrr_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/gh_lrr_gg.png",width=25,height=20,units="cm",dpi=800)
+```
+
+bromus only
+```{r}
+gh_lrr_brgg <- ggplot(data=gh_lrr_done %>% filter(Competition == "Bromus"),
+                        aes(x=factor(Habitat,levels=c("Roadside", "Vegetated")),
+                            y=Average_LRR,
+                            group=Site,
+                            color=Site))+
+  ylab("LRR against Bromus")+
+  xlab("")+
+#  ggtitle("Bromus: Average LRR by Habitat")+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(linewidth=1,
+            position=pd)+
+  geom_point(size=3,
+             position=pd)+
+  #scale_color_manual(values=c("gray85","forestgreen"))+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Average_LRR-SE),
+                    ymax=(Average_LRR+SE)))
+gh_lrr_brgg
+```
+
+festuca only
+
+```{r}
+gh_lrr_fgg <- ggplot(data=gh_lrr_done %>% filter(Competition == "Festuca"),
+                        aes(x=factor(Habitat,levels=c("Roadside", "Vegetated")),
+                            y=Average_LRR,
+                            group=Site,
+                            color=Site))+
+  ylab("LRR against Festuca")+
+  xlab("")+
+#  ggtitle("Festuca: Average LRR by Habitat")+
+  theme_bw(base_size=16)+
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"))+
+  geom_line(linewidth=1,
+            position=pd)+
+  geom_point(size=3,
+             position=pd)+
+  #scale_color_manual(values=c("gray85","forestgreen"))+
+  geom_errorbar(width=0.15,
+                position=pd,
+                aes(ymin=(Average_LRR-SE),
+                    ymax=(Average_LRR+SE)))
+gh_lrr_fgg
+```
+

@@ -81,7 +81,8 @@ library(patchwork)
 library(Sleuth2)
 ```
 
-#Load Data This dataframe has one row per pot (768 observations). Data
+#Load Data 
+This dataframe has one row per pot (768 observations). Data
 are Dittrichia_biomass and Grass_biomass, both measured in grams, and
 DittrichiaLLL_mm_3 which is the longest leaf length in mm. NAs in
 columns are "no data" because there was no grass present in that pot at
@@ -698,3 +699,18 @@ comp_int_grow_field_gg
 
 #ggsave(plot=comp_int_grow_field_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/comp_int_grow_field_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
+#Load field soil data only
+```{r}
+mydata_field<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/greenhouse_competition/greenhouse_competition_fieldsoil.csv",stringsAsFactors=T)
+# change "NA" to "0"
+mydata_field1<-mydata_field %>% 
+  replace_na(list(Dittrichia_biomass=0,Grass_biomass=0,DittrichiaLLL_mm_3=0,GrassHeight_cm_3=0))
+mydata_field1$LRR_All<-as.numeric(mydata_field1$LRR_All)
+str(mydata_field1) #Check that each column has the right class (factor, integer, numeric, etc.)
+```
+
+##Summarize data
+```{r}
+
+```
+

@@ -1,8 +1,8 @@
 ---
 title: "seedbanks"
-author: Emma Gloudeman, Miranda Melen
-date: "2023-05-19"
 output: html_document
+author: Emma Gloudeman, Miranda Melen
+date: May 2023
 ---
 
 #Meta Data
@@ -78,7 +78,7 @@ gh_bank_gg<-ggplot(data=gh_bank_summary,
                        y=prop_means))+
   geom_line(group=1,
             color="forestgreen",
-            size=1.2)+
+            linewidth=1.2)+
   geom_point(size=3,
              color="forestgreen")+
   xlab("Months")+

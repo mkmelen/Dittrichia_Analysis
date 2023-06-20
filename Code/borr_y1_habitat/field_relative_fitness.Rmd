@@ -69,6 +69,7 @@ library(glmmTMB)
 library(MASS)
 library(emmeans)
 library(AICcmodavg)
+library(tidyverse)
 ```
 
 #Load Data
@@ -230,6 +231,11 @@ summary(growth_fullmodel4.1)
 emmeans(growth_fullmodel4.1,
         pairwise~Treatment)
 ```
+###Chapter 1 three panel figure
+```{r}
+
+```
+
 
 ###ggplot
 ####Interaction plot
@@ -273,7 +279,7 @@ field_int_bio_grow_gg<-ggplot(growth_mydata1,
                 position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))+
-  labs(y="*Dittrichia graveolens* Biomass (g)",
+  labs(y="*Dittrichia graveolens* \n Biomass (g)",
        color="Source Habitat",
        shape="Source Habitat")
 field_int_bio_grow_gg
@@ -757,8 +763,6 @@ field_int_surv_all_gg<-ggplot(data=surv_mydata2,
 field_int_surv_all_gg
 
 
-
-
 survival_gg<-ggplot(data=mydata,
        aes(x=factor(Treatment,levels=c("Grassland","Biomass Removal","Raking","Raking & Clipping","Hemizonia")),
            y=as.numeric(PropBudSite)))+
@@ -862,6 +866,7 @@ survival_auto
 
 ggsave(plot=survival_auto,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_auto.png",width=25,height=15,units="cm",dpi=800)
 ```
+
 Post hoc Tukey
 ```{r}
 summary(glht(cox_fullmodel4,mcp(Treatment="Tukey")))
@@ -907,6 +912,67 @@ autoplot(cox_model_graph3)+
         legend.title=element_text(face="bold",
                                   size=10))
 ```
+
+
+Plot by all treatments but not including Hemizonia
+```{r}
+#Filter the data using subset to remove Hemizonia from the dataframe, but it will remain in the metadata so we'll next use droplevels to reconcile the metadata and the dataframe to only have 4 levels
+filtered_data<-subset(mydata,Treatment!="Hemizonia")
+filtered_data$Treatment<-droplevels(filtered_data$Treatment)
+levels(filtered_data$Treatment)
+
+cox_model_graph3<-survfit(Surv(NumDaysAlive,CensorReproduction)~
+                            Treatment,
+                          data=filtered_data)
+
+survival_filtered<-autoplot(cox_model_graph3)+
+  labs(x="Days to Flowering",
+       y="Proportion Alive",
+       title="")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",size=20),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=20),
+        legend.title=element_text(face="bold",
+                                  size=12))
+        #scale_fill_discrete(name="Treatment")
+survival_filtered
+
+ggsave(plot=survival_filtered,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/survival_filtered.png",width=25,height=15,units="cm",dpi=800)
+
+cox_simple_flower<-coxph(Surv(NumDaysAlive,CensorReproduction)~
+                        Treatment,
+                      data=filtered_data)
+summary(cox_simple_flower)
+
+cox_full_flower<-coxme(Surv(NumDaysAlive,CensorReproduction)~
+                        Treatment+
+                        (1|Block),
+                      data=filtered_data)
+summary(cox_full_flower)
+
+anova(cox_simple_flower,cox_full_flower)
+AIC(cox_simple_flower,cox_full_flower) #use the full model, it has the lower AIC score
+```
+
+#Using Patchwork to put three graphs together
+```{r}
+multi_panel_gg<-(field_int_rate_grow_gg+theme(legend.position = c(0.9,1)))/
+  (field_int_surv_all_gg+theme(legend.position = "none"))/
+  (field_int_bio_grow_gg+theme(legend.position = "none"))+
+  plot_annotation(tag_levels = c("A"),
+                  tag_suffix = ")")&
+  theme(text=element_text(size=10))
+multi_panel_gg
+
+ggsave(plot=multi_panel_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/multi_panel_gg.png",width=15,height=25,units="cm",dpi=800)
+
+```
+
+
+
 
 #2022 data
 
@@ -1280,6 +1346,31 @@ p_values <- 2 * (1 - pnorm(abs(z_values)))
 # Print the calculated z and p values
 z_values
 p_values
+
+1-exp(coef(cox_full_water1))
+
+
+cox_full_water_notreatment<-coxme(Surv(NumDaysAlive,Censor)~
+                                    Competition+
+                                    (1|Plot),
+                                  data=water_calc)
+
+cox_full_water_nocompetition<-coxme(Surv(NumDaysAlive,Censor)~
+                                      Treatment+
+                                      (1|Plot),
+                                    data=water_calc)
+
+anova(cox_full_water1,cox_full_water_notreatment) # effect of treatment (using cox_full_water1 here assuming you have no interaction effect)
+
+anova(cox_full_water1,cox_full_water_nocompetition) # effect of competition
+
+#Now if you want to do a post-hoc test of your different Treatment levels, you can use this:
+
+library(multcomp)
+
+summary(glht(cox_full_water1, mcp(Treatment="Tukey"))) # for treatment
+
+summary(glht(cox_full_water1, mcp(Competition="Tukey"))) # for competition – you have only 2 levels so this should give you the same result as the main effect.
 ```
 
 Now we can compare the models to see which model is best
@@ -1292,4 +1383,7 @@ AIC(cox_simp_shade,cox_full_shade) #But comparing the AIC scores is easiest. Kee
 
 anova(cox_simp_water,cox_full_water1,cox_full_water) 
 AIC(cox_simp_water,cox_full_water1,cox_full_water) #But comparing the AIC scores is easiest. Use the middle model (cox_full_water1) with the lowest AIC.
+
+anova(cox_full_water,cox_full_water1)
+summary(glht(cox_full_water, mcp(Competition:Treatment="Tukey")))
 ```
