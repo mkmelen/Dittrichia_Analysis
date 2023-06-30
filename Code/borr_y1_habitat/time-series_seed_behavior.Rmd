@@ -3,6 +3,7 @@ title: "time-series seed behavior"
 output: html_notebook
 date: May 2023
 author: Miranda Melen
+contributors: Laura Goetz, Matt Kustra
 ---
 
 #Libraries
@@ -17,6 +18,8 @@ library(ggplot2)
 library(tidyr)
 library(stringr)
 library(scales)
+library(survival)
+library(coxme)
 ```
 
 #Load Data
@@ -31,9 +34,189 @@ myFPdata$DishNum<-as.factor(myFPdata$DishNum)
 str(myFPdata) #Check that each column has the right class (factor, integer, numeric, etc.)
 ```
 
+#Histograms
+```{r}
+#All data
+hist(myFPdata$DaysToGerm,col='steelblue',main='Original')
+```
 
-##Proportion Germinated x Time with Habitat and Treatment (data pooled by dish) <-- THIS CODE WORKS
+#Cox Model
+Start by making a simple model with no random effects. This will be compared to the full model with random effects.
+##Simple Model
+```{r}
+simplemodel1<-coxph(Surv(DaysToGerm,
+                         Censor)~
+                      Habitat,
+                    data=myFPdata)
+#summary(simplemodel1)
+#print(simplemodel1)
+#predict(simplemodel1)
+hist(predict(simplemodel1))
+```
 
+##Full Model 1 - coxme
+Now make a full model using random effects
+```{r}
+fullmodel1<-coxme(Surv(DaysToGerm,
+                       Censor)~
+                    Habitat
+                    +(1|Site/Population/DishNum),
+                  data=myFPdata)
+#summary(fullmodel1)
+#print(fullmodel1)
+#predict(fullmodel1)
+hist(predict(fullmodel1))
+```
+
+Now we can compare the models to see which model is best
+```{r}
+anova(simplemodel1,fullmodel1) #There is a significance between models
+AIC(simplemodel1,fullmodel1) #But comparing the AIC scores is easiest. Keep the lower AIC score because that is considered the better model. The full model (fullmodel1) is best
+```
+
+##Best Model
+```{r}
+fullmodel1<-coxme(Surv(DaysToGerm,Censor)~
+                    Habitat+
+                    (1|Site/Population/DishNum),
+                  data=myFPdata)
+summary(fullmodel1)
+```
+
+###Risk Assessment
+These values are found in the model summary, but if you want to pull them out, here is how you interpret them.
+```{r}
+#1 = no effect, <1 = decreased risk of death, >1 = increased risk of death.
+
+exp(coef(fullmodel1)) #When we run this, vegetated is just below 1, which means that vegetated has an ever so slight decrease in germination compared to roadside.
+
+#Here we pull the std dev of the random effects which works like the fixed effect coefficients to calculate risk.
+exp(ranef(fullmodel1)$Site) # Pretty even among all the sites
+```
+
+#ggplots
+##Filter Paper: Proportion Germinated x Time with Habitat and Treatment (data pooled by dish)
+```{r}
+myFPdata1<-myFPdata%>%
+  filter(DaysToGerm!=0)%>% #our real data has some zeros because some seeds didn't germinate, but we need those to be removed since they are not real zeros
+  mutate(type=c("real")) #here we add a column identifies our real
+
+germ_rate2.0<-myFPdata1%>% 
+  group_by(DishNum,GermDate,Habitat,Treatment,DaysToGerm)%>%
+  summarize(NumGerm=n(),PropGerm=NumGerm/10)%>% 
+  mutate(PlotTreatment=paste(Habitat,Treatment,sep="/"))%>% #create a new column called PlotTreatment combining Habitat and Treatment with a / to separate
+  group_by(DishNum)%>% 
+  mutate(CumPropGerm=cumsum(PropGerm))
+
+#make empty data frame to fill with closest or actual number
+germ_rate2.1<-data.frame(PlotTreatment="blank",
+                      DaysToGerm=c(rep(seq(1,12,1),80)), #why was this 40? doesn't seem to do anything
+                      DishNum=rep(seq(1,80,1),each=12), #changed from 1,160,1 to 1,80,1 because now I only have 80 dishes (10 seeds each, total 800 seeds)
+                      PropGerm=0,CumPropGerm=0)
+
+#germ_rate2.1<-
+germ_rate2.1%>% #is this assignment necessary?
+  filter(germ_rate2.1$DishNum%in%germ_rate2.0$DishNum) #actually prefilter dish numbers by comparing germ_rate2.0 and germ_rate2.1 and only keeping the rows that match by DishNum
+
+#for loop to fill in missing data, may take a bit, warnings are just about making empty data frame
+for (i in 1:nrow(germ_rate2.1)){
+  #first check if the dish number is in the data set
+  if(germ_rate2.1$DishNum[i]%in%germ_rate2.0$DishNum){
+    #make temporary data frame of the data set of dish
+    temp<-germ_rate2.0%>%
+      filter(DishNum==germ_rate2.1$DishNum[i])%>%#first filter for the right dish
+      mutate(diff=DaysToGerm-as.numeric(germ_rate2.1$DaysToGerm[i]))
+    #now filter for specific day
+    filltemp<-temp%>% #subtract day
+      filter(diff<=0)%>% #filter for either earlier or same day
+      filter(diff==max(diff))#filter for exact match or closest
+    if(nrow(filltemp)>0){#check if it is empty data frame, meaning no close day
+      germ_rate2.1[i,]<-c(filltemp$PlotTreatment,germ_rate2.1$DaysToGerm[i],germ_rate2.1$DishNum[i],filltemp$PropGerm,filltemp$CumPropGerm)
+    }else{
+    germ_rate2.1[i,]<-c(temp$PlotTreatment[1],germ_rate2.1$DaysToGerm[i],germ_rate2.1$DishNum[i],0,0)
+  }}
+  else{#if there is no data for the dish just skip.
+    next
+  }
+}
+
+#we want the graph to start at zero, but the data starts on day 2, so here we create fake data for the line to use
+fakedataFP<-data.frame(PlotTreatment=c("Roadside/Filter","Vegetated/Filter"),
+                      DaysToGerm=c(0),
+                      DishNum=c(0),
+                      PropGerm=c(0),
+                      CumPropGerm=c(0),
+                      type=c("fake"))
+
+fakedataFP$DaysToGerm<-as.character(fakedataFP$DaysToGerm)
+fakedataFP$DishNum<-as.character(fakedataFP$DishNum)
+fakedataFP$PropGerm<-as.character(fakedataFP$PropGerm) 
+fakedataFP$CumPropGerm<-as.character(fakedataFP$CumPropGerm)
+fakedataFP$type<-as.character(fakedataFP$type)
+germ_rate2.1$DaysToGerm<-as.character(germ_rate2.1$DaysToGerm)
+germ_rate2.1$DishNum<-as.character(germ_rate2.1$DishNum)
+germ_rate2.1$PropGerm<-as.character(germ_rate2.1$PropGerm) 
+germ_rate2.1$CumPropGerm<-as.character(germ_rate2.1$CumPropGerm)
+
+#put real data and fake data together
+germ_rate2.2<-germ_rate2.1%>%
+  mutate(type=c("real"))%>% #here we add a column to identify our real data
+  bind_rows(fakedataFP) #now we add our fake data so that we have one dataframe with real and fake data (labeled, of course)
+
+germ_rate2.2$CumPropGerm<-as.numeric(germ_rate2.2$CumPropGerm)
+
+germ_rate2.2<-germ_rate2.2%>% 
+  group_by(type,DaysToGerm,PlotTreatment)%>%
+  summarize(mean_CumPropGerm=mean(CumPropGerm,
+                               na.rm=TRUE),
+            sd_prop=sd(CumPropGerm,na.rm=TRUE),
+            se_prop=sd_prop/sqrt(80))%>% #I'm not sure this 40 makes sense for calculating SE so its changed to 80 sample size
+  mutate(DaysToGerm=as.numeric(DaysToGerm))
+ 
+germ_rate2.2_gg<-ggplot(germ_rate2.2, #making a graph with ggplot
+                      aes(x=DaysToGerm, #variable for x-axis
+                          y=mean_CumPropGerm, #variable for y-axis
+                          color=PlotTreatment, #how colors should be assigned
+                          shape=PlotTreatment))+ #how shapes should be assigned
+  geom_line(linewidth=0.5)+ #now we make the line
+  geom_point(aes(size=type))+ #now we add the data points
+  geom_errorbar(aes(ymin=mean_CumPropGerm-se_prop,
+                    ymax=mean_CumPropGerm+se_prop),
+                width=0.2,
+                size=0.5,
+  #              color="gray58",
+                position=position_dodge(width=0.0,))+
+  theme_bw(base_size=16)+ #theme and base_size is the font size for labels
+  theme(panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        axis.line=element_line(colour="black"),
+        legend.position = c(0.8, 0.3))+ #position of our legend
+  scale_y_continuous(name="Proportion Germinated", #y-axis: title
+                     limits=c(0,1), #y-axis: range
+                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+ #y-axis: manual incremental breaks
+  scale_x_continuous(name="Days to Germination", #x-axis: title
+                     limits=c(0,12), #x-axis: range
+                     breaks=seq(0,12,1))+ #x-axis: incremental breaks by giving range and requesting a sequence by 1
+  scale_size_manual(values=c(0,4), #second number controls the size of the point
+                    guide="none")+
+  scale_color_manual(values=c("gray85","forestgreen"),
+                    labels=c("Roadside","Vegetated"))+ #colors assigned in order of the legend
+#  scale_shape_manual(values=c(19,17,19),
+  scale_shape_manual(values=c(16,2),
+                    labels=c("Roadside","Vegetated"))+
+    labs(y="Proportion Germinated",
+       fill="Source Habitat",
+       color="Source Habitat",
+       shape="Source Habitat")+
+  guides(colour=guide_legend(override.aes=list(size=4)),
+         shape=guide_legend(override.aes=list(size=4)))
+germ_rate2.2_gg
+
+ggsave(plot=germ_rate2.2_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate2.2_gg.png",width=25,height=15,units="cm",dpi=800)
+```
+
+##Soil Data: Proportion Germinated x Time with Habitat and Treatment (data pooled by dish)
 ```{r}
 mydata1<-mydata%>%
   filter(DaysToGerm!=0)%>% #our real data has some zeros because some seeds didn't germinate, but we need those to be removed since they are not real zeros
@@ -144,121 +327,7 @@ germ_rate1.2_gg
 #ggsave(plot=germ_rate1.2_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate1.2_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
-##Filter Paper: Proportion Germinated x Time with Habitat and Treatment (data pooled by dish) <-- THIS CODE WORKS
-
-```{r}
-myFPdata1<-myFPdata%>%
-  filter(DaysToGerm!=0)%>% #our real data has some zeros because some seeds didn't germinate, but we need those to be removed since they are not real zeros
-  mutate(type=c("real")) #here we add a column identifies our real
-
-germ_rate2.0<-myFPdata1%>% 
-  group_by(DishNum,GermDate,Habitat,Treatment,DaysToGerm)%>%
-  summarize(NumGerm=n(),PropGerm=NumGerm/10)%>% 
-  mutate(PlotTreatment=paste(Habitat,Treatment,sep="/"))%>% #create a new column called PlotTreatment combining Habitat and Treatment with a / to separate
-  group_by(DishNum)%>% 
-  mutate(CumPropGerm=cumsum(PropGerm))
-
-#make empty data frame to fill with closest or actual number
-germ_rate2.1<-data.frame(PlotTreatment="blank",
-                      DaysToGerm=c(rep(seq(1,12,1),40)),
-                      DishNum=rep(seq(1,160,1),each=12),
-                      PropGerm=0,CumPropGerm=0)
-
-germ_rate2.1<-germ_rate2.1%>%
-  filter(germ_rate2.1$DishNum%in%germ_rate2.0$DishNum) #actually prefilter dish numbers
-
-#for loop to fill in missing data, may take a bit, warnings are just about making empty data frame
-for (i in 1:nrow(germ_rate2.1)){
-  #first check if the dish number is in the data set
-  if(germ_rate2.1$DishNum[i]%in%germ_rate2.0$DishNum){
-    #make temporary data frame of the data set of dish
-    temp<-germ_rate2.0%>%
-      filter(DishNum==germ_rate2.1$DishNum[i])%>%#first filter for the right dish
-      mutate(diff=DaysToGerm-as.numeric(germ_rate2.1$DaysToGerm[i]))
-    #now filter for specific day
-    filltemp<-temp%>% #subtract day
-      filter(diff<=0)%>% #filter for either earlier or same day
-      filter(diff==max(diff))#filter for exact match or closest
-    if(nrow(filltemp)>0){#check if it is empty data frame, meaning no close day
-      germ_rate2.1[i,]<-c(filltemp$PlotTreatment,germ_rate2.1$DaysToGerm[i],germ_rate2.1$DishNum[i],filltemp$PropGerm,filltemp$CumPropGerm)
-    }else{
-    germ_rate2.1[i,]<-c(temp$PlotTreatment[1],germ_rate2.1$DaysToGerm[i],germ_rate2.1$DishNum[i],0,0)
-  }}
-  else{#if there is no data for the dish just skip.
-    next
-  }
-}
-
-#we want the graph to start at zero, but the data starts on day 2, so here we create fake data for the line to use
-fakedataFP<-data.frame(PlotTreatment=c("Roadside/Filter","Vegetated/Filter"),
-                      DaysToGerm=c(0),
-                      DishNum=c(0),
-                      PropGerm=c(0),
-                      CumPropGerm=c(0),
-                      type=c("fake"))
-
-fakedataFP$DaysToGerm<-as.character(fakedataFP$DaysToGerm)
-fakedataFP$DishNum<-as.character(fakedataFP$DishNum)
-fakedataFP$PropGerm<-as.character(fakedataFP$PropGerm) 
-fakedataFP$CumPropGerm<-as.character(fakedataFP$CumPropGerm)
-fakedataFP$type<-as.character(fakedataFP$type) 
-
-#put real data and fake data together
-germ_rate2.2<-germ_rate2.1%>%
-  mutate(type=c("real"))%>% #here we add a column to identify our real data
-  bind_rows(fakedataFP) #now we add our fake data so that we have one dataframe with real and fake data (labeled, of course)
-
-germ_rate2.2$CumPropGerm<-as.numeric(germ_rate2.2$CumPropGerm)
-
-germ_rate2.2<-germ_rate2.2%>% 
-  group_by(type,DaysToGerm,PlotTreatment)%>%
-  summarize(mean_CumPropGerm=mean(CumPropGerm,
-                               na.rm=TRUE),
-            sd_prop=sd(CumPropGerm,na.rm=TRUE),
-            se_prop=sd_prop/sqrt(40))%>% 
-  mutate(DaysToGerm=as.numeric(DaysToGerm))
- 
-germ_rate2.2_gg<-ggplot(germ_rate2.2, #making a graph with ggplot
-                      aes(x=DaysToGerm, #variable for x-axis
-                          y=mean_CumPropGerm, #variable for y-axis
-                          color=PlotTreatment, #how colors should be assigned
-                          shape=PlotTreatment))+ #how shapes should be assigned
-  geom_line(linewidth=0.5)+ #now we make the line
-  geom_point(aes(size=type))+ #now we add the data points
-  geom_errorbar(aes(ymin=mean_CumPropGerm-se_prop,
-                    ymax=mean_CumPropGerm+se_prop),
-                width=0.2,
-                size=0.5,
-                color="gray58",
-                position=position_dodge(width=0.15,))+
-  theme_bw(base_size=16)+ #theme and base_size is the font size for labels
-  theme(panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),
-        axis.line=element_line(colour="black"),
-        legend.position = c(0.8, 0.3))+ #position of our legend
-  scale_y_continuous(name="Proportion Germinated", #y-axis: title
-                     limits=c(0,1), #y-axis: range
-                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+ #y-axis: manual incremental breaks
-  scale_x_continuous(name="Days to Germination", #x-axis: title
-                     limits=c(0,12), #x-axis: range
-                     breaks=seq(0,12,1))+ #x-axis: incremental breaks by giving range and requesting a sequence by 1
-  scale_size_manual(values=c(0,5), #second number controls the size of the point
-                    guide="none")+
-  scale_color_manual(values=c("gray85","forestgreen"))+ #colors assigned in order of the legend
-  scale_shape_manual(values=c(19,17))+
-    labs(y="Proportion Germinated",
-       fill="Source Habitat",
-       color="Source Habitat",
-       shape="Source Habitat")
-germ_rate2.2_gg
-
-#ggsave(plot=germ_rate1.2_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate1.2_gg.png",width=25,height=15,units="cm",dpi=800)
-```
-
-
-
-##Proportion Germinated x Time with Habitat (data pooled by dish)
+##Soil Data: Proportion Germinated x Time with Habitat (data pooled by dish)
 
 ```{r}
 mydata1<-mydata%>%
@@ -373,7 +442,7 @@ germ_rate2.2_gg
 #ggsave(plot=germ_rate2.2_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/germ_rate2.2_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
-##Proportion Germinated x Time with Treatment (data pooled by dish)
+##Soil Data: Proportion Germinated x Time with Treatment (data pooled by dish)
 
 ```{r}
 mydata1<-mydata%>%

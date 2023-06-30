@@ -3,7 +3,7 @@ title: "Relative fitness in a field setting - Figure 4 (Evolution MS)"
 output: html_notebook
 date: December 2022
 author: Miranda Melen
-contributors: Laura Goetz, Matt Kustra, Nicky Lustenhouwer
+contributors: Laura Goetz, Matt Kustra, Julia Harenčár, and Nicky Lustenhouwer
 ---
 #Background
 At Blue Oak Ranch Reserve, we established a 10m x 26m fenced field site to test whether evolution over the course of invasion away from roads has resulted in enhanced performance in undisturbed vegetation relative to roadside populations. The experiment was replicated in a randomized block design (20 plots in total). Each plot was 1.5m2 with 16 D. graveolens growing in a 4 x 4 grid centered on the plot. There was 33cm between each plant and 25cm between the edge plants and the border of the plot.
@@ -16,15 +16,6 @@ We measured the longest leaf for each plant and then transplanted them into the 
 
 #Data Analysis
 Statistical analyses were performed in R version 4.2.1 (R Core Team 2022) using linear mixed-effects models with the lme4 (Bates et al. 2015), lmerTest (Kuznetsova et al. 2017), and DHARMa packages (Hartig 2022), generalized linear mixed models with the glmmTMB package (Brooks et al. 2017), and mixed effects cox models with the coxme (Therneau 2022a) and survival (Therneau 2022b) packages.
-
-
-
-
-
-  
-##Generalized linear mixed models
-under construction
-
 
 #Libraries
 ```{r}
@@ -64,113 +55,142 @@ library(tidyverse)
 ```
 
 #Load Data
-This dataframe has one row per plant (800 observations). Data are for survivorship curves (3 censor options), the number of days the plant stayed alive (NumDaysAlive) and aboveground biomass. Censors with a 1 denote reaching the event (CensorAll = died, CensorBiomass = survived to collect biomass, CensorReproduction = survived to reproduce) and a 0 denoting when a seed didn't germinate by the last census date (Census = 11/15/21). CensorReproduction will be most useful in understanding the amount of biomass produced by an individual when buds appear.
+This dataframe has one row per plant (320 observations). Data are for survivorship curves (3 censor options), the number of days the plant stayed alive (NumDaysAlive) and aboveground biomass. Censors with a 1 denote reaching the event (CensorAll = died, CensorBiomass = survived to collect biomass, CensorReproduction = survived to reproduce) and a 0 denoting when a seed didn't germinate by the last census date (Census = 11/15/21). CensorReproduction will be most useful in understanding the amount of biomass produced by an individual when buds appear.
 ```{r}
-mydata-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/field_relative_fitness/field_relative_fitness_2021.csv",stringsAsFactors=T)
+mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/field_relative_fitness/MS_Evolution_Fig4_2021.csv",stringsAsFactors=T)
 str(mydata) #Check that each column has the right class (factor, integer, numeric, etc.)
 mydata$Site<-as.character(mydata$Site)
 mydata$Treatment<-factor(mydata$Treatment,
-                         levels=c("Grassland","Biomass Removal","Hemizonia","Raking","Raking & Clipping")) #Changing the contrast order so that everything is compared to Grassland (control)
+                         levels=c("Grassland","Biomass Removal")) #Changing the contrast order so that everything is compared to Grassland (control)
 ```
 
 #Early Growth
 This code uses Growth data with Habitat (roadside and vegetated) and Treatment in a glmm model. Anova and Tukey tests are used on the successful Model4 with the creation of a box plot as a finished product.
 
-Note: 10 blocks, 5 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and vegetated; R or O)
+Note: 10 blocks, 2 treatments, 16 populations (CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and vegetated; R or O)
 
-Also Note: Growth data is a measure of growth of longest leaf. Each plant was measured upon transplanting into the field in March and then again in June 2021. This plant has a juvenile stage of a basal rosette, and then it bolts and produced smaller cauline leaves. The goal was to capture early growth data for this plant before bolting occurs so that the measurements capture the basal rosette stage, however in some cases the plants bolted earlier than expected and the resulting measurement was smaller than previous. In these cases we determined that the data should be removed from the dataset as the negative number (or changing it to a zero) does not reflect the biological importance of the measurement.
+Also Note: Growth data is a measure of growth of longest leaf. Each plant was measured upon transplanting into the field in March and then again in May 2021. This plant has a juvenile stage of a basal rosette, and then it bolts and produced smaller cauline leaves. The goal was to capture early growth data for this plant before bolting occurs so that the measurements capture the basal rosette stage, however in some cases the plants bolted earlier than expected and the resulting measurement was smaller than previous. In these cases we determined that the data should be removed from the dataset as the negative number (or changing it to a zero) does not reflect the biological importance of the measurement.
 
 Here we need to filter the data to remove Growth>0 and to convert plant measurement dates to date format
 ```{r}
 growth_mydata<-mydata%>%filter(Growth>0) #Here I am only looking at the Growth data that is greater than 0 (see Also Note above)
 growth_mydata$PlantDate<-as.Date(growth_mydata$PlantDate,"%m/%d/%y") 
-growth_mydata$Num.Days.Growth<-as.Date("2021-05-22")-growth_mydata$PlantDate
+
+growth_mydata$Num.Days.Growth<-as.Date("2021-05-22")-growth_mydata$PlantDate #number days
 growth_mydata$Num.Days.Growth<-as.numeric(growth_mydata$Num.Days.Growth)
-growth_mydata$Growth.Rate<-growth_mydata$Growth/growth_mydata$Num.Days.Growth #First calculate number of days of growth to get the Rate (Growth/Num.Days.Growing). Then fit data to Beta distribution
+growth_mydata$Growth.Rate<-growth_mydata$Growth/growth_mydata$Num.Days.Growth #First calculate number of days of growth to get the Rate 
 ```
 
 ##Histograms
 ###Original data
-When we plot the original data as a histogram, we find that it is skewed. We also want to test for normality by using the Shapiro-Wilk normality test.
+When we plot the original data as a histogram, we find that it is skewed. We also use the Shapiro-Wilk normality test, but get a p-value = 1.402e-05.
 
-The Shapiro-Wilk normality test is used to assess whether a dataset follows a normal distribution. In the provided output, the test statistic (W) is 0.90445 and the p-value is less than 2.2e-16.
-
-In statistical hypothesis testing, a common significance level (alpha) is set at 0.05. If the p-value is less than alpha (p-value < alpha), it suggests strong evidence against the null hypothesis. In this case, the p-value is extremely small (less than 2.2e-16), indicating very strong evidence against the null hypothesis.
+In statistical hypothesis testing, a common significance level (alpha) is set at 0.05. If the p-value is less than alpha (p-value < alpha), it suggests strong evidence against the null hypothesis. In this case, the p-value is extremely small (less than 1.402e-05), indicating very strong evidence against the null hypothesis.
 
 Therefore, based on the given output, it can be concluded that the dataset did not pass the Shapiro-Wilk normality test. The data is unlikely to follow a normal distribution. Let's consider log transforming the data.
-```{r eval=FALSE, include=FALSE}
+```{r}
 hist(growth_mydata$Growth.Rate,
-     col='steelblue',main='Original') 
+     col='steelblue',
+     main='Original') 
 shapiro.test(growth_mydata$Growth.Rate)
 ```
 
 ###Log transform data
 (https://www.statology.org/transform-data-in-r/)
-When we log transform the data and plot using a histogram, the data looks better than the original distribution, but we need to still test for normalicy with a Shapiro-Wilk normality test. Here we find that the data are not normally distributed because the p-value = 1.503e-15.
-```{r eval=FALSE, include=FALSE}
+When we log transform the data and plot using a histogram, the data does not look, but we need to still test for normalicy with a Shapiro-Wilk normality test. Here we find that the data are not normally distributed because the p-value = 7.398e-14.
+```{r}
 log_growth_mydata<-log10(growth_mydata$Growth.Rate)
 hist(log_growth_mydata,
-     col='steelblue',main='Log Transformed') #Log transformed data, this looks better than the original distribution
+     col='steelblue',main='Log Transformed') #Log transformed data does not look good at all!
 shapiro.test(log_growth_mydata) #Data does not improve with log transformation
+
+qqnorm(log_growth_mydata) #qqplot
+qqline(log_growth_mydata) #add the line 
 ```
 
 ###Square root transform data
-This improved the distribution, but it failed the Shapiro-Wilk normality test (p-value = 7.695e-05). Let's try it anyways with Model 1.
-```{r eval=FALSE, include=FALSE}
+This improved the distribution, but it failed the Shapiro-Wilk normality test (p-value = 0.001034). Let's try poisson.
+```{r}
 sqrt_growth_mydata<-sqrt(growth_mydata$Growth.Rate)
 hist(sqrt_growth_mydata,
-     col='steelblue',main='Log Transformed') #Square root transformed data looks better than the original distribution
+     col='steelblue',main='Square Root Transformed') #Square root transformed data looks better than the original distribution
 shapiro.test(sqrt_growth_mydata)
+
+qqnorm(sqrt_growth_mydata) #qqplot
+qqline(sqrt_growth_mydata) #add the line 
+```
+
+###Poisson distribution
+Poisson is actually not a good fit because the growth rate is not an integer (has decimals), which poisson is not equipt to deal with. Maybe I'll try gamma?
+```{r}
+library(MASS)
+MASS::fitdistr((growth_mydata$Growth.Rate*1000),
+               "Poisson")
+qqPlot(growth_mydata$Growth.Rate,
+       distribution="pois",
+       lambda=1)
+```
+
+###Gamma distribution
+Nope, not gamma
+```{r}
+gamma<-fitdistr(growth_mydata$Growth.Rate,
+                "gamma")
+qqp(growth_mydata$Growth.Rate,
+    "gamma",
+    shape=gamma$estimate[[1]],
+    rate=gamma$estimate[[2]])
 ```
 
 ##Models
-Linear Mixed Effects models are used for regression analyses involving dependent data. For a tutorial: https://doi.org/10.1177/2515245920960351
+###Full Model 1 - glmm
 
-fullmodel<-lmer(log(Biomass)~   #Response variable: biomass
-          Habitat*Treatment+    #Fixed effects and their interactions(*)
-          (1|Site)+(1|Block),   #Random effect with random intercept only
-          data=mydata)          #Dataframe
-          
-The linear mixed-effects model is a statistical model that incorporates both fixed effects (predictors) and random effects (grouping factors) to analyze data with hierarchical or clustered structures. It is particularly useful when dealing with correlated data, where observations within the same group may be more similar to each other than to observations from other groups.
+```{r}
+growth_fullmodel1<-glmmTMB(Growth.Rate~
+                             Habitat*Treatment+
+                             (1|Site)+
+                             (1|Block),
+                           family=Gamma(link="log"),
+                           data=growth_mydata) 
+summary(growth_fullmodel1)
+qqnorm(resid(growth_fullmodel1)) #qqplot
+qqline(resid(growth_fullmodel1)) #add the line
+testDispersion(growth_fullmodel1) #red line should be in the middle of the distribution
+myDHARMagraph_grow1<-simulateResiduals(growth_fullmodel1) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph_grow1) #plotting graph. Looks good, but check the outliers to make sure they are real.
+```
 
-The lmer() function allows you to specify a linear model formula, similar to the lm() function, with both fixed and random effects. It estimates the fixed effects coefficients and random effects variance components, allowing for the modeling of the relationship between the response variable and the predictors while accounting for the hierarchical structure of the data.
-
-The random effects in lmer() capture the variability between different groups or subjects and can account for correlations among observations within the same group. This makes it suitable for analyzing longitudinal or repeated measures data, clustered data, and nested data, among others.
-          
-###Model 1 - lmer: Modeling Habitat and Treatment with Site and Block as random effects
-For this first model, we use the sqrt data, but it fails the singularity test*. Further checking shows that Site as a random effect does not explain any of the variance in the model, therefore let's try Site as a fixed effect to see if it adds to the model.
-
-*The message "boundary (singular) fit: see help('isSingular')" typically indicates an issue with the model fit. It suggests that the model may be encountering singularity or perfect separation.
-
-Singularity refers to a situation where one or more predictor variables in the model are perfectly correlated or linearly dependent, leading to an unstable or unreliable estimation of the model parameters. Perfect separation occurs when a predictor variable or combination of variables can perfectly predict the outcome variable, resulting in infinite parameter estimates.
-
-To address this problem, you may need to review your model specification, check for collinearity among predictor variables, consider removing or transforming variables, or use alternative modeling techniques suited for dealing with singularity or separation issues.
-```{r eval=FALSE, include=FALSE}
-growth_fullmodel1<-lmer(sqrt(Growth.Rate)~
+###Full Model 2 - lmer
+```{r}
+growth_fullmodel2<-lmer(sqrt(Growth.Rate)~
                           Habitat*Treatment+
                           (1|Site)+
                           (1|Block),
                         data=growth_mydata)
-isSingular(growth_fullmodel1,
-           tol=1e-4) #=True
-summary(growth_fullmodel1) #Variance explained by Site = 0.000
-anova(growth_fullmodel1)
+isSingular(growth_fullmodel2,
+           tol=1e-4) #=False
+summary(growth_fullmodel2)
+anova(growth_fullmodel2)
+
+qqnorm(resid(growth_fullmodel2)) #qqplot
+qqline(resid(growth_fullmodel2)) #add the line
+testDispersion(growth_fullmodel2) #red line should be in the middle of the distribution
+myDHARMagraph_grow2<-simulateResiduals(growth_fullmodel2) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph_grow2) #plotting graph. At this point, you don't want any text or lines to be red. The QQ plots are not looking good for this model. Let's try fitting to a negative binomial distribution.
 ```
 
-###Model 2 - lmer: Modeling Site as a fixed effect and Block as a random effect
-Here we go back to using the log(Growth.Rate) data and find that Site as a fixed effect accounts for 3% of the variance. *** I'm not sure why I switched back to log, when my notes clearly show that log and sqrt both fail the Shapiro-Wilk test of normality
+###Other Model Attempts
+####lmer with log data
+Modeling Habitat and Treatment with Site and Block as random effects. For this  model, we use the log(Growth.Rate) data. The qqplot does not look good.
 ```{r eval=FALSE, include=FALSE}
 growth_fullmodel2<-lmer(log(Growth.Rate)~
                           Habitat*Treatment+
-                          Site+
+                          (1|Site)+
                           (1|Block),
                         data=growth_mydata)
-summary(growth_fullmodel2) #As a fixed effect, one of the Sites (OAP) is significant.
-anova(growth_fullmodel2) #Site as a fixed effect accounts for 3% of the variance
-```
+summary(growth_fullmodel2) #Site accounts for 1% of the variance
+anova(growth_fullmodel2)
 
-Now we'll look at the QQ plots and the residuals using DHARMa. The QQ plots are not looking good for this model because we don't want any text or lines to be red. So, the next step is to try fitting to a negative binomial distribution. So, we'll move on to Model 3.
-```{r eval=FALSE, include=FALSE}
 qqnorm(resid(growth_fullmodel2)) #qqplot
 qqline(resid(growth_fullmodel2)) #add the line
 testDispersion(growth_fullmodel2) #red line should be in the middle of the distribution
@@ -178,8 +198,8 @@ myDHARMagraph2<-simulateResiduals(growth_fullmodel2) #making a graph using DHARM
 plot(myDHARMagraph2) #plotting graph. At this point, you don't want any text or lines to be red. The QQ plots are not looking good for this model. Let's try fitting to a negative binomial distribution.
 ```
 
-###Model 3 - glmer.nb: Negative Binomial
-Here I tried fitting my data to a negative binomial distribution, but it throws an error that I haven't resolved. So this model isn't working well either. Let's try building a model and fitting it to a Beta distribution, first without a link function. Check it with DHARMa, and if it doesn't look good, then fit it to a Beta distribution with a logit link function.
+####glmer.nb: Negative Binomial
+Here I tried fitting my data to a negative binomial distribution, but my data are non-integer, so this model won't work. Let's try building a model and fitting it to a Beta distribution which can deal with non-integers (between 0 and 1), first without a link function. Check it with DHARMa, and if it doesn't look good, then fit it to a Beta distribution with a logit link function.
 
 fullmodel<-glmer.nb(Growth.Rate)~   #Response variable: growth rate
           Habitat*Treatment+        #Fixed effects and their interactions(*)
@@ -197,19 +217,11 @@ growth_fullmodel3<-glmer.nb(Growth.Rate~
                               Habitat*Treatment+
                               (1|Site)+
                               (1|Block),
-                            data=growth_mydata) #this barfs right now, not sure why
-isSingular(growth_fullmodel3,
-           tol=1e-4)
-#summary(growth_fullmodel3)
-#qqnorm(resid(growth_fullmodel3)) #qqplot
-#qqline(resid(growth_fullmodel3)) #add the line
-#testDispersion(growth_fullmodel3) #red line should be in the middle of the distribution
-#myDHARMagraph3<-simulateResiduals(growth_fullmodel3) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
-#plot(myDHARMagraph3) #plotting graph.The QQ plots are not looking good for this model.
+                            data=growth_mydata) #this barfs because I have non-integers - whoops!
 ```
 
-###Model 4 - glmm: Beta Distribution
-Now I'm using glmm because I'm fitting to other distributions (beta). The DHARMa package looks good after verifying the outliers make sense. This is now the Best Model for this data.
+####glmm: Beta Distribution
+Turns out this was also not helpful because beta distributions are for proportions, which this is not.But I'll keep this here for future reference.
 
 fullmodel<-glmmTMB(Growth.Rate~    #Response variable: growth rate
           Habitat*Treatment+       #Fixed effects and their interactions (*)
@@ -223,7 +235,8 @@ The glmmTMB() function allows you to specify a GLMM using a formula syntax simil
 
 The TMB framework implemented in glmmTMB utilizes efficient algorithms for model fitting and parameter estimation. It offers computational advantages, making it particularly useful for large datasets or models with complex structures. The package also provides functionality for handling zero-inflation, overdispersion, and handling non-Gaussian response distributions.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
+#this model didn't pan out because although my data is non-normal and non-integer, beta distributions are for proportional data, which growth rate is not. Scrap this idea too.
 growth_fullmodel4<-glmmTMB(Growth.Rate~
                              Habitat*Treatment+
                              (1|Site)+
@@ -251,26 +264,9 @@ growth_outlier_boxplot1
 
 max(growth_mydata$Growth.Rate[growth_mydata$Habitat=="Vegetated"])
 max(growth_mydata$Growth.Rate[growth_mydata$Habitat=="Roadside"]) #Yes, these outliers make sense, so I don't need to worry about the red stars in the DHARMa plot.
-```
 
-##Best Model: Early Growth
-Family: beta (logit)
-Formula: Growth.Rate ~ Habitat * Treatment + (1 | Site) + (1 | Block)
-Data: growth_mydata
+#Post-Hoc Test, but first remove non-significant interaction terms before running the Tukey.
 
-In the field experiment, source habitats (roadside and vegetated sites) did not differ for D. graveolens growth rate (Z = 0.73, P = 0.47, Figure 4A).  Although treatment had a strong effect on growth rate (Z = 10.66, P < 0.0001), there was no interaction between treatment and source habitat (Z = -0.172, P = 0.863).
-```{r}
-growth_fullmodel4<-glmmTMB(Growth.Rate~
-                             Habitat*Treatment+
-                             (1|Site)+
-                             (1|Block),
-                           family=beta_family(),
-                           data=growth_mydata)
-summary(growth_fullmodel4)
-```
-###Post-Hoc Test
-Remove non-significant interaction terms before running the Tukey.
-```{r}
 #?emmeans,emmeans(model,pairwise~treatment)
 growth_fullmodel4.1<-glmmTMB(Growth.Rate~
                                Treatment+
@@ -282,6 +278,17 @@ summary(growth_fullmodel4.1)
 emmeans(growth_fullmodel4.1,
         pairwise~Treatment)
 ```
+
+###Best Model
+```{r}
+growth_fullmodel2<-lmer(sqrt(Growth.Rate)~
+                          Habitat*Treatment+
+                          (1|Site)+
+                          (1|Block),
+                        data=growth_mydata)
+summary(growth_fullmodel2)
+```
+
 
 #Survival Analysis
 This code uses NumDaysAlive data with Habitat (roadside and vegetated) and Treatment in a Cox proportional hazards model to assess survival. Information here: https://cran.r-project.org/web/packages/coxme/vignettes/coxme.pdf. "Surv" creates a survival object to combine the days column (NumDaysAlive) and the reproductive censor column (ReproductionCensor) to be used as a response variable in a model formula. The model follows the same syntax as linear models (lm, lmer, etc). Fixed effects: "var1 * var2" will give you the interaction term and the individual variables: so "var1 + var2 + var1:var2". To add random effects, type "+ (1|random effect)". 
@@ -303,7 +310,7 @@ ggplot(mydata,
 ggplot(mydata,
        aes(x=NumDaysAlive))+
   geom_histogram()+
-  facet_wrap(vars(Treatment)) #Here we see that 4 of the treatments have the same bi-modal distribution and Biomass Removal is right skewed.
+  facet_wrap(vars(Treatment))
 ```
 
 ##Models
@@ -325,7 +332,7 @@ predict(cox_simplemodel1)
 hist(predict(cox_simplemodel1))
 ```
 
-###Full Model 1
+###Full Model 1 - coxme
 Now make a full model using random effects
 ```{r}
 cox_fullmodel1<-coxme(Surv(NumDaysAlive,CensorReproduction)~
@@ -345,7 +352,7 @@ anova(cox_simplemodel1,cox_fullmodel1)
 #See example: https://www.rdocumentation.org/packages/coxme/versions/2.2-16/topics/coxme
 AIC(cox_simplemodel1,cox_fullmodel1) #But comparing the AIC scores is easiest. Keep the lower AIC score because that is considered the better model. Here it is the fullmodel1.
 ```
-###Full Model 2
+###Full Model 2 - coxme
 Now, let's make a model with no interaction term and then we'll compare that to the fullmodel1 which was deemed the best above.
 ```{r}
 cox_fullmodel2<-coxme(Surv(NumDaysAlive,CensorReproduction)~
@@ -360,10 +367,10 @@ summary(cox_fullmodel2)
 Let's compare the the first two models to test for the significance of the term that is removed (using LR). Here we see that fullmodel2 has a lower AIC score so now it is the best model.
 ```{r}
 anova(cox_fullmodel1,cox_fullmodel2) #Not significant
-AIC(cox_fullmodel1,cox_fullmodel2) #Interaction term is not significant and the second model has a lower AIC score. So we can drop the interaction term and keep fullmodel2.
+AIC(cox_fullmodel1,cox_fullmodel2) #The AIC scores are within 2 points of each other, so we can keep the simpler model, which is fullmodel2.
 ```
 
-###Full Model 3
+###Full Model 3 - coxme
 So, now let's add in population nested under site as a random effect
 ```{r}
 cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~
@@ -381,7 +388,8 @@ anova(cox_fullmodel2,cox_fullmodel3) #Significant
 AIC(cox_fullmodel2,cox_fullmodel3) #Looks like fullmodel3 is the better model because of the lower AIC score
 ```
 
-##Best Model: Survival
+###Best Model
+The effect of source habitat was also not significant for the proportion of survival to bud (Z = -0.09, P = 0.93, Figure 4B). Again, the treatment effect was significant but not the interaction between treatment and source habitat (Z = 6.56, P < 0.0001).
 ```{r}
 cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~
                         Habitat+
@@ -392,17 +400,17 @@ cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~
 summary(cox_fullmodel3)
 ```
 
-###Risk Assessment
+####Risk Assessment
 These values are found in the model summary, but if you want to pull them out, here is how you interpret them.
 1 = no effect, <1 = decreased risk of death, >1 = increased risk of death.
 ```{r}
-exp(coef(cox_fullmodel3)) #This should be interpreted that Biomass Removal is almost 5% more likely to survive to reproduction compared to Control, and Raking + Clipping is about 2.5% more likely to survive to reproduction compared to Control.
+exp(coef(cox_fullmodel3)) #This should be interpreted that Biomass Removal is almost 9% more likely to survive to reproduction compared to Control.
 exp(ranef(cox_fullmodel3)$Block)
 exp(ranef(cox_fullmodel3)$Site) # Pretty even among all the sites
 Anova(cox_fullmodel3)
 ```
 
-Looks like roadside and vegetated populations are the same, so let's combine them together in a model (aka, removing the Habitat term)
+For the next manuscript: Looks like roadside and vegetated populations are the same, so let's combine them together in a model (aka, removing the Habitat term)
 ```{r}
 cox_fullmodel4<-coxme(Surv(NumDaysAlive,CensorReproduction)~
                         Treatment+
@@ -412,7 +420,7 @@ cox_fullmodel4<-coxme(Surv(NumDaysAlive,CensorReproduction)~
 summary(cox_fullmodel4)
 summary(cox_fullmodel3)
 anova(cox_fullmodel3,cox_fullmodel4) #Significant
-AIC(cox_fullmodel3,cox_fullmodel4) #Looks like fullmodel4 is the better model because the AIC score is within 2 points of each other, therefore the models are assessed the same and you should take the simpler model. But this is for another manuscript :-)
+AIC(cox_fullmodel3,cox_fullmodel4) #Using the full dataset (not loaded here) it looks like fullmodel4 is the better model because the AIC score is within 2 points of each other, therefore the models are assessed the same and you should take the simpler model. But this is for another manuscript :-)
 ```
 
 #Reproductive Biomass
@@ -425,14 +433,23 @@ Also Note: Biomass data is a measure of aboveground biomass of all individuals h
 Here we need to subset the data to only look at Biomass when CensorReproduction = 1, so that all Biomass data is for reproductive individuals only.
 ```{r}
 reproduction_mydata<-subset(mydata,CensorReproduction%in%c('1')) #Here I am only looking at the Biomass data where the CensorReproduction = 1
+repro_mydata<-na.omit(reproduction_mydata)
 ```
 
 ##Histograms
 ###Original data
 The original data is skewed and fails the Shapiro-Wilk normality test, so we should consider a log transformation.
-```{r eval=FALSE, include=FALSE}
-hist(reproduction_mydata$Biomass,col='steelblue',main='Original') #Original data is skewed, let's test for normality and consider log transforming the data
-shapiro.test(reproduction_mydata$Biomass) #fails the Shapiro-Wilk normality test
+```{r}
+#All data
+hist(repro_mydata$Biomass,col='steelblue',
+     main='Original') #Original data is skewed, let's test for normality and consider log transforming the data
+shapiro.test(repro_mydata$Biomass) #fails the Shapiro-Wilk normality test
+
+#Biomass Removal data
+biomass_hist<-repro_mydata %>%
+  select(Biomass,Treatment) %>% 
+  filter(Treatment =="Biomass Removal")
+hist(biomass_hist$Biomass,breaks=20,col='steelblue',main='Original Biomass Removal')
 ```
 
 ###Log transform data 
@@ -440,126 +457,96 @@ shapiro.test(reproduction_mydata$Biomass) #fails the Shapiro-Wilk normality test
 Log transformed data has a better distribution than the original data (although it still fails the Shapiro-Wilk normality test) so we will use the log transformed data with our models.
 
 ```{r}
-log_reproduction_mydata<-log10(reproduction_mydata$Biomass)
-hist(log_reproduction_mydata,col='steelblue',main='Log Transformed') #Log transformed data, this looks better than the original distribution
-shapiro.test(log_reproduction_mydata) #fails this test
+log_reproduction_mydata<-log10(repro_mydata$Biomass)
+hist(log_reproduction_mydata,col='steelblue',
+     main='Log Transformed') #Log transformed data, this looks better than the original distribution
+shapiro.test(log_reproduction_mydata) #but it fails this test
+
+qqnorm(log_reproduction_mydata) #qqplot
+qqline(log_reproduction_mydata) #add the line... kinda wobbly around the ends
+```
+
+###Square root transform data
+Nope, not square root
+```{r}
+sqrt_biomass_mydata<-sqrt(repro_mydata$Biomass)
+hist(sqrt_biomass_mydata,
+     col='steelblue',main='Square Root Transformed') #nope, this does not look better
+shapiro.test(sqrt_biomass_mydata)
+
+qqnorm(sqrt_biomass_mydata) #qqplot
+qqline(sqrt_biomass_mydata) #add the line 
+```
+
+###Poisson distribution
+Poisson is actually not a good fit because the growth rate is not an integer (has decimals), which poisson cannot deal with. Maybe I'll try gamma?
+```{r}
+library(MASS)
+MASS::fitdistr((repro_mydata$Biomass*1000),
+               "Poisson")
+qqPlot(repro_mydata$Biomass,
+       distribution="pois",
+       lambda=1)
+```
+
+###Gamma distribution
+Maybe?
+```{r}
+gamma<-fitdistr(repro_mydata$Biomass,
+                "gamma")
+qqp(repro_mydata$Biomass,
+    "gamma",
+    shape=gamma$estimate[[1]],
+    rate=gamma$estimate[[2]])
 ```
 
 ##Models
+Julia recommends the log and gamma... then use DHARMa to test the dispersion of each models
 
-###Model 1 - lmer: Modeling Habitat and Treatment with Site and Block as random effects
+###Full Model 1 - lmer: Modeling Habitat and Treatment with Site and Block as random effects
 Site as a random effect does not explain any of the variance in the model, therefore let's try Site as a fixed effect to demonstrate that it doesn't add to the model.
 ```{r}
 fullmodel1<-lmer(log(Biomass)~
                    Habitat*Treatment+
-                   (1|Site)+
+                   #(1|Site)+ we dropped site because it was a singular fit because it is described by habitat
                    (1|Block),
-                 data=reproduction_mydata)
-isSingular(fullmodel1,tol=1e-4)
-summary(fullmodel1) #Variance explained by Site = 0.000
+                 data=repro_mydata)
+isSingular(fullmodel1,tol=1e-4) #false without site
+summary(fullmodel1) #but this runs fine
 anova(fullmodel1)
 predict(fullmodel1)
 hist(predict(fullmodel1,type="response"))
+
+qqnorm(resid(fullmodel1)) #qqplot
+qqline(resid(fullmodel1)) #add the line
+testDispersion(fullmodel1) #red line should be in the middle of the distribution
+myDHARMagraph1<-simulateResiduals(fullmodel1) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph1) #plotting graph. At this point, you don't want any text or lines to be red.
 ```
 
-###Model 2 - lmer: Modeling Site as a fixed effect
-Site as a fixed effect is not significant, therefore it should not be used as a fixed effect in addition to it not being used as a random effect.
+###Full Model 2 - glmm
 ```{r}
-fullmodel2<-lmer(log(Biomass)~
-                   Habitat*Treatment+
-                   Site+
-                   (1|Block),
-                 data=reproduction_mydata)
+fullmodel2<-glmmTMB(Biomass~
+                             Habitat*Treatment+
+                             (1|Site)+
+                             (1|Block),
+                           family=Gamma(link="log"),
+                           data=repro_mydata) 
 summary(fullmodel2)
-anova(fullmodel2)
+qqnorm(resid(fullmodel2)) #qqplot
+qqline(resid(fullmodel2)) #add the line
+testDispersion(fullmodel2) #red line should be in the middle of the distribution
+myDHARMagraph2<-simulateResiduals(fullmodel2) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph2) #plotting graph. Looks good, but check the outliers to make sure they are real.
 ```
-
-###Model 3 - lmer: Site is removed from this model because it explains very little of the variance
+###Best Model
 ```{r}
-fullmodel3<-lmer(log(Biomass)~
+fullmodel1<-lmer(log(Biomass)~
                    Habitat*Treatment+
+                   #(1|Site)+ we dropped site because it was a singular fit because it is described by habitat
                    (1|Block),
-                 data=reproduction_mydata)
-summary(fullmodel3)
-anova(fullmodel3)
-```
-
-Now we'll look at the QQ plots and the residuals using DHARMa
-```{r}
-qqnorm(resid(fullmodel3)) #qqplot
-qqline(resid(fullmodel3)) #add the line
-testDispersion(fullmodel3) #red line should be in the middle of the distribution
-myDHARMagraph3<-simulateResiduals(fullmodel3) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
-plot(myDHARMagraph3) #plotting graph. At this point, you don't want any text or lines to be red.
-```
-
-When we compare the model summaries and Anova of Models 2 & 3, we see that the removal of Site doesn't impact the model. Therefore the more simple Model 3 is a better choice. But let's keep checking...
-
-Compare AIC Scores
-Now I need to compare the AIC scores for all the models to tell me which is the better model (but it will not say which fits my data better, that is why I did all the DHARMa stuff)
-
-Using aictab to make the comparison of models and table 
-```{r}
-models<-list(fullmodel1,fullmodel2,fullmodel3)
-mod.names<-c('Site.Random','Site.Fixed','No.Site')
-aictab(cand.set=models,modnames=mod.names)
-#The lowest AICc score is listed first and indicates the best fitting model, here, Model 3 (No.Site) where Site is not included. The cut-off for comparing Models is 2 units. The difference between Model 1 (Site.Random) and Model 3 (No.Site) is 2.12. So Model 3 (No.Site) is marginally better than Model 1 (Site.Random).
-```
-
-###Other Models Attempted
-Other ideas that were explored to keep Site but resulted in singular error and Site explaining 0.000 of the variance: 
-fullmodel4<-lmer(log(Biomass)~ Treatment + (1|Site) + (1|Block), data = mydata)
-summary(fullmodel4)
-fullmodel5<-lmer(log(Biomass)~ Treatment + Habitat + (1|Site) + (1|Block), data = mydata)
-summary(fullmodel5)
-
-###Best Model: Biomass
-```{r}
-fullmodel3<-lmer(log(Biomass)~
-                   Habitat*Treatment+
-                   (1|Block),
-                 data=reproduction_mydata)
-summary(fullmodel3)
-```
-
-####Post-Hoc Test
-You should remove non-significant interaction terms before running a post-hoc test. It is difficult to judge the main effects (Habitat and Site) when you also have the interaction term present, so when it is not significant, fit a new model without it.
-```{r}
-fullmodel3.1<-lmer(log(Biomass)~
-                     Treatment+
-                     (1|Block),
-                   data=reproduction_mydata)
-summary(fullmodel3.1)
-anova(fullmodel3.1)
-qqnorm(resid(fullmodel3.1)) #qqplot
-qqline(resid(fullmodel3.1)) #add the line
-testDispersion(fullmodel3.1) #red line should be in the middle of the distribution
-myDHARMagraph3.1<-simulateResiduals(fullmodel3.1) #testing for heteroscedasticity
-plot(myDHARMagraph3.1) #plotting graph
-```
-
-```{r}
-fullmodel3.2<-lmer(log(Biomass)~
-                     Treatment+
-                     (1|Block)+
-                     (1|Population),
-                   data=mydata)
-summary(fullmodel3.2)
-anova(fullmodel3.2)
-qqnorm(resid(fullmodel3.2)) #qqplot
-qqline(resid(fullmodel3.2)) #add the line
-testDispersion(fullmodel3.2) #red line should be in the middle of the distribution
-myDHARMagraph3.2<-simulateResiduals(fullmodel3.2) #testing for heteroscedasticity
-plot(myDHARMagraph3.2) #plotting graph
-```
-
-Let's use emmeans for our Best Model (fullmodel3) and the two off-shoots.
-```{r}
-#?emmeans, emmeans(model, pairwise ~ treatment)
-emmeans(fullmodel3,pairwise~Treatment)
-emmeans(fullmodel3.1,pairwise~Treatment)
-emmeans(fullmodel3.2,pairwise~Treatment)
-#These models result in similar Tukey outcomes
+                 data=repro_mydata)
+fullmodel1
 ```
 
 
@@ -573,7 +560,7 @@ pd<-position_dodge(0)
 growth_mydata2<-growth_mydata%>% 
   replace_na(list(Growth.Rate=0))%>%
   filter(CensorReproduction==1)%>%
-  filter(Treatment=="Biomass Removal"|Treatment=="Grassland")%>%
+  #filter(Treatment=="Biomass Removal"|Treatment=="Grassland")%>%
   group_by(Treatment,Habitat)%>%
   summarise(Mean=mean(Growth.Rate),
             SD=sd(Growth.Rate),
@@ -597,16 +584,17 @@ field_int_rate_grow_gg<-ggplot(growth_mydata2,
         legend.position = c(0.8, 0.8))+
  # ggtitle("Growth of Dittrichia graveolens that budded")+
   ylab("*Dittrichia graveolens* \n (Change in Leaf Length/Days)")+
-  geom_line(size=1,
+  geom_line(size=0.8,
             position=pd)+
-  geom_point(size=5,
+  geom_point(size=4,
              position=pd)+
+  scale_shape_manual(values=c(16,2))+
   scale_color_manual(values=c("gray85","forestgreen"))+
   geom_errorbar(width=0.15,
                 position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))+
-  labs(y="Change in Leaf Length per Day",
+  labs(y="Change in Leaf Length/Day",
        color="Source Habitat",
        shape="Source Habitat")
 field_int_rate_grow_gg
@@ -619,7 +607,7 @@ field_int_rate_grow_gg
 pd<-position_dodge(0)
 
 surv_mydata1<-mydata%>%
-  filter(Treatment=="Biomass Removal"|Treatment=="Grassland")%>%
+  #filter(Treatment=="Biomass Removal"|Treatment=="Grassland")%>%
   group_by(Treatment,Habitat)%>%
   summarise(Mean=mean(PropBudSite),
             SD=sd(PropBudSite),
@@ -643,11 +631,12 @@ field_int_surv_all_gg<-ggplot(data=surv_mydata1,
         legend.position = c(0.8, 0.8))+
   scale_y_continuous(name="Proportion Survival to Bud",
                      limits=c(0,1),
-                     breaks=c(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))+
-  geom_line(size=1,
+                     breaks=c(0.0,0.2,0.4,0.6,0.8,1.0))+
+  geom_line(size=0.8,
             position=pd)+
-  geom_point(size=5,
+  geom_point(size=4,
              position=pd)+
+  scale_shape_manual(values=c(16,2))+
   scale_color_manual(values=c("gray85","forestgreen"))+
   geom_errorbar(width=0.15,
                 position=pd,
@@ -669,7 +658,7 @@ pd<-position_dodge(0)
 growth_mydata1<-growth_mydata%>% 
   replace_na(list(Biomass=0))%>%
   filter(CensorReproduction==1)%>%
-  filter(Treatment=="Biomass Removal"|Treatment=="Grassland")%>%
+#  filter(Treatment=="Biomass Removal"|Treatment=="Grassland")%>%
   group_by(Treatment,Habitat)%>%
   summarise(Mean=mean(Biomass),
             SD=sd(Biomass),
@@ -693,16 +682,17 @@ field_int_bio_grow_gg<-ggplot(growth_mydata1,
         axis.line=element_line(colour="black"),
         axis.title.y=ggtext::element_markdown(),
         legend.position = c(0.8, 0.8))+
-  geom_line(size=1,
+  geom_line(size=0.8,
             position=pd)+
-  geom_point(size=5,
+  geom_point(size=4,
              position=pd)+
+  scale_shape_manual(values=c(16,2))+
   scale_color_manual(values=c("gray85","forestgreen"))+
   geom_errorbar(width=0.15,
                 position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))+
-  labs(y="*Dittrichia graveolens* Biomass (g)",
+  labs(y="*D. graveolens* Biomass (g)",
        color="Source Habitat",
        shape="Source Habitat")
 field_int_bio_grow_gg
@@ -710,17 +700,147 @@ field_int_bio_grow_gg
 #ggsave(plot=field_int_bio_grow_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/field_int_bio_grow_gg.png",width=25,height=15,units="cm",dpi=800)
 ```
 
-##Figure panel (3 plots)
+##Figure 4 panel (3 plots)
 ```{r}
 library(patchwork)
 
-multi_panel_gg<-(field_int_rate_grow_gg+theme(legend.position = c(0.9,0.9)))/
+multi_panel_gg<-(field_int_rate_grow_gg+theme(legend.position = c(0.8,0.9)))/
   (field_int_surv_all_gg+theme(legend.position="none"))/
   (field_int_bio_grow_gg+theme(legend.position="none"))+
   plot_annotation(tag_levels=c("A"),
-                  tag_suffix=") ")&
-  theme(text=element_text(size=12))
+                  tag_suffix=")  ")&
+  theme(text=element_text(size=8))
 multi_panel_gg
 
-ggsave(plot=multi_panel_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/multi_panel_gg.png",width=15,height=20,units="cm",dpi=800)
+ggsave(plot=multi_panel_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/multi_panel_gg.png",width=8.5,height=17,units="cm",dpi=800)
+```
+
+##Figure 5?
+```{r}
+#Here's the best model
+cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~
+                        Habitat+
+                        Treatment+
+                        (1|Site/Population)+
+                        (1|Block),
+                      data=mydata) 
+
+#Now let's try making survival curves to plot
+cox_model_graph3<-survfit(Surv(NumDaysAlive,CensorReproduction)~
+                            Habitat+
+                            Treatment,
+                          data=mydata)
+
+surv_habitat_plot1<-autoplot(cox_model_graph3)+
+  labs(x="Survival (Days)",
+       y="Probability")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=12))
+surv_habitat_plot1
+ggsave(plot=surv_habitat_plot1,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/surv_habitat_plot1.png",width=16,height=8,units="cm",dpi=800)
+
+cox_model_graph4<-survfit(Surv(NumDaysAlive,CensorReproduction)~
+                            Treatment+
+                            Habitat,
+                          data=mydata)
+
+surv_habitat_plot2<-autoplot(cox_model_graph4)+
+  labs(x="Survival (Days)",
+       y="Probability")+
+  theme(plot.title=element_text(hjust=0.5),
+        axis.title.x=element_text(face="bold",
+                                  color="Black",
+                                  size=12),
+        axis.title.y=element_text(face="bold",
+                                  color="Black",
+                                  size=12))
+surv_habitat_plot2
+ggsave(plot=surv_habitat_plot2,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/surv_habitat_plot2.png",width=16,height=8,units="cm",dpi=800)
+
+```
+
+New plot idea
+http://sthda.com/english/wiki/survminer-r-package-survival-data-analysis-and-visualization#change-legend-title-labels-and-position
+
+https://www.rdocumentation.org/packages/survminer/versions/0.4.9#computing-and-passin-p-values
+```{r}
+library("survminer")
+library("survival")
+
+cox_model_graph4<-survfit(Surv(NumDaysAlive,CensorReproduction)~
+                            Habitat+
+                            Treatment,
+                          data=mydata)
+
+surv_habitat_plot3 <- ggsurvplot(cox_model_graph4,
+                               data = mydata,
+                               xlab = "Survival (Days)",
+                               ylab = "Probability",
+                               surv.scale = "percent",
+                               ggtheme = theme_bw() + theme(legend.position = "right"),
+                               palette = c("gray30", "gray85", "forestgreen", "green3"),
+                               #palette = c("yellowgreen", "forestgreen", "limegreen", "springgreen1"),
+                               #palette = c("green3", "chartreuse3", "limegreen", "forestgreen"),
+                               legend = c(0.21, 0.22),
+                               legend.title = "Source Habitat",
+                               #legend.labs = c("Roadside/Grassland",
+                               #                "Roadside/Biomass Removal",
+                               #                "Vegetated/Grassland",
+                               #                "Vegetated/Biomass Removal"),
+                               conf.int = TRUE,                 # Add confidence intervals
+                               conf.int.style = "ribbon",       # Display confidence intervals as ribbons
+                               risk.table = FALSE,
+                               risk.table.y.text.col = FALSE,
+                               pval = FALSE,
+                               pval.coord = c(0.25, 0.9)
+)
+surv_habitat_plot3
+
+
+
+#Trying this:
+cox_model_graph4 <- survfit(Surv(NumDaysAlive, CensorReproduction) ~ Habitat + Treatment, data = mydata)
+
+# Create a new variable for the combination of Habitat and Treatment
+mydata$Strata <- paste(mydata$Habitat, mydata$Treatment, sep = "/")
+
+# Modify the line types in the survfit object
+strata_levels <- unique(mydata$Strata)
+line_types <- c("solid", "dashed", "solid", "dashed")
+
+cox_model_graph4$strata <- factor(mydata$Strata, levels = strata_levels)
+cox_model_graph4$linetype <- line_types[match(cox_model_graph4$strata, strata_levels)]
+
+surv_habitat_plot3 <- ggsurvplot(cox_model_graph4,
+                                 data = mydata,
+                                 xlab = "Survival (Days)",
+                                 ylab = "Probability",
+                                 surv.scale = "percent",
+                                 ggtheme = theme_bw() + theme(legend.position = "right"),
+                                 palette = c("gray30", "gray85", "forestgreen", "springgreen1"),
+                                 legend = c(0.21, 0.22),
+                                 legend.title = "Source Habitat",
+                                 legend.labs = c("Roadside/Grassland",
+                                                 "Roadside/Biomass Removal",
+                                                 "Vegetated/Grassland",
+                                                 "Vegetated/Biomass Removal"),
+                                 conf.int = TRUE,                 # Add confidence intervals
+                                 conf.int.style = "ribbon",       # Display confidence intervals as ribbons
+                                 risk.table = FALSE,
+                                 risk.table.y.text.col = FALSE,
+                                 pval = FALSE,
+                                 pval.coord = c(0.25, 0.9)
+)
+
+surv_habitat_plot3
+
+
+
+#ggsave doesn't work with this type of plot
+#ggsave(plot=surv_habitat_plot3,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/surv_habitat_plot3.png",width=25,height=15,units="cm",dpi=800)
 ```

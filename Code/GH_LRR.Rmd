@@ -1,64 +1,175 @@
 ---
 title: "greenhouse_competition"
 output: html_notebook
+date: June 2023
+authors: Miranda Melen, Laura Goetz
 ---
+#Background
+Calculate log response ratio (LRR) of biomass in greenhouse_competition_fieldsoil.csv
 
-Calculate LRR of biomass in greenhouse_competition_fieldsoil.csv
+#Data Analysis 
 
-
+#Libraries
 ```{r}
 library(tidyverse)
-
-gh <- read_csv("../data/greenhouse_competition/greenhouse_competition_fieldsoil.csv")
+library(lme4)
 ```
 
+#Load data
 ```{r}
-gh_no_comp <- gh %>% 
-  select(Site, Block, Habitat, Competition, Dittrichia_biomass) %>% 
-  filter(Competition == "None") %>% 
-  select(-Competition) %>% 
+gh<-read_csv("../data/greenhouse_competition/greenhouse_competition_fieldsoil.csv")
+```
+
+
+#Data preparation
+```{r}
+gh_no_comp<-gh%>% 
+  select(Site,Block,Habitat,Competition,Dittrichia_biomass)%>% 
+  filter(Competition=="None")%>% 
+  select(-Competition)%>% 
   rename("Divide_val"="Dittrichia_biomass")
 
-gh_lrr <- left_join(gh, gh_no_comp, by=c("Site", "Block", "Habitat")) %>% 
-  filter(Competition != "None") %>% 
-  filter(!is.na(Dittrichia_biomass))# filter out dead Festuca
+gh_lrr<-left_join(gh,gh_no_comp,by=c("Site","Block","Habitat"))%>% 
+  filter(Competition!="None")%>% 
+  filter(!is.na(Dittrichia_biomass)) #filter out dead Festuca
 
-# count number of obsevations per group
-gh_group_count <- gh_lrr %>% 
-  group_by(Site, Habitat, Competition) %>% 
-  count() %>% 
+# count number of observations per group
+gh_group_count<-gh_lrr%>% 
+  group_by(Site,Habitat,Competition)%>% 
+  count()%>% 
   ungroup()
 
 # calculate average
-gh_lrr_calc <- left_join(gh_lrr, gh_group_count) %>% 
-  mutate(LRR = log(as.numeric(Dittrichia_biomass)/as.numeric(Divide_val)), .after=Dittrichia_biomass) %>% 
-  group_by(Site, Habitat, Competition) %>% 
-  mutate(Average_LRR = sum(as.numeric(LRR))/n, .after=LRR)
+gh_lrr_calc<-left_join(gh_lrr,gh_group_count)%>% 
+  mutate(LRR=log(as.numeric(Dittrichia_biomass)/as.numeric(Divide_val)),.after=Dittrichia_biomass)%>% 
+  group_by(Site,Habitat,Competition)%>% 
+  mutate(Average_LRR=sum(as.numeric(LRR))/n,.after=LRR)
 
 # calculate SD and SE
-gh_lrr_stats <- gh_lrr_calc %>% 
-  group_by(Site, Habitat, Competition) %>% 
+gh_lrr_stats<-gh_lrr_calc%>% 
+  group_by(Site,Habitat,Competition)%>% 
   summarise(SD=sd(LRR),
             N=length(LRR))%>%
   mutate(SE=SD/sqrt(N))
 
 # bind final table
-gh_lrr_done <- left_join(gh_lrr_calc, gh_lrr_stats)
+gh_lrr_done<-left_join(gh_lrr_calc,gh_lrr_stats)
+```
 
+#Histograms
+##Original data
+The data is skewed and does not pass the Shapiro-Wilk normality test (p < 0.0001). So let's try log transforming the data.
 
+```{r eval=FALSE, include=FALSE}
+hist(gh_lrr_done$Dittrichia_biomass,
+     col='steelblue',main='Original',breaks=30) 
+shapiro.test(gh_lrr_done$Dittrichia_biomass)
+```
+##Log transform
+(https://www.statology.org/transform-data-in-r/)
+When we log transform the data and plot using a histogram, the data looks better than the original distribution, but we need to still test for normalicy with a Shapiro-Wilk normality test. Here we find that the data are not normally distributed because the p-value = 0.01951. Let's go straight to a glmm that can deal with non-normal data.
+```{r}
+log_gh_lrr_done<-log10(gh_lrr_done$Dittrichia_biomass)
+hist(log_gh_lrr_done,
+     col='steelblue',main='Log Transformed') #Log transformed data, this looks better than the original distribution
+shapiro.test(log_gh_lrr_done) #Data does not improve with log transformation, but is waaaay better than anything else
+
+qqnorm(log_gh_lrr_done) #qqplot
+qqline(log_gh_lrr_done) #add the line 
+```
+##Poisson distribution
+Nope, not poisson
+```{r eval=FALSE, include=FALSE}
+library(MASS)
+MASS::fitdistr((gh_lrr_done$Dittrichia_biomass*10000),
+               "Poisson")
+qqPlot(gh_lrr_done$Dittrichia_biomass,
+       distribution="pois",
+       lambda=1)
+```
+
+##Gamma distribution
+Nope, not gamma
+```{r eval=FALSE, include=FALSE}
+gamma<-fitdistr(gh_lrr_done$Dittrichia_biomass,
+                "gamma")
+qqp(gh_lrr_done$Dittrichia_biomass,
+    "gamma",
+    shape=gamma$estimate[[1]],
+    rate=gamma$estimate[[2]])
+```
+
+#Models
+###Full Model 1 - glmer
+```{r}
+fullmodel1<-lmer(log(Dittrichia_biomass)~
+                             Habitat*Competition+
+                             (1|Site)+
+                             (1|Block),
+                           data=gh_lrr_done)
+summary(fullmodel1)
+qqnorm(resid(fullmodel1))
+qqline(resid(fullmodel1)) #add the line (run this at the same time as qqnorm)
+testDispersion(fullmodel1) #red line should be in the middle of the distribution
+myDHARMagraph1<-simulateResiduals(fullmodel1) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph1) #plotting graph. Yay!
+```
+
+###Other Models
+All of these were over dispersed
+####glmmTMB - beta
+```{r}
+fullmodel2<-glmmTMB(Dittrichia_biomass~
+                             Habitat*Competition+
+                             (1|Site)+
+                             (1|Block),
+                           family=beta_family(),
+                           data=gh_lrr_done) 
+summary(fullmodel2)
+qqnorm(resid(fullmodel2)) #qqplot
+qqline(resid(fullmodel2)) #add the line (run this at the same time as qqnorm)
+testDispersion(fullmodel2) #red line should be in the middle of the distribution, but here it is not
+myDHARMagraph2<-simulateResiduals(fullmodel2) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph2) #plotting graph. This doesn't look right.
+```
+####glmmTMB - beta, link = logit
+```{r}
+fullmodel3<-glmmTMB(Dittrichia_biomass~
+                             Habitat*Competition+
+                             (1|Site)+
+                             (1|Block),
+                           family=beta_family(link = "logit"),
+                           data=gh_lrr_done) 
+summary(fullmodel3)
+qqnorm(resid(fullmodel3)) #qqplot
+qqline(resid(fullmodel3)) #add the line (run this at the same time as qqnorm)
+testDispersion(fullmodel3) #red line should be in the middle of the distribution, but here it is not
+myDHARMagraph3<-simulateResiduals(fullmodel3) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph3) #plotting graph. This doesn't look right.
+```
+
+###Best Model
+```{r}
+fullmodel1<-lmer(log(Dittrichia_biomass)~
+                             Habitat*Competition+
+                             (1|Site)+
+                             (1|Block),
+                           data=gh_lrr_done)
+summary(fullmodel1)
 ```
 
 
-Plotting
-
+#ggplot
+##Both side by side
 ```{r}
 pd<-position_dodge(0.1)
 
-gh_lrr_gg <- ggplot(data=gh_lrr_done,
-                        aes(x=factor(Habitat,levels=c("Roadside", "Vegetated")),
+gh_lrr_gg<-ggplot(data=gh_lrr_done,
+                        aes(x=factor(Habitat,levels=c("Roadside","Vegetated")),
                             y=Average_LRR,
                             group=Site,
-                            color=Site))+
+                            color=Site,
+                            shape=Habitat))+
   ylab("LRR against competitor")+
   facet_grid(.~Competition)+
   xlab("")+
@@ -70,22 +181,26 @@ gh_lrr_gg <- ggplot(data=gh_lrr_done,
         axis.line=element_line(colour="black"))+
   geom_line(linewidth=1,
             position=pd)+
-  geom_point(size=3,
+  geom_point(size=4,
              position=pd)+
   geom_errorbar(width=0.15,
                 position=pd,
                 aes(ymin=(Average_LRR-SE),
-                    ymax=(Average_LRR+SE)))
+                    ymax=(Average_LRR+SE)))+
+  scale_shape_manual(values=c(16,2))+
+  labs(shape="Source Habitat")
 gh_lrr_gg
+
 ggsave(plot=gh_lrr_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/gh_lrr_gg.png",width=25,height=20,units="cm",dpi=800)
+
 ```
 
-
-```{r}
+##Both stacked
+```{r eval=FALSE, include=FALSE}
 pd<-position_dodge(0.1)
 
-gh_lrr_gg <- ggplot(data=gh_lrr_done,
-                        aes(x=factor(Habitat,levels=c("Roadside", "Vegetated")),
+gh_lrr_gg<-ggplot(data=gh_lrr_done,
+                        aes(x=factor(Habitat,levels=c("Roadside","Vegetated")),
                             y=Average_LRR,
                             group=Site,
                             color=Site))+
@@ -111,8 +226,8 @@ gh_lrr_gg
 #ggsave(plot=gh_lrr_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/gh_lrr_gg.png",width=25,height=20,units="cm",dpi=800)
 ```
 
-bromus only
-```{r}
+##Bromus only
+```{r eval=FALSE, include=FALSE}
 gh_lrr_brgg <- ggplot(data=gh_lrr_done %>% filter(Competition == "Bromus"),
                         aes(x=factor(Habitat,levels=c("Roadside", "Vegetated")),
                             y=Average_LRR,
@@ -138,9 +253,8 @@ gh_lrr_brgg <- ggplot(data=gh_lrr_done %>% filter(Competition == "Bromus"),
 gh_lrr_brgg
 ```
 
-festuca only
-
-```{r}
+##Festuca only
+```{r eval=FALSE, include=FALSE}
 gh_lrr_fgg <- ggplot(data=gh_lrr_done %>% filter(Competition == "Festuca"),
                         aes(x=factor(Habitat,levels=c("Roadside", "Vegetated")),
                             y=Average_LRR,

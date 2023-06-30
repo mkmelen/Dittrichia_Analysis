@@ -3,61 +3,23 @@ title: "Response to Soil Type and Competition"
 output: html_notebook
 date: December 2022
 authors: Miranda Melen, Laura Goetz
-editor_options: 
-  markdown: 
-    wrap: 72
 ---
 
 #Background
-We used a two-way factorial design with construction soil
-and natural soil and three competition treatments (*Dittrichia
-graveolens* grown alone, with *Bromus hordeaceus*, or with *Festuca
-perennis*). These grasses were selected because they are commonly found
-in California annual grasslands and were identified in many of the 8
-paired sites. We collected *B. hordeaceus* seeds from Blue Oak Ranch
-Reserve and *F. perennis* seeds from the Terrace Lands of Younger Lagoon
-Reserve on the UCSC Coastal Science Campus.
+We used a two-way factorial design with construction soil and natural soil and three competition treatments (*Dittrichia graveolens* grown alone, with *Bromus hordeaceus*, or with *Festuca perennis*). These grasses were selected because they are commonly found in California annual grasslands and were identified in many of the 8 paired sites. We collected *B. hordeaceus* seeds from Blue Oak Ranch Reserve and *F. perennis* seeds from the Terrace Lands of Younger Lagoon Reserve on the UCSC Coastal Science Campus.
 
-Every pot had either one *D. graveolens* with one *B. hordeaceus* or one
-with *F. perennis*, or no grass competitor (grown alone). We prepared
-Deepots (D16; 5cm diameter, 18cm height) at the UCSC Coastal Science
-Campus Greenhouse and filled with rehydrated soil: 384 pots were filled
-with natural soil, and 384 with construction soil (768 pots total).
+Every pot had either one *D. graveolens* with one *B. hordeaceus* or one with *F. perennis*, or no grass competitor (grown alone). We prepared Deepots (D16; 5cm diameter, 18cm height) at the UCSC Coastal Science Campus Greenhouse and filled with rehydrated soil: 384 pots were filled with natural soil, and 384 with construction soil (768 pots total).
 
-We germinated *D. graveolens* seeds in an incubation chamber with a
-daytime temperature of 23ºC from 9AM-1AM and a nighttime temperature of
-19ºC from 1AM-9AM. Grasses were germinated in trays with potting mix and
-placed under fluorescent light banks for 16-hour length days and 8-hour
-length nights. Once radicles and cotyledons emerged, seedlings were
-transplanted in sets of six (one for each treatment) and then randomized
-into a blocked design.
+We germinated *D. graveolens* seeds in an incubation chamber with a daytime temperature of 23ºC from 9AM-1AM and a nighttime temperature of 19ºC from 1AM-9AM. Grasses were germinated in trays with potting mix and placed under fluorescent light banks for 16-hour length days and 8-hour length nights. Once radicles and cotyledons emerged, seedlings were transplanted in sets of six (one for each treatment) and then randomized into a blocked design.
 
-After 4 months, we measured grass height from the soil surface to the
-longest tip of each grass bundle and measured *D. graveolens* leaf
-length from stem node to leaf tip of the longest newest true leaf to
-obtain an accurate estimate of the rosette size. We then harvested
-aboveground biomass at the crown and dried it in a 60ºC oven for 3 days
-before weighing it.
+After 4 months, we measured grass height from the soil surface to the longest tip of each grass bundle and measured *D. graveolens* leaf length from stem node to leaf tip of the longest newest true leaf to obtain an accurate estimate of the rosette size. We then harvested aboveground biomass at the crown and dried it in a 60ºC oven for 3 days before weighing it.
 
 #Data Analysis 
-Statistical analyses were performed in R version 4.2.1 (R
-Core Team 2022) using a two-way factorial ANOVA to test for the effects
-of soil and of competition on *D. graveolens* biomass. We used a
-post-hoc Tukey test to compare the three competitive treatments (grown
-alone, with *B. hordeaceus*, and with *F. perennis*) for each soil type
-separately. We also quantified the response of *D. graveolens* to the
-biomass of each competitor using linear regression models.
+Statistical analyses were performed in R version 4.2.1 (R Core Team 2022) using a two-way factorial ANOVA to test for the effects of soil and of competition on *D. graveolens* biomass. We used a post-hoc Tukey test to compare the three competitive treatments (grown alone, with *B. hordeaceus*, and with *F. perennis*) for each soil type separately. We also quantified the response of *D. graveolens* to the biomass of each competitor using linear regression models.
 
-We tested for a difference between roadside and adjacent vegetation
-habitat types on each soil type independently, using mixed-model ANOVA,
-with site as a random effect and habitat (roadside or adjacent
-vegetation) as a fixed effect. Biomass of both *D. graveolens* and the
-grass competitors was ln-transformed before analysis.
-
-##Models Included
+We tested for a difference between roadside and adjacent vegetation habitat types on each soil type independently, using mixed-model ANOVA, with site as a random effect and habitat (roadside or adjacent vegetation) as a fixed effect. Biomass of both *D. graveolens* and the grass competitors was ln-transformed before analysis.
 
 #Libraries
-
 ```{r}
 #install.packages("ggplot2")
 #install.packages("tidyverse")
@@ -82,11 +44,7 @@ library(Sleuth2)
 ```
 
 #Load Data 
-This dataframe has one row per pot (768 observations). Data
-are Dittrichia_biomass and Grass_biomass, both measured in grams, and
-DittrichiaLLL_mm_3 which is the longest leaf length in mm. NAs in
-columns are "no data" because there was no grass present in that pot at
-the time of measurement.
+This dataframe has one row per pot (768 observations). Data are Dittrichia_biomass and Grass_biomass, both measured in grams, and DittrichiaLLL_mm_3 which is the longest leaf length in mm. NAs in columns are "no data" because there was no grass present in that pot at the time of measurement.
 
 ```{r}
 mydata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/greenhouse_competition/greenhouse_competition.csv",stringsAsFactors=T)
@@ -97,9 +55,9 @@ str(mydata) #Check that each column has the right class (factor, integer, numeri
 ```
 
 #Dittrichia Biomass
-
 ##Histograms
-
+###Original data
+The original data is skewed. So let's try log-transforming.
 ```{r}
 #Dittrichia biomass
 hist(mydata1$Dittrichia_biomass,col='steelblue',main='Original')
@@ -113,10 +71,8 @@ ggplot(mydata1,aes(x=Grass_biomass))+
   geom_histogram()+
   facet_wrap(vars(Soil))
 ```
-
-Data is skewed, so let's try log transforming. However, the values are
-all \<0 which create negative numbers when log transforming, therefore
-we need to multiply to move the decimal and then check the data again.
+###Log transform data
+Data is skewed, so let's try log transforming. However, the values are all <0 which create negative numbers when log transforming, therefore we need to multiply to move the decimal and then check the data again. And we find thatl it does not pass the Shapiro-Wilk normality test, therefore I'll try square-rooting the data.
 
 ```{r}
 #Prepare data for log transform (doing ln and log10)
@@ -134,17 +90,25 @@ hist(log_mydata$log_Grass,col='steelblue',main='Original')
 shapiro.test(log_mydata$log_Grass) #does not compute?
 ```
 
+###Square root transform data
+
+```{r eval=FALSE, include=FALSE}
+sqrt_mydata<-sqrt(growth_mydata$Growth.Rate)
+hist(sqrt_growth_mydata,
+     col='steelblue',main='Log Transformed') #Square root transformed data looks better than the original distribution
+shapiro.test(sqrt_growth_mydata)
+```
+
 ##Model
 
 ###Best Model
 
 ###Risk Assessment
 
-##ggplot ###Biomass x Competition and Soil
-
+#ggplot
+###Biomass x Competition and Soil
 ####Interaction Plot Note: 10 blocks, 5 treatments, 16 populations
-(CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed
-effect: roadside and off-road; R or O)
+(CHE-O), 8 sites (random: population pairs; CHE), 2 habitat (fixed effect: roadside and off-road; R or O)
 
 All data combined.
 
@@ -607,7 +571,11 @@ hist(log_mydata_Dgrowth$log_Dgrowth,col='steelblue',main='Original')
 shapiro.test(log_mydata_Dgrowth$log_Dgrowth) #does not improve with log transform
 ```
 
-##Model ###Best Model ###Risk Assessment ##ggplot ###Growth Rate x
+##Model 
+###Best Model 
+###Risk Assessment 
+##ggplot 
+###Growth Rate x
 Competition and Soil
 
 ####Interaction Plot Note: 10 blocks, 5 treatments, 16 populations
