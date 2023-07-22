@@ -81,6 +81,10 @@ fullmodel1<-coxme(Surv(DaysToGerm,Censor)~
                     (1|Site/Population/DishNum),
                   data=myFPdata)
 summary(fullmodel1)
+?anova.coxme
+anova.coxme(fullmodel1)
+fullmodel1
+anova(fullmodel1)
 ```
 
 ###Risk Assessment

@@ -1758,27 +1758,46 @@ display: none;
 citation for R</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2l0YXRpb24oKVxudmVyc2lvbiR2ZXJzaW9uLnN0cmluZ1xuYGBgIn0= -->
-<pre class="r"><code>citation()
-version$version.string</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudmVyc2lvbiR2ZXJzaW9uLnN0cmluZ1xuXG5gYGAifQ== -->
+<pre class="r"><code>version$version.string
+</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiUiB2ZXJzaW9uIDQuMi4yICgyMDIyLTEwLTMxKVwiXG4ifQ== -->
+<pre><code>[1] &quot;R version 4.2.2 (2022-10-31)&quot;</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>Here is the code to pull information needed to cite a package in
 R</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2l0YXRpb24oXCJjb3htZVwiKVxuY2l0YXRpb24oXCJzdXJ2aXZhbFwiKVxuY2l0YXRpb24oXCJESEFSTWFcIilcbmNpdGF0aW9uKFwiZ2xtbVRNQlwiKVxuY2l0YXRpb24oXCJsbWU0XCIpXG5jaXRhdGlvbihcImxtZXJUZXN0XCIpXG5gYGAifQ== -->
-<pre class="r"><code>citation(&quot;coxme&quot;)
-citation(&quot;survival&quot;)
-citation(&quot;DHARMa&quot;)
-citation(&quot;glmmTMB&quot;)
-citation(&quot;lme4&quot;)
-citation(&quot;lmerTest&quot;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2l0YXRpb24oXCJNQVNTXCIpXG5cbmBgYCJ9 -->
+<pre class="r"><code>citation(&quot;MASS&quot;)
+</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG5UbyBjaXRlIHRoZSBNQVNTIHBhY2thZ2UgaW4gcHVibGljYXRpb25zIHVzZTpcblxuICBWZW5hYmxlcywgVy4gTi4gJiBSaXBsZXksIEIuIEQuICgyMDAyKSBNb2Rlcm4gQXBwbGllZCBTdGF0aXN0aWNzIHdpdGggUy4gRm91cnRoIEVkaXRpb24uIFNwcmluZ2VyLFxuICBOZXcgWW9yay4gSVNCTiAwLTM4Ny05NTQ1Ny0wXG5cbkEgQmliVGVYIGVudHJ5IGZvciBMYVRlWCB1c2VycyBpc1xuXG4gIEBCb29reyxcbiAgICB0aXRsZSA9IHtNb2Rlcm4gQXBwbGllZCBTdGF0aXN0aWNzIHdpdGggU30sXG4gICAgYXV0aG9yID0ge1cuIE4uIFZlbmFibGVzIGFuZCBCLiBELiBSaXBsZXl9LFxuICAgIHB1Ymxpc2hlciA9IHtTcHJpbmdlcn0sXG4gICAgZWRpdGlvbiA9IHtGb3VydGh9LFxuICAgIGFkZHJlc3MgPSB7TmV3IFlvcmt9LFxuICAgIHllYXIgPSB7MjAwMn0sXG4gICAgbm90ZSA9IHtJU0JOIDAtMzg3LTk1NDU3LTB9LFxuICAgIHVybCA9IHtodHRwczovL3d3dy5zdGF0cy5veC5hYy51ay9wdWIvTUFTUzQvfSxcbiAgfVxuIn0= -->
+<pre><code>
+To cite the MASS package in publications use:
+
+  Venables, W. N. &amp; Ripley, B. D. (2002) Modern Applied Statistics with S. Fourth Edition. Springer,
+  New York. ISBN 0-387-95457-0
+
+A BibTeX entry for LaTeX users is
+
+  @Book{,
+    title = {Modern Applied Statistics with S},
+    author = {W. N. Venables and B. D. Ripley},
+    publisher = {Springer},
+    edition = {Fourth},
+    address = {New York},
+    year = {2002},
+    note = {ISBN 0-387-95457-0},
+    url = {https://www.stats.ox.ac.uk/pub/MASS4/},
+  }</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiUiBSZXNvdXJjZXMiCm91dHB1dDogaHRtbF9ub3RlYm9vawpkYXRlOiBEZWNlbWJlciAyMDIyCmF1dGhvcnM6IE1pcmFuZGEgTWVsZW4KLS0tCgojZ2dwbG90Ci0gaHR0cHM6Ly9nZ3Bsb3QyLnRpZHl2ZXJzZS5vcmcvcmVmZXJlbmNlLyNwbG90LWJhc2ljcwoKI0NpdGF0aW9ucwpIZXJlIGlzIHRoZSBjb2RlIHRvIHB1bGwgaW5mb3JtYXRpb24gbmVlZGVkIHRvIG1ha2UgYSBjaXRhdGlvbiBmb3IgUgpgYGB7cn0KY2l0YXRpb24oKQp2ZXJzaW9uJHZlcnNpb24uc3RyaW5nCmBgYAoKSGVyZSBpcyB0aGUgY29kZSB0byBwdWxsIGluZm9ybWF0aW9uIG5lZWRlZCB0byBjaXRlIGEgcGFja2FnZSBpbiBSCmBgYHtyfQpjaXRhdGlvbigiY294bWUiKQpjaXRhdGlvbigic3Vydml2YWwiKQpjaXRhdGlvbigiREhBUk1hIikKY2l0YXRpb24oImdsbW1UTUIiKQpjaXRhdGlvbigibG1lNCIpCmNpdGF0aW9uKCJsbWVyVGVzdCIpCmBgYAo=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUiBSZXNvdXJjZXMiCm91dHB1dDogaHRtbF9ub3RlYm9vawpkYXRlOiBEZWNlbWJlciAyMDIyCmF1dGhvcnM6IE1pcmFuZGEgTWVsZW4KLS0tCgojZ2dwbG90Ci0gaHR0cHM6Ly9nZ3Bsb3QyLnRpZHl2ZXJzZS5vcmcvcmVmZXJlbmNlLyNwbG90LWJhc2ljcwoKI0NpdGF0aW9ucwpIZXJlIGlzIHRoZSBjb2RlIHRvIHB1bGwgaW5mb3JtYXRpb24gbmVlZGVkIHRvIG1ha2UgYSBjaXRhdGlvbiBmb3IgUgpgYGB7cn0KY2l0YXRpb24oKQp2ZXJzaW9uJHZlcnNpb24uc3RyaW5nCmBgYAoKSGVyZSBpcyB0aGUgY29kZSB0byBwdWxsIGluZm9ybWF0aW9uIG5lZWRlZCB0byBjaXRlIGEgcGFja2FnZSBpbiBSCmBgYHtyfQpjaXRhdGlvbigiY294bWUiKQpjaXRhdGlvbigic3Vydml2YWwiKQpjaXRhdGlvbigiREhBUk1hIikKY2l0YXRpb24oImdsbW1UTUIiKQpjaXRhdGlvbigibG1lNCIpCmNpdGF0aW9uKCJsbWVyVGVzdCIpCmNpdGF0aW9uKCJsbWU0IikKY2l0YXRpb24oIk1BU1MiKQpgYGAK</div>
 
 
 

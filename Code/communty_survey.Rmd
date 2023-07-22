@@ -1,0 +1,15 @@
+---
+title: "community_surveys"
+author: "Miranda Melen"
+date: "2023-07-22"
+output: html_document
+---
+
+#Load Data
+```{r}
+andrewdata<-read.csv("/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/data/community_survey/community_survey.csv",stringsAsFactors=T)
+str(andrewdata) #Check that each column has the right class (factor, integer, numeric, etc.)
+andrewdata$Site<-as.character(andrewdata$Site)
+andrewdata$Habitat<-factor(andrewdata$Habitat,
+                         levels=c("Roadside","Vegetated")) #Changing the contrast order so that everything is compared to Grassland (control)
+```

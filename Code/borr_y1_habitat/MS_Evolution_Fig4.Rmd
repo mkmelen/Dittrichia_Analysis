@@ -312,14 +312,37 @@ ggplot(mydata,
   geom_histogram()+
   facet_wrap(vars(Treatment))
 ```
-
 ##Models
+###Full Model 1 - glm - generalized linear model
+```{r}
+surv_fullmodel1<-glm(SurvToRepro~
+                          Habitat*Treatment+
+                          Site,
+                       family="binomial",
+                       data=mydata)
+summary(surv_fullmodel1)
+#Site and block should be removed because they make the model singular, and site as a fixed effect does not explain enough variance
+
+surv_fullmodel2<-glm(SurvToRepro~
+                          Habitat*Treatment,
+                     family="binomial",
+                     data=mydata)
+summary(surv_fullmodel2)
+
+qqnorm(resid(surv_fullmodel2)) #qqplot
+qqline(resid(surv_fullmodel2)) #add the line
+testDispersion(surv_fullmodel2) #red line should be in the middle of the distribution
+myDHARMagraph_surv3<-simulateResiduals(surv_fullmodel2) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph_surv3) #plotting graph. At this point, you don't want any text or lines to be red. The QQ plots are not looking good for this model. Let's try fitting to a negative binomial distribution.
+```
+
+###Cox Models
 Cox proportional hazard models
 Here we will use 'coxme' which allows you to conduct mixed effects Cox proportional hazards models. Information here: https://cran.r-project.org/web/packages/coxme/vignettes/coxme.pdf. We conducted a germination experiment using Dittrichia graveolens seeds on filter paper. "Surv" creates a survival object to combine the days column (NumDaysAlive) and the censor column (CensorReproduction) to be used as a response variable in a model formula. The model follows the same syntax as linear models (lm, lmer, etc). Fixed effects: "var1 * var2" will give you the interaction term and the individual variables: so "var1 + var2 + var1:var2". To add random effects, type "+ (1|random effect)".
 
 Assumptions for cox models: https://www.theanalysisfactor.com/assumptions-cox-regression/
 
-###Simple Model
+####Simple Model
 Start by making a simple model with no random effects. This will be compared to the full model with random effects.
 ```{r}
 cox_simplemodel1<-coxph(Surv(NumDaysAlive,
@@ -332,7 +355,7 @@ predict(cox_simplemodel1)
 hist(predict(cox_simplemodel1))
 ```
 
-###Full Model 1 - coxme
+####Full Model 1 - coxme
 Now make a full model using random effects
 ```{r}
 cox_fullmodel1<-coxme(Surv(NumDaysAlive,CensorReproduction)~
@@ -352,7 +375,7 @@ anova(cox_simplemodel1,cox_fullmodel1)
 #See example: https://www.rdocumentation.org/packages/coxme/versions/2.2-16/topics/coxme
 AIC(cox_simplemodel1,cox_fullmodel1) #But comparing the AIC scores is easiest. Keep the lower AIC score because that is considered the better model. Here it is the fullmodel1.
 ```
-###Full Model 2 - coxme
+####Full Model 2 - coxme
 Now, let's make a model with no interaction term and then we'll compare that to the fullmodel1 which was deemed the best above.
 ```{r}
 cox_fullmodel2<-coxme(Surv(NumDaysAlive,CensorReproduction)~
@@ -370,7 +393,7 @@ anova(cox_fullmodel1,cox_fullmodel2) #Not significant
 AIC(cox_fullmodel1,cox_fullmodel2) #The AIC scores are within 2 points of each other, so we can keep the simpler model, which is fullmodel2.
 ```
 
-###Full Model 3 - coxme
+####Full Model 3 - coxme
 So, now let's add in population nested under site as a random effect
 ```{r}
 cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~
@@ -388,7 +411,7 @@ anova(cox_fullmodel2,cox_fullmodel3) #Significant
 AIC(cox_fullmodel2,cox_fullmodel3) #Looks like fullmodel3 is the better model because of the lower AIC score
 ```
 
-###Best Model
+####Best Model
 The effect of source habitat was also not significant for the proportion of survival to bud (Z = -0.09, P = 0.93, Figure 4B). Again, the treatment effect was significant but not the interaction between treatment and source habitat (Z = 6.56, P < 0.0001).
 ```{r}
 cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~
@@ -400,7 +423,7 @@ cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~
 summary(cox_fullmodel3)
 ```
 
-####Risk Assessment
+#####Risk Assessment
 These values are found in the model summary, but if you want to pull them out, here is how you interpret them.
 1 = no effect, <1 = decreased risk of death, >1 = increased risk of death.
 ```{r}
@@ -594,7 +617,7 @@ field_int_rate_grow_gg<-ggplot(growth_mydata2,
                 position=pd,
                 aes(ymin=(Mean-SE),
                     ymax=(Mean+SE)))+
-  labs(y="Change in Leaf Length/Day",
+  labs(y="Change in Leaf Length (mm/day)",
        color="Source Habitat",
        shape="Source Habitat")
 field_int_rate_grow_gg
@@ -715,17 +738,26 @@ multi_panel_gg
 ggsave(plot=multi_panel_gg,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/multi_panel_gg.png",width=8.5,height=17,units="cm",dpi=800)
 ```
 
-##Figure 5?
+#Survival to Bud
+##Models
+###Best Model
 ```{r}
-#Here's the best model
-cox_fullmodel3<-coxme(Surv(NumDaysAlive,CensorReproduction)~
-                        Habitat+
-                        Treatment+
+cox_fullmodel4<-coxme(Surv(DaysToPheno,CensorPheno)~
+                        Habitat*Treatment+
                         (1|Site/Population)+
                         (1|Block),
-                      data=mydata) 
+                      data=mydata)
+summary(cox_fullmodel4)
 
-#Now let's try making survival curves to plot
+exp(coef(cox_fullmodel4))
+```
+
+#ggplot - survival curves
+##Figure 5
+
+###autoplot
+```{r}
+#Now let's try making survival curves to plot, however, this is not the right model for this figure
 cox_model_graph3<-survfit(Surv(NumDaysAlive,CensorReproduction)~
                             Habitat+
                             Treatment,
@@ -768,79 +800,71 @@ New plot idea
 http://sthda.com/english/wiki/survminer-r-package-survival-data-analysis-and-visualization#change-legend-title-labels-and-position
 
 https://www.rdocumentation.org/packages/survminer/versions/0.4.9#computing-and-passin-p-values
+
+###ggsurvplot
 ```{r}
 library("survminer")
 library("survival")
 
+#Using only data from budding plants
 cox_model_graph4<-survfit(Surv(NumDaysAlive,CensorReproduction)~
                             Habitat+
                             Treatment,
                           data=mydata)
 
-surv_habitat_plot3 <- ggsurvplot(cox_model_graph4,
-                               data = mydata,
-                               xlab = "Survival (Days)",
-                               ylab = "Probability",
-                               surv.scale = "percent",
-                               ggtheme = theme_bw() + theme(legend.position = "right"),
-                               palette = c("gray30", "gray85", "forestgreen", "green3"),
-                               #palette = c("yellowgreen", "forestgreen", "limegreen", "springgreen1"),
-                               #palette = c("green3", "chartreuse3", "limegreen", "forestgreen"),
-                               legend = c(0.21, 0.22),
-                               legend.title = "Source Habitat",
-                               #legend.labs = c("Roadside/Grassland",
-                               #                "Roadside/Biomass Removal",
-                               #                "Vegetated/Grassland",
-                               #                "Vegetated/Biomass Removal"),
-                               conf.int = TRUE,                 # Add confidence intervals
-                               conf.int.style = "ribbon",       # Display confidence intervals as ribbons
-                               risk.table = FALSE,
-                               risk.table.y.text.col = FALSE,
-                               pval = FALSE,
-                               pval.coord = c(0.25, 0.9)
+surv_habitat_plot4<-ggsurvplot(cox_model_graph4,
+                               data=mydata,
+                               xlab="Time (Days)",
+                               ylab="Percent Budding",
+                               surv.scale="percent",
+                               ggtheme=theme_bw()+
+                                 theme(legend.position="right"),
+                               palette=c("gray30","gray85","forestgreen","green3"),
+                               legend=c(0.21, 0.75),
+                               legend.title="Treatment: Source Habitat",
+                               legend.labs=c("Grassland: Roadside",
+                                               "Biomass Removal: Roadside",
+                                               "Grassland: Vegetated",
+                                               "Biomass Removal: Vegetated"),
+                               conf.int=TRUE,                 # Add confidence intervals
+                               conf.int.style="ribbon",       # Display confidence intervals as ribbons
+                               risk.table=FALSE,
+                               risk.table.y.text.col=FALSE,
+                               pval=FALSE,
+                               pval.coord=c(0.25, 0.9),
+                               fun="event"
 )
-surv_habitat_plot3
+surv_habitat_plot4
 
+#Using data from all plants <- THIS IS FIGURE 5!
+cox_model_graph5<-survfit(Surv(DaysToPheno,CensorReproduction)~
+                        Habitat+
+                        Treatment,
+                      data=mydata)
 
-
-#Trying this:
-cox_model_graph4 <- survfit(Surv(NumDaysAlive, CensorReproduction) ~ Habitat + Treatment, data = mydata)
-
-# Create a new variable for the combination of Habitat and Treatment
-mydata$Strata <- paste(mydata$Habitat, mydata$Treatment, sep = "/")
-
-# Modify the line types in the survfit object
-strata_levels <- unique(mydata$Strata)
-line_types <- c("solid", "dashed", "solid", "dashed")
-
-cox_model_graph4$strata <- factor(mydata$Strata, levels = strata_levels)
-cox_model_graph4$linetype <- line_types[match(cox_model_graph4$strata, strata_levels)]
-
-surv_habitat_plot3 <- ggsurvplot(cox_model_graph4,
-                                 data = mydata,
-                                 xlab = "Survival (Days)",
-                                 ylab = "Probability",
-                                 surv.scale = "percent",
-                                 ggtheme = theme_bw() + theme(legend.position = "right"),
-                                 palette = c("gray30", "gray85", "forestgreen", "springgreen1"),
-                                 legend = c(0.21, 0.22),
-                                 legend.title = "Source Habitat",
-                                 legend.labs = c("Roadside/Grassland",
-                                                 "Roadside/Biomass Removal",
-                                                 "Vegetated/Grassland",
-                                                 "Vegetated/Biomass Removal"),
-                                 conf.int = TRUE,                 # Add confidence intervals
-                                 conf.int.style = "ribbon",       # Display confidence intervals as ribbons
-                                 risk.table = FALSE,
-                                 risk.table.y.text.col = FALSE,
-                                 pval = FALSE,
-                                 pval.coord = c(0.25, 0.9)
+surv_habitat_plot5<-ggsurvplot(cox_model_graph5,
+                               data=mydata,
+                               xlab="Time (Days)",
+                               ylab="Percent Budding",
+                               surv.scale="percent",
+                               ggtheme=theme_bw()+
+                                 theme(legend.position="right"),
+                               palette=c("gray30","gray85","forestgreen","green3"),
+                               legend=c(0.21, 0.75),
+                               legend.title="Treatment: Source Habitat",
+                               legend.labs=c("Grassland: Roadside",
+                                               "Biomass Removal: Roadside",
+                                               "Grassland: Vegetated",
+                                               "Biomass Removal: Vegetated"),
+                               conf.int=TRUE,                 # Add confidence intervals
+                               conf.int.style="ribbon",       # Display confidence intervals as ribbons
+                               risk.table=FALSE,
+                               risk.table.y.text.col=FALSE,
+                               pval=FALSE,
+                               pval.coord=c(0.25, 0.9),
+                               fun="event"
 )
-
-surv_habitat_plot3
-
-
+surv_habitat_plot5
 
 #ggsave doesn't work with this type of plot
-#ggsave(plot=surv_habitat_plot3,file="/Users/Miranda/Documents/Education/UC Santa Cruz/Dittrichia/Dittrichia_Analysis/figures/surv_habitat_plot3.png",width=25,height=15,units="cm",dpi=800)
 ```

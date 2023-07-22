@@ -3,16 +3,21 @@ title: "greenhouse_competition"
 output: html_notebook
 date: June 2023
 authors: Miranda Melen, Laura Goetz
+contributor: Julia Harenčár
 ---
 #Background
 Calculate log response ratio (LRR) of biomass in greenhouse_competition_fieldsoil.csv
 
-#Data Analysis 
+LRR_All was calculated using Excel and is used to as a check against what R calculates
 
 #Libraries
 ```{r}
 library(tidyverse)
+library(dplyr)
 library(lme4)
+library(ggplot2)
+library(DHARMa)
+library(lmerTest)
 ```
 
 #Load data
@@ -20,52 +25,90 @@ library(lme4)
 gh<-read_csv("../data/greenhouse_competition/greenhouse_competition_fieldsoil.csv")
 ```
 
-
 #Data preparation
 ```{r}
-gh_no_comp<-gh%>% 
-  select(Site,Block,Habitat,Competition,Dittrichia_biomass)%>% 
-  filter(Competition=="None")%>% 
-  select(-Competition)%>% 
-  rename("Divide_val"="Dittrichia_biomass")
+#Select specific columns from the dataset
+gh_no_comp<-gh%>%
+  select(Site,Block,Habitat,Competition,Dittrichia_biomass)%>%
+#Filter out rows where the Competition variable is "None"
+  filter(Competition=="None")%>%
+#Exclude the Competition variable from the resulting dataset
+  select(-Competition)%>%
+#Rename the Dittrichia_biomass column to Divide_val
+  rename(Divide_val = Dittrichia_biomass)
 
-gh_lrr<-left_join(gh,gh_no_comp,by=c("Site","Block","Habitat"))%>% 
-  filter(Competition!="None")%>% 
-  filter(!is.na(Dittrichia_biomass)) #filter out dead Festuca
+#Join the datasets gh and gh_no_comp based on the columns Site, Block, and Habitat
+gh_lrr<-left_join(gh,gh_no_comp,by=c("Site","Block","Habitat"))%>%
+#Filter out rows where Competition is not "None"
+  filter(Competition!="None")%>%
+#Filter out rows where Dittrichia_biomass is NA (missing values)
+  filter(!is.na(Dittrichia_biomass))
 
-# count number of observations per group
-gh_group_count<-gh_lrr%>% 
-  group_by(Site,Habitat,Competition)%>% 
-  count()%>% 
+#Count the number of observations per group (Site, Habitat, Competition)
+gh_group_count<-gh_lrr%>%
+  group_by(Site,Habitat,Competition)%>%
+  count()%>%
   ungroup()
 
-# calculate average
-gh_lrr_calc<-left_join(gh_lrr,gh_group_count)%>% 
-  mutate(LRR=log(as.numeric(Dittrichia_biomass)/as.numeric(Divide_val)),.after=Dittrichia_biomass)%>% 
-  group_by(Site,Habitat,Competition)%>% 
+#Calculate the average LRR (log response ratio) for each group
+gh_lrr_calc<-left_join(gh_lrr,gh_group_count)%>%
+  mutate(LRR=log(as.numeric(Dittrichia_biomass)/as.numeric(Divide_val)),.after=Dittrichia_biomass)%>%
+  group_by(Site,Habitat,Competition)%>%
   mutate(Average_LRR=sum(as.numeric(LRR))/n,.after=LRR)
 
-# calculate SD and SE
-gh_lrr_stats<-gh_lrr_calc%>% 
-  group_by(Site,Habitat,Competition)%>% 
+#Calculate the standard deviation (SD) and standard error (SE) for each group
+gh_lrr_stats<-gh_lrr_calc%>%
+  group_by(Site,Habitat,Competition)%>%
   summarise(SD=sd(LRR),
             N=length(LRR))%>%
   mutate(SE=SD/sqrt(N))
 
-# bind final table
+#Join the calculated statistics with the main dataset
 gh_lrr_done<-left_join(gh_lrr_calc,gh_lrr_stats)
 ```
 
 #Histograms
-##Original data
-The data is skewed and does not pass the Shapiro-Wilk normality test (p < 0.0001). So let's try log transforming the data.
+##Average LRR x Competition
+###Original data
+```{r}
+#Histogram of all data combined (this is not actually helpful here)
+hist(gh_lrr_done$Average_LRR,
+     col='steelblue',main='Original',breaks=30)
+shapiro.test(gh_lrr_done$Average_LRR) #Does not pass the test because the p value is significant
 
+#Create QQ plots for all data
+qqnorm(gh_lrr_done$Average_LRR)
+qqline(gh_lrr_done$Average_LRR)
+
+#Subset the data for Bromus
+bromus_data<-subset(gh_lrr_done,Competition=="Bromus")
+hist(bromus_data$Average_LRR,
+     col='steelblue',main='Original Bromus',breaks=5)
+
+#Create QQ plot for Bromus
+qqnorm(bromus_data$Average_LRR)
+qqline(bromus_data$Average_LRR)
+
+#Subset the data for Festuca
+festuca_data<-subset(gh_lrr_done,Competition=="Festuca")
+hist(festuca_data$Average_LRR,
+     col='steelblue',main='Original Festuca',breaks=5)
+
+#Create QQ plot for Festuca
+qqnorm(festuca_data$Average_LRR)
+qqline(festuca_data$Average_LRR)
+```
+
+
+##Biomass
+###Original data
+The data is skewed and does not pass the Shapiro-Wilk normality test (p < 0.0001).
 ```{r eval=FALSE, include=FALSE}
 hist(gh_lrr_done$Dittrichia_biomass,
      col='steelblue',main='Original',breaks=30) 
 shapiro.test(gh_lrr_done$Dittrichia_biomass)
 ```
-##Log transform
+###Log transform
 (https://www.statology.org/transform-data-in-r/)
 When we log transform the data and plot using a histogram, the data looks better than the original distribution, but we need to still test for normalicy with a Shapiro-Wilk normality test. Here we find that the data are not normally distributed because the p-value = 0.01951. Let's go straight to a glmm that can deal with non-normal data.
 ```{r}
@@ -75,9 +118,9 @@ hist(log_gh_lrr_done,
 shapiro.test(log_gh_lrr_done) #Data does not improve with log transformation, but is waaaay better than anything else
 
 qqnorm(log_gh_lrr_done) #qqplot
-qqline(log_gh_lrr_done) #add the line 
+qqline(log_gh_lrr_done) #add the line
 ```
-##Poisson distribution
+###Poisson distribution
 Nope, not poisson
 ```{r eval=FALSE, include=FALSE}
 library(MASS)
@@ -88,7 +131,7 @@ qqPlot(gh_lrr_done$Dittrichia_biomass,
        lambda=1)
 ```
 
-##Gamma distribution
+###Gamma distribution
 Nope, not gamma
 ```{r eval=FALSE, include=FALSE}
 gamma<-fitdistr(gh_lrr_done$Dittrichia_biomass,
@@ -100,7 +143,95 @@ qqp(gh_lrr_done$Dittrichia_biomass,
 ```
 
 #Models
-###Full Model 1 - glmer
+##LRR Bromus
+###Full Model 1 - lmer
+```{r}
+#Bromus model1
+fullmodel1_LRR_B<-lmer(Average_LRR~
+                       Habitat+
+                       (1|Site),
+                     data=bromus_data) #Block is removed because it creates a singular fit
+summary(fullmodel1_LRR_B)
+
+#QQ plots
+qqnorm(resid(fullmodel1_LRR_B))
+qqline(resid(fullmodel1_LRR_B)) #add the line (run this at the same time as qqnorm)
+testDispersion(fullmodel1_LRR_B) #red line should be in the middle of the distribution
+myDHARMagraph1B<-simulateResiduals(fullmodel1_LRR_B) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph1B) #plotting graph, doesn't look good, so let's check on those outliers
+plotResiduals(myDHARMagraph1B)
+
+#Checking on the outliers
+testOutliers(myDHARMagraph1B)
+levels(bromus_data$Habitat)
+unique(bromus_data$Habitat)
+
+#Make a boxplot to show the spread of the data
+Bro_plot<-ggplot(bromus_data)+
+  geom_boxplot(aes(x=Habitat,
+                   y=Average_LRR),
+               size=0.5)+
+  theme_classic()+
+  geom_point(aes(x=Habitat,
+                    y=Average_LRR))+
+  scale_fill_manual(values=c("forestgreen","gray58"))+
+  labs(y="Average LRR",
+       fill="Habitat",
+       x="Habitat")
+Bro_plot #Well, there are no crazy outliers, it is just that the data is really spread out for Vegetated
+
+#Let's double check using a non-parametric test
+# Subset the data for the two groups
+group1 <- bromus_data$Average_LRR[bromus_data$Habitat == "Roadside"]
+group2 <- bromus_data$Average_LRR[bromus_data$Habitat == "Vegetated"]
+
+# Perform Mann-Whitney U test
+result_mw <- wilcox.test(group1, group2)
+print(result_mw)
+#Ha! Also a non-significant p-value, so our parametric model is no better than the non-parametric. We can say something like these examples from Julia:
+
+#The difference in herbivory between species in each pair was not normal, but nonparametric Wilcoxon rank-sum test results did not differ from the t-test, so we report only t-test results here.
+
+#We conducted both an unpaired Welch’s two-sample t-test on log-transformed data and a nonparametric Wilcoxon rank-sum test. Both tests had the same significance level, so we only report the t-test results here. 
+
+```
+
+##LRR Festuca
+###Full Model 1 - lmer
+```{r}
+#Festuca model1
+fullmodel1_LRR_F<-lmer(Average_LRR~
+                       Habitat+
+                       (1|Site),
+                     data=festuca_data) #Block is removed because it creates a singular fit
+
+summary(fullmodel1_LRR_F)
+
+qqnorm(resid(fullmodel1_LRR_F))
+qqline(resid(fullmodel1_LRR_F)) #add the line (run this at the same time as qqnorm)
+testDispersion(fullmodel1_LRR_F) #red line should be in the middle of the distribution
+myDHARMagraph1F<-simulateResiduals(fullmodel1_LRR_F) #making a graph using DHARMa package, also testing for heteroscedasticity, https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html#heteroscedasticity
+plot(myDHARMagraph1F) #plotting graph. Yay!
+
+#Make a boxplot to show the spread of the data
+Fes_plot<-ggplot(festuca_data)+
+  geom_boxplot(aes(x=Habitat,
+                   y=Average_LRR),
+               size=0.5)+
+  theme_classic()+
+  geom_point(aes(x=Habitat,
+                    y=Average_LRR))+
+  scale_fill_manual(values=c("forestgreen","gray58"))+
+  labs(y="Average LRR",
+       fill="Habitat",
+       x="Habitat")
+Fes_plot #Nothing funky going on here, just a lot of variability. So perhaps the significant p-value is related to underlying biological component.
+
+```
+
+
+##Biomass
+###Full Model 1 - lmer
 ```{r}
 fullmodel1<-lmer(log(Dittrichia_biomass)~
                              Habitat*Competition+

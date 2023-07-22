@@ -23,4 +23,6 @@ citation("DHARMa")
 citation("glmmTMB")
 citation("lme4")
 citation("lmerTest")
+citation("lme4")
+citation("MASS")
 ```
